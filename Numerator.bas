@@ -12,7 +12,8 @@ Sub Init()
     Dim i As Long
     i = 1
     Do While dTab.Cells(i, 1) <> ""
-        Nums.Add dTab.Cells(i, 1), dTab.Cells(i, 2)
+        pref = dTab.Cells(i, 1)
+        Nums.Add pref, dTab.Cells(i, 2)
         i = i + 1
     Loop
 End Sub
@@ -37,7 +38,6 @@ End Sub
 Function Generate(dat As Date, Buyer As String) As String
     'ѕредположим что покупатель не может быть не правильный, так как проверка должна быть ещЄ до присвоени€ номера
     pref = UCase(Left(Buyer, 1)) + Right(CStr(Year(dat)), 2) + CStr(Month(dat)) + CStr(Day(dat))
-    
     If Not Nums.exists(pref) Then Nums.Add pref, 0
     Nums(pref) = Nums(pref) + 1
     Generate = pref + Right(CStr(Nums(pref) + 1000), 3)
