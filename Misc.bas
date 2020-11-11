@@ -34,13 +34,12 @@ HandleError:
     SheetExist = False
 End Function
 
-'Поиск максимального количества строк (последняя строка где первая колонка непрерывно заполнена)
-Function FindMax(ByVal name As String) As Long
-    i = 0
-    Do While Sheets(name).Cells(i + 1000, 1) <> ""
+'Поиск максимального количества строк
+Function FindMax(tb As Variant, ByVal i As Long, c As Integer) As Long
+    Do While tb.Cells(i + 1000, c) <> ""
         i = i + 1000
     Loop
-    Do While Sheets(name).Cells(i + 1, 1) <> ""
+    Do While tb.Cells(i + 1, c) <> ""
         i = i + 1
     Loop
     FindMax = i
