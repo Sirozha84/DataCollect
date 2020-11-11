@@ -5,7 +5,6 @@ Dim dTab As Variant
 
 'Инициализация словаря
 Sub Init()
-    Message "Инициализация словаря нумератора"
     Call NewTab(NumPage, False)
     Set dTab = Sheets(NumPage)
     Set Nums = CreateObject("Scripting.Dictionary")
@@ -29,14 +28,15 @@ Sub Save()
     Next
 End Sub
 
+'Очистка словаря
 Sub Clear()
     On Error GoTo er
     Sheets(NumPage).Cells.Clear
 er:
 End Sub
 
+'Генерация уникального номера
 Function Generate(dat As Date, Buyer As String) As String
-    'Предположим что покупатель не может быть не правильный, так как проверка должна быть ещё до присвоения номера
     pref = UCase(Left(Buyer, 1)) + Right(CStr(Year(dat)), 2) + CStr(Month(dat)) + CStr(Day(dat))
     If Not Nums.exists(pref) Then Nums.Add pref, 0
     Nums(pref) = Nums(pref) + 1
