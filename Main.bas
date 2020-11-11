@@ -1,15 +1,21 @@
 Attribute VB_Name = "Main"
 'Const isRelease = True  'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 Const isRelease = False 'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
-Const FirstC = 6        'Первая строка в коллекции данных
+
+Const FirstD = 6        'Первая строка в коллекции данных
 Const FirstS = 5        'Первая строка в исходных файлах
 Const cFile = 17        'Колонка с именем файла
 Const cCode = 18        'Колонка с кодом файла
 Const errName = "Ошибки"
+
 Dim dat As Variant      'Таблица с данными
+Dim src As Variant      'Таблица с исходниками
 Dim err As Variant      'Таблица с ошибками
 Dim Indexes As Object   'Словарь индексов
 Dim max As Long         'Последняя строка в данных
+Dim i As Long
+Dim file As Variant
+Dim cod As String
 
 'Выбор директории с данными
 Sub DirSelect()
@@ -21,8 +27,8 @@ End Sub
 'Удаление всех данных (оставляя шапку)
 Sub Clear()
     On Error GoTo er
-    'If MsgBox("Данная процедура очистит собранные данные список ошибок и нумераторы. Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Range(Cells(FirstC, 1), Cells(1048576, 50)).Clear
+    If isRelease Then If MsgBox("Данная процедура очистит собранные данные список ошибок и нумераторы. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    Range(Cells(FirstD, 1), Cells(1048576, 50)).Clear
     Sheets(errName).Cells.Clear
 er:
     Numerator.Clear
@@ -32,12 +38,12 @@ End Sub
 Sub DataCollect()
     
     Set dat = ActiveSheet
-    noEmpty = (dat.Cells(FirstC, 2) <> "")
+    noEmpty = (dat.Cells(FirstD, 2) <> "")
     If isRelease And noEmpty Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Message "Подготовка"
     
     'Получаем коллекцию файлов
-    Set Files = Source.GetList("C:\Users\SG\OneDrive\Работа\Цифровая сибирь\Сбор данных\Данные")
+    Set Files = Source.GetList(dat.Cells(1, 3))
         
     'Создаём вкладку (если её нет) для списка ошибок
     Call NewTab(errName, True)
@@ -47,8 +53,15 @@ Sub DataCollect()
     err.Cells(1, 1) = "Файл"
     err.Cells(1, 2) = "Результат"
     
-    'Индексируем собранные данные
-    
+    'Индексируем существующие записи
+    Set Indexes = CreateObject("Scripting.Dictionary")
+    i = FirstD
+    Do While dat.Cells(i, 2) <> ""
+        uid = dat.Cells(i, 1)
+        If uid <> "" Then Indexes.Add uid, i
+        i = i + 1
+    Loop
+    max = i
     
     'Инициализируем словарь нумератора
     Numerator.Init
@@ -56,8 +69,6 @@ Sub DataCollect()
     n = 1
     s = 0
     e = 0
-    'max = FindMax(dat, FirstC, 2) - noEmpty 'Если не пусто +1, потому что с этой строки будет продолжаться запись новых строк
-    
     For Each file In Files
         Message ("Обработка файла " + CStr(n) + " из " + CStr(Files.Count) + " (" + Source.FSO.getfilename(file)) + ")"
         er = AddFile(file)
@@ -79,11 +90,8 @@ End Sub
 
 'Добавление данных из файла (возвращает 0 - всё хорошо, 1 - ошибка загрузки, 2 - ошибка в данных, 3 - нет кода)
 Function AddFile(ByVal file As String) As Byte
-    
-    On Error GoTo er
-    
+    'On Error GoTo er
     Application.ScreenUpdating = False
-    
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
@@ -92,8 +100,7 @@ Function AddFile(ByVal file As String) As Byte
         If cod <> "" Then
         
             'Очищаем предыдущие строки с ошибками
-            Dim i As Long
-            i = FirstC
+            i = FirstD
             Do While dat.Cells(i, 2) <> ""
                 If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
                     dat.Rows(i).Delete
@@ -107,31 +114,19 @@ Function AddFile(ByVal file As String) As Byte
             i = FirstS
             Do While src.Cells(i, 2) <> ""
                 
-                If src.Cells(i, 1) = "" Then
+                uid = src.Cells(i, 1)
+                If uid = "" Then
                     'Строки нет
-                    For j = 2 To 14
-                        dat.Cells(max, j) = src.Cells(i, j)
-                    Next
-                    dat.Cells(max, cFile) = file
-                    dat.Cells(max, cCode) = cod
-                    Range(dat.Cells(max, cFile), dat.Cells(max, cCode)).Font.Color = RGB(192, 192, 192)
-                    
-                    errors = Verify.Verify(dat, src, max, i)
-                    If errors Then
-                        AddFile = 2
-                    Else
-                        'Если нет ошибок, присваиваем номер
-                        num = Numerator.Generate(dat.Cells(max, 2), dat.Cells(max, 4))
-                        dat.Cells(max, 1) = num
-                        src.Cells(i, 1) = num
-                    End If
+                    AddFile = copyRecord(file, max, i, False)
                     max = max + 1
                 Else
                     'Строка есть
+                    ind = Indexes(uid)
+                    AddFile = copyRecord(file, ind, i, True)
                 End If
-                
                 i = i + 1
             Loop
+            
         Else
             AddFile = 3
         End If
@@ -143,4 +138,32 @@ Function AddFile(ByVal file As String) As Byte
     Exit Function
 er:
     AddFile = 1
+End Function
+
+'Копирование записи. refresh - обновление данных (проверять что поменялось)
+Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Byte) As Byte
+    For j = 2 To 14
+        If refresh Then
+            If dat.Cells(di, j) = src.Cells(si, j) Then
+                dat.Cells(di, j).ClearFormats
+            Else
+                dat.Cells(di, j).Interior.Color = RGB(256, 256, 192)
+            End If
+        End If
+        dat.Cells(di, j) = src.Cells(si, j)
+    Next
+    dat.Cells(di, cFile) = file
+    dat.Cells(di, cCode) = cod
+    Range(dat.Cells(di, cFile), dat.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
+    errors = Verify.Verify(dat, src, di, si)
+    If errors Then
+        copyRecord = 2
+    Else
+        'Если нет ошибок, присваиваем номер, если его нет
+        If dat.Cells(di, 1) = "" Then
+            num = Numerator.Generate(dat.Cells(di, 2), dat.Cells(di, 4))
+            dat.Cells(di, 1) = num
+            src.Cells(si, 1) = num
+        End If
+    End If
 End Function

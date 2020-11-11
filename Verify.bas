@@ -29,6 +29,9 @@ Function Verify(ByRef cur As Variant, ByRef imSh As Variant, ByVal iC As Long, B
         cur.Cells(iC, cComment).Interior.Color = red
         imSh.Cells(iI, cComment) = Comment
         imSh.Cells(iI, cComment).Interior.Color = red
+    Else
+        imSh.Cells(iI, cComment) = ""
+        imSh.Cells(iI, cComment).ClearFormats
     End If
     Verify = errors
     
