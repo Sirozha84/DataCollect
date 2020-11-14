@@ -126,18 +126,65 @@ er2:
     hat.Interior.Color = RGB(224, 224, 224)
     hat.Borders.Weight = 3
     
-    'Поле2 - Дата
+    'Поле 2 - Дата
     Call setFormat(2, "date")
     Call allowEdit(2, "Дата")
-    'Поле3 - ИНН, находится через впр
+    'Поле 3 - ИНН покупателя, находится с помощью ВПР
     For i = 5 To 4 + MaxRecords
         Cells(i, 3).FormulaLocal = "=ВПР(D" + CStr(i) + ";Справочники!A2:B" + _
         CStr(maxBuyers) + ";2;0)"
     Next
     setFormatConditions (3)
-    'Поле3 - Покупатель, выбираем из списка
+    'Поле 4 - Покупатель, выбираем из списка
     Call setValidation(4, "b")
     Call allowEdit(4, "Покупатель")
+    'Поле 5 - ИНН продавца, находится с помлщью ВПР
+    For i = 5 To 4 + MaxRecords
+        Cells(i, 5).FormulaLocal = "=ВПР(F" + CStr(i) + ";Справочники!C2:D" + _
+        CStr(maxSellers) + ";2;0)"
+    Next
+    setFormatConditions (5)
+    'Поле 6 - Продавец, выбираем из списка
+    Call setValidation(6, "s")
+    Call allowEdit(6, "Продавец")
+    'Поле 7 - Стоимость
+    Call setFormat(7, "money")
+    Cells(1, 7).Borders.Weight = 3
+    Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(4 + MaxRecords) + ")"
+    Call allowEdit(7, "Стоимость")
+    'Поле 8 - Ставка НДС
+    Call setValidation(8, "nds")
+    Call allowEdit(8, "Ставка НДС")
+    'Общее 9-14
+    For i = 9 To 14
+        Call setFormat(i, "money")
+        Cells(1, i).Borders.Weight = 3
+    Next
+    'Поле 9-11 - Сумма с НДС 20,18,10%      Формула G/(100+H)*100
+    For i = 5 To 4 + MaxRecords
+        Cells(i, 9).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=20);" + _
+        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*100;2);"""")"
+        Cells(i, 10).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=18);" + _
+        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*100;2);"""")"
+        Cells(i, 11).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=10);" + _
+        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*100;2);"""")"
+    Next
+    Cells(1, 9).FormulaLocal = "=СУММ(I5:I" + CStr(4 + MaxRecords) + ")"
+    Cells(1, 10).FormulaLocal = "=СУММ(J5:J" + CStr(4 + MaxRecords) + ")"
+    Cells(1, 11).FormulaLocal = "=СУММ(K5:K" + CStr(4 + MaxRecords) + ")"
+    'Поле 12-14 - Сумма без НДС 20,18,10%   Формула G/(100+H)*H
+    For i = 5 To 4 + MaxRecords
+        Cells(i, 12).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=20);" + _
+        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*H" + CStr(i) + ";2);"""")"
+        Cells(i, 13).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=18);" + _
+        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*H" + CStr(i) + ";2);"""")"
+        Cells(i, 14).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=10);" + _
+        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*H" + CStr(i) + ";2);"""")"
+    Next
+    Cells(1, 12).FormulaLocal = "=СУММ(L5:L" + CStr(4 + MaxRecords) + ")"
+    Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(4 + MaxRecords) + ")"
+    Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(4 + MaxRecords) + ")"
+    
     
     'Защита книги
     temp.Protect Secret, UserInterfaceOnly:=True
@@ -150,9 +197,10 @@ er:
 End Sub
 
 'Установка формата для колонки
-Sub setFormat(c As Integer, format As String)
+Sub setFormat(ByVal c As Integer, format As String)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
     If format = "date" Then rang.NumberFormat = "dd.MM.yyyy"
+    If format = "money" Then rang.NumberFormat = "### ### ##0.00"
 End Sub
 
 'Установка условного форматирования для колонки
@@ -167,11 +215,9 @@ End Sub
 'Установка списка проверки
 Sub setValidation(c As Integer, list As String)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
-    If list = "b" Then
-        formul = "=Справочники!$A$2:$A$" + CStr(maxBuyers)
-    Else
-        formul = "=Справочники!$C$2:$C$" + CStr(maxSellers)
-    End If
+    If list = "b" Then formul = "=Справочники!$A$2:$A$" + CStr(maxBuyers)
+    If list = "s" Then formul = "=Справочники!$C$2:$C$" + CStr(maxSellers)
+    If list = "nds" Then formul = "10,18,20"
     With rang.Validation
         .Delete
         .Add Type:=xlValidateList, _
