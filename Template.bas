@@ -9,6 +9,7 @@ Dim temp As Variant
 Dim dat As Variant
 
 Public Sub Generate()
+
     'Находим максимальный код (если он есть)
     Dim i As Long
     i = FirstClient
@@ -36,12 +37,17 @@ Public Sub Generate()
     Next
     
     Message "Готово!"
+    
 End Sub
 
 'Создание нового файла
 Sub NewTemplate(name As String, cod As Long)
-    'Создаём файл с нужными вкладками
+    
+    'Если файл существует - пропустим
     Filename = Cells(1, 3) + "\" + name + ".xlsx"
+    If Dir$(Filename) <> "" Then Exit Sub
+    
+    'Создаём файл с нужными вкладками
     Workbooks.Add
     On Error GoTo er2
     Application.DisplayAlerts = False
@@ -53,7 +59,6 @@ Sub NewTemplate(name As String, cod As Long)
     Sheets(4).Delete
     Sheets(4).Delete
 er2:
-    
     On Error GoTo er
     Set temp = Application.ActiveSheet
     Set listb = Sheets(2)
@@ -179,14 +184,10 @@ er2:
     Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(4 + MaxRecords) + ")"
     Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(4 + MaxRecords) + ")"
     
-    
-    'Защита книги
+    'Защита и сохранение книги
     temp.Protect Secret, UserInterfaceOnly:=True
-    'lists.Protect Secret, UserInterfaceOnly:=True
-    
-    'Если требуется сразу открыть результат - закомментировать оставшиеся строки
-    ActiveWorkbook.SaveAs Filename:=Filename
-    ActiveWorkbook.Close
+    ActiveWorkbook.SaveAs Filename:=Filename    'Для тестов эти строки комментируем и смотрим
+    ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
 er:
 End Sub
 
