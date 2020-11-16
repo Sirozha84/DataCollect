@@ -2,11 +2,11 @@ Attribute VB_Name = "Template"
 Const MaxRecords = 100  'Максимальное количество записей
 Const FirstClient = 6   'Первая строка списка клиентов
 Const Secret = "123"
+Const maxBuyers = 100   'Максимальное количество покупателей
+Const maxSellers = 100  'Максимальное количество продавцов
 
 Dim temp As Variant
 Dim dat As Variant
-Dim maxBuyers As Integer
-Dim maxSellers As Integer
 
 Public Sub Generate()
     'Находим максимальный код (если он есть)
@@ -40,44 +40,37 @@ End Sub
 
 'Создание нового файла
 Sub NewTemplate(name As String, cod As Long)
+    'Создаём файл с нужными вкладками
     Filename = Cells(1, 3) + "\" + name + ".xlsx"
     Workbooks.Add
-    'On Error GoTo er2
+    On Error GoTo er2
     Application.DisplayAlerts = False
     Sheets.Add
+    Sheets.Add
     Sheets(1).name = name
-    Sheets(2).name = "Справочники"
-    Sheets(3).Delete
-    Sheets(3).Delete
+    Sheets(2).name = "Покупатели"
+    Sheets(3).name = "Продавцы"
+    Sheets(4).Delete
+    Sheets(4).Delete
 er2:
     
-    'On Error GoTo er
+    On Error GoTo er
     Set temp = Application.ActiveSheet
-    Set lists = Sheets(2)
+    Set listb = Sheets(2)
+    Set lists = Sheets(3)
     Cells(1, 1) = cod
     
-    'Копируем справочники
-    For i = 1 To 4: lists.Columns(i).ColumnWidth = 20: Next
-    i = 5
-    j = 0
-    Do While dat.Cells(i, 3) <> ""
-        j = j + 1
-        lists.Cells(j, 1) = dat.Cells(i, 3)
-        lists.Cells(j, 2) = dat.Cells(i, 4)
-        i = i + 1
-    Loop
-    maxBuyers = j
-    i = 5
-    j = 0
-    Do While dat.Cells(i, 5) <> ""
-        j = j + 1
-        lists.Cells(j, 3) = dat.Cells(i, 5)
-        lists.Cells(j, 4) = dat.Cells(i, 6)
-        i = i + 1
-    Loop
-    maxSellers = j
+    'Вкладки со справочниками
+    listb.Columns(1).ColumnWidth = 20
+    listb.Columns(2).ColumnWidth = 10
+    listb.Cells(1, 1) = "Покупатели"
+    listb.Cells(1, 2) = "ИНН/КПП"
+    lists.Columns(1).ColumnWidth = 20
+    lists.Columns(2).ColumnWidth = 10
+    lists.Cells(1, 1) = "Продавцы"
+    lists.Cells(1, 2) = "ИНН"
     
-    'Рисуем шапку формы
+    'Основная вкладка. Рисуем шапку формы
     Columns(1).ColumnWidth = 20
     Columns(2).ColumnWidth = 15
     Columns(3).ColumnWidth = 30
@@ -128,10 +121,11 @@ er2:
     
     'Поле 2 - Дата
     Call setFormat(2, "date")
+    Call setValidation(2, "date")
     Call allowEdit(2, "Дата")
     'Поле 3 - ИНН покупателя, находится с помощью ВПР
     For i = 5 To 4 + MaxRecords
-        Cells(i, 3).FormulaLocal = "=ВПР(D" + CStr(i) + ";Справочники!A2:B" + _
+        Cells(i, 3).FormulaLocal = "=ВПР(D" + CStr(i) + ";Покупатели!A2:B" + _
         CStr(maxBuyers) + ";2;0)"
     Next
     setFormatConditions (3)
@@ -140,7 +134,7 @@ er2:
     Call allowEdit(4, "Покупатель")
     'Поле 5 - ИНН продавца, находится с помлщью ВПР
     For i = 5 To 4 + MaxRecords
-        Cells(i, 5).FormulaLocal = "=ВПР(F" + CStr(i) + ";Справочники!C2:D" + _
+        Cells(i, 5).FormulaLocal = "=ВПР(F" + CStr(i) + ";Продавцы!A2:B" + _
         CStr(maxSellers) + ";2;0)"
     Next
     setFormatConditions (5)
@@ -188,7 +182,7 @@ er2:
     
     'Защита книги
     temp.Protect Secret, UserInterfaceOnly:=True
-    lists.Protect Secret, UserInterfaceOnly:=True
+    'lists.Protect Secret, UserInterfaceOnly:=True
     
     'Если требуется сразу открыть результат - закомментировать оставшиеся строки
     ActiveWorkbook.SaveAs Filename:=Filename
@@ -212,27 +206,32 @@ Sub setFormatConditions(c As Integer)
     End With
 End Sub
 
-'Установка списка проверки
-Sub setValidation(c As Integer, list As String)
+'Установка проверки значений
+Sub setValidation(c As Integer, typ As String)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
-    If list = "b" Then formul = "=Справочники!$A$2:$A$" + CStr(maxBuyers)
-    If list = "s" Then formul = "=Справочники!$C$2:$C$" + CStr(maxSellers)
-    If list = "nds" Then formul = "10,18,20"
-    With rang.Validation
-        .Delete
-        .Add Type:=xlValidateList, _
-        AlertStyle:=xlValidAlertStop, _
-        Formula1:=formul
-        .ErrorMessage = "Только из списка, пожалуйста!"
-    End With
+    If typ = "b" Then formul = "=Покупатели!$A$2:$A$" + CStr(maxBuyers)
+    If typ = "s" Then formul = "=Продавцы!$A$2:$A$" + CStr(maxSellers)
+    If typ = "nds" Then formul = "10,18,20"
+    If formul <> "" Then
+        With rang.Validation
+            .Delete
+            .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Formula1:=formul
+            .ErrorMessage = "Только из списка, пожалуйста!"
+        End With
+    End If
+    If typ = "date" Then
+        With rang.Validation
+            .Delete
+            '30000 - какая-то дата 82-го года, так и не понял как записать человеческую дату
+            .Add Type:=xlValidateDate, AlertStyle:=xlValidAlertStop, Operator:=xlGreater, Formula1:="30000"
+            .ErrorMessage = "Тут должна быть дата!"
+        End With
+    End If
 End Sub
 
 'Установка разрешения редактирования для колонки
 Sub allowEdit(c As Integer, name As String)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
-    temp.Protection.AllowEditRanges.Add _
-        Title:=name, _
-        Range:=rang, _
-        Password:=""
+    temp.Protection.AllowEditRanges.Add Title:=name, Range:=rang, Password:=""
     rang.Interior.Color = RGB(255, 255, 192)
 End Sub
