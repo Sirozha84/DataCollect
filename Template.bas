@@ -1,7 +1,7 @@
 Attribute VB_Name = "Template"
 Const MaxRecords = 100  'Максимальное количество записей
 Const FirstClient = 6   'Первая строка списка клиентов
-Const Secret = "123"
+Const Secret = "123"    'Пароль для защиты
 Const maxBuyers = 100   'Максимальное количество покупателей
 Const maxSellers = 100  'Максимальное количество продавцов
 
@@ -66,13 +66,13 @@ er2:
     Cells(1, 1) = cod
     
     'Вкладки со справочниками
-    listb.Columns(1).ColumnWidth = 20
-    listb.Columns(2).ColumnWidth = 10
-    listb.Cells(1, 1) = "Покупатели"
+    listb.Columns(1).ColumnWidth = 30
+    listb.Columns(2).ColumnWidth = 20
+    listb.Cells(1, 1) = "Наименование"
     listb.Cells(1, 2) = "ИНН/КПП"
-    lists.Columns(1).ColumnWidth = 20
-    lists.Columns(2).ColumnWidth = 10
-    lists.Cells(1, 1) = "Продавцы"
+    lists.Columns(1).ColumnWidth = 30
+    lists.Columns(2).ColumnWidth = 20
+    lists.Cells(1, 1) = "Наименование"
     lists.Cells(1, 2) = "ИНН"
     
     'Основная вкладка. Рисуем шапку формы
