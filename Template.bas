@@ -1,7 +1,8 @@
 Attribute VB_Name = "Template"
+Public Const Secret = "123"     'Пароль для защиты
+
 Const MaxRecords = 100  'Максимальное количество записей
 Const FirstClient = 6   'Первая строка списка клиентов
-Const Secret = "123"    'Пароль для защиты
 Const maxBuyers = 100   'Максимальное количество покупателей
 Const maxSellers = 100  'Максимальное количество продавцов
 

@@ -1,11 +1,11 @@
 Attribute VB_Name = "Main"
-'Const isRelease = True  'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
-Const isRelease = False 'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
+Const isRelease = True 'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 
-Const FirstD = 6        'Первая строка в коллекции данных
+Const FirstD = 8        'Первая строка в коллекции данных
 Const FirstS = 5        'Первая строка в исходных файлах
-Const cFile = 17        'Колонка с именем файла
-Const cCode = 18        'Колонка с кодом файла
+Const cFile = 16        'Колонка с именем файла
+Const cCode = 17        'Колонка с кодом файла
+
 Const errName = "Ошибки"
 
 Dim dat As Variant      'Таблица с данными
@@ -70,7 +70,7 @@ Sub DataCollect()
     s = 0
     e = 0
     For Each file In Files
-        Message ("Обработка файла " + CStr(n) + " из " + CStr(Files.Count) + " (" + Source.FSO.getfilename(file)) + ")"
+        Message ("Обработка файла " + CStr(n) + " из " + CStr(Files.count) + " (" + Source.FSO.getfilename(file)) + ")"
         er = AddFile(file)
         If er > 0 Then
             e = e + 1
@@ -90,12 +90,13 @@ End Sub
 
 'Добавление данных из файла (возвращает 0 - всё хорошо, 1 - ошибка загрузки, 2 - ошибка в данных, 3 - нет кода)
 Function AddFile(ByVal file As String) As Byte
-    'On Error GoTo er
+    On Error GoTo er
     Application.ScreenUpdating = False
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
         Set src = impBook.Worksheets(1) 'Пока берём данные с первого листа
+        src.Unprotect Template.Secret
         cod = src.Cells(1, 1)
         If cod <> "" Then
         
@@ -130,6 +131,7 @@ Function AddFile(ByVal file As String) As Byte
         Else
             AddFile = 3
         End If
+        src.Protect Template.Secret
         impBook.Close isRelease
     End If
     Numerator.Save
@@ -141,21 +143,29 @@ er:
 End Function
 
 'Копирование записи. refresh - обновление данных (проверять что поменялось)
-Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Byte) As Byte
+Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Boolean) As Byte
+Dim changed As Boolean
+    wht = RGB(255, 255, 255)
+    yel = RGB(256, 256, 192)
     For j = 2 To 14
-        If refresh Then
-            If dat.Cells(di, j) = src.Cells(si, j) Then
-                dat.Cells(di, j).ClearFormats
-            Else
-                dat.Cells(di, j).Interior.Color = RGB(256, 256, 192)
-            End If
-        End If
+        ch = dat.Cells(di, j) = src.Cells(si, j)
         dat.Cells(di, j) = src.Cells(si, j)
+        dat.Cells(di, j).ClearFormats
+        If j = 2 Or j = 4 Or j = 5 Or j = 6 Or j = 7 Or j = 8 Then
+            src.Cells(si, j).Interior.Color = yel
+        Else
+            src.Cells(si, j).Interior.Color = wht
+        End If
+        If refresh And Not ch Then
+            dat.Cells(di, j).Interior.Color = yel
+            src.Cells(si, j).Interior.Color = yel
+            changed = True
+        End If
     Next
     dat.Cells(di, cFile) = file
     dat.Cells(di, cCode) = cod
     Range(dat.Cells(di, cFile), dat.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
-    errors = Verify.Verify(dat, src, di, si)
+    errors = Verify.Verify(dat, src, di, si, changed)
     If errors Then
         copyRecord = 2
     Else

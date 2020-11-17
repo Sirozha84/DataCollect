@@ -1,14 +1,18 @@
 Attribute VB_Name = "Verify"
-Const cComment = 16
+Const cComment = 15
 Dim Comment As String
 Dim errors As Boolean
 
 'Проверка корректности данных
-Function Verify(ByRef cur As Variant, ByRef imSh As Variant, ByVal iC As Long, ByVal iI As Long) As Boolean
+Function Verify(ByRef cur As Variant, ByRef imSh As Variant, ByVal iC As Long, ByVal iI As Long, _
+changed As Boolean) As Boolean
     Comment = ""
     errors = False
     red = RGB(255, 192, 192)
+    grn = RGB(192, 255, 192)
+    yel = RGB(255, 255, 192)
     Verify = True
+    
     '2 - Дата
     cur.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
     If Not IsDate(cur.Cells(iC, 2)) Then
@@ -24,15 +28,17 @@ Function Verify(ByRef cur As Variant, ByRef imSh As Variant, ByVal iC As Long, B
         AddCom "ИНН/КПП введены не корректно"
     End If
     
-    If errors Then
-        cur.Cells(iC, cComment) = Comment
-        cur.Cells(iC, cComment).Interior.Color = red
-        imSh.Cells(iI, cComment) = Comment
-        imSh.Cells(iI, cComment).Interior.Color = red
-    Else
-        imSh.Cells(iI, cComment) = ""
-        imSh.Cells(iI, cComment).ClearFormats
+    'Пишем комментарий и расскрашиваем его
+    col = red
+    If Not errors Then
+        col = grn: Comment = "Принято"
+        If changed Then col = yel: Comment = "Изменено"
     End If
+    cur.Cells(iC, cComment) = Comment
+    cur.Cells(iC, cComment).Interior.Color = col
+    imSh.Cells(iI, cComment) = Comment
+    imSh.Cells(iI, cComment).Interior.Color = col
+    
     Verify = errors
     
 End Function
