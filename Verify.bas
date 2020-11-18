@@ -30,10 +30,7 @@ changed As Boolean) As Boolean
     
     'Пишем комментарий и расскрашиваем его
     col = red
-    If Not errors Then
-        col = grn: Comment = "Принято"
-        If changed Then col = yel: Comment = "Изменено"
-    End If
+    If Not errors Then col = grn: Comment = "Принято"
     cur.Cells(iC, cComment) = Comment
     cur.Cells(iC, cComment).Interior.Color = col
     imSh.Cells(iI, cComment) = Comment
