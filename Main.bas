@@ -114,17 +114,20 @@ Function AddFile(ByVal file As String) As Byte
             'Обрабатываем строки исходника
             i = FirstS
             Do While src.Cells(i, 2) <> ""
-                
                 uid = src.Cells(i, 1)
-                If uid = "" Then
-                    'Строки нет
-                    AddFile = copyRecord(file, max, i, False)
-                    max = max + 1
-                Else
-                    'Строка есть
+                'Строка уже есть (наверное)
+                If uid <> "" Then
                     ind = Indexes(uid)
-                    AddFile = copyRecord(file, ind, i, True)
+                    If ind <> Empty Then
+                        'И строка действительно есть, обновляем данные
+                        AddFile = copyRecord(file, ind, i, True)
+                    Else
+                        'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
+                        uid = ""
+                    End If
                 End If
+                'Новая строка
+                If uid = "" Then AddFile = copyRecord(file, max, i, False)
                 i = i + 1
             Loop
             
@@ -143,6 +146,7 @@ er:
 End Function
 
 'Копирование записи. refresh - обновление данных (проверять что поменялось)
+'Возвращает 0 - если всё хорошо, 2 - если в данных есть ошибка
 Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Boolean) As Byte
 Dim changed As Boolean
     wht = RGB(255, 255, 255)
@@ -169,11 +173,12 @@ Dim changed As Boolean
     If errors Then
         copyRecord = 2
     Else
-        'Если нет ошибок, присваиваем номер, если его нет
-        If dat.Cells(di, 1) = "" Then
+        'Если нет ошибок, и это не обновление, присваиваем номер
+        If Not refresh Then
             num = Numerator.Generate(dat.Cells(di, 2), dat.Cells(di, 4))
             dat.Cells(di, 1) = num
             src.Cells(si, 1) = num
         End If
     End If
+    If Not refresh Then max = max + 1
 End Function
