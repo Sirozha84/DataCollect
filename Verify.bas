@@ -4,7 +4,7 @@ Dim Comment As String
 Dim errors As Boolean
 
 'Проверка корректности данных
-Function Verify(ByRef cur As Variant, ByRef imSh As Variant, ByVal iC As Long, ByVal iI As Long, _
+Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, ByVal iI As Long, _
 changed As Boolean) As Boolean
     Comment = ""
     errors = False
@@ -14,27 +14,34 @@ changed As Boolean) As Boolean
     Verify = True
     
     '2 - Дата
-    cur.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
-    If Not IsDate(cur.Cells(iC, 2)) Then
-        cur.Cells(iC, 2).Interior.Color = red
-        imSh.Cells(iI, 2).Interior.Color = red
+    dat.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
+    If Not IsDate(dat.Cells(iC, 2)) Then
+        dat.Cells(iC, 2).Interior.Color = red
+        src.Cells(iI, 2).Interior.Color = red
         AddCom "Дата введена не корректно"
     End If
     
     '3 - ИНН
-    If Not isINNKPP(cur.Cells(iC, 3)) Then
-        cur.Cells(iC, 3).Interior.Color = red
-        imSh.Cells(iI, 3).Interior.Color = red
+    If Not isINNKPP(dat.Cells(iC, 3).text) Then
+        dat.Cells(iC, 3).Interior.Color = red
+        src.Cells(iI, 3).Interior.Color = red
         AddCom "ИНН/КПП введены не корректно"
+    End If
+    
+    '5 - ИНН
+    If Not isINNKPP(dat.Cells(iC, 5).text) Then
+        dat.Cells(iC, 5).Interior.Color = red
+        src.Cells(iI, 5).Interior.Color = red
+        AddCom "ИНН введен не корректно"
     End If
     
     'Пишем комментарий и расскрашиваем его
     col = red
     If Not errors Then col = grn: Comment = "Принято"
-    cur.Cells(iC, cComment) = Comment
-    cur.Cells(iC, cComment).Interior.Color = col
-    imSh.Cells(iI, cComment) = Comment
-    imSh.Cells(iI, cComment).Interior.Color = col
+    dat.Cells(iC, cComment) = Comment
+    dat.Cells(iC, cComment).Interior.Color = col
+    src.Cells(iI, cComment) = Comment
+    src.Cells(iI, cComment).Interior.Color = col
     
     Verify = errors
     

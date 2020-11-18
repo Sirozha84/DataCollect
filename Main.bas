@@ -90,6 +90,7 @@ End Sub
 
 'Добавление данных из файла (возвращает 0 - всё хорошо, 1 - ошибка загрузки, 2 - ошибка в данных, 3 - нет кода)
 Function AddFile(ByVal file As String) As Byte
+    errors = False
     On Error GoTo er
     Application.ScreenUpdating = False
     Set impBook = Nothing
@@ -113,21 +114,21 @@ Function AddFile(ByVal file As String) As Byte
             
             'Обрабатываем строки исходника
             i = FirstS
-            Do While src.Cells(i, 2) <> ""
+            Do While NotEmpty(i)
                 uid = src.Cells(i, 1)
                 'Строка уже есть (наверное)
                 If uid <> "" Then
                     ind = Indexes(uid)
                     If ind <> Empty Then
                         'И строка действительно есть, обновляем данные
-                        AddFile = copyRecord(file, ind, i, True)
+                        If copyRecord(file, ind, i, True) Then errors = True
                     Else
                         'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
                         uid = ""
                     End If
                 End If
                 'Новая строка
-                If uid = "" Then AddFile = copyRecord(file, max, i, False)
+                If uid = "" Then If copyRecord(file, max, i, False) Then errors = True
                 i = i + 1
             Loop
             
@@ -140,19 +141,29 @@ Function AddFile(ByVal file As String) As Byte
     Numerator.Save
     Application.ScreenUpdating = True
     DoEvents
+    If errors Then AddFile = 2
     Exit Function
 er:
     AddFile = 1
 End Function
 
+'Возвращает True если строка si в исходнике не пустая
+Function NotEmpty(si As Long) As Boolean
+    NotEmpty = False
+    For j = 1 To 14
+        txt = src.Cells(si, j).text
+        If txt <> "" And txt <> "#Н/Д" Then NotEmpty = True
+    Next
+End Function
+
 'Копирование записи. refresh - обновление данных (проверять что поменялось)
-'Возвращает 0 - если всё хорошо, 2 - если в данных есть ошибка
-Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Boolean) As Byte
-Dim changed As Boolean
+'Возвращает True - если в данных есть ошибка
+Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
+    Dim changed As Boolean
     wht = RGB(255, 255, 255)
     yel = RGB(256, 256, 192)
     For j = 2 To 14
-        ch = dat.Cells(di, j) = src.Cells(si, j)
+        ravno = dat.Cells(di, j).text = src.Cells(si, j).text
         dat.Cells(di, j) = src.Cells(si, j)
         dat.Cells(di, j).ClearFormats
         If j = 2 Or j = 4 Or j = 5 Or j = 6 Or j = 7 Or j = 8 Then
@@ -160,7 +171,7 @@ Dim changed As Boolean
         Else
             src.Cells(si, j).Interior.Color = wht
         End If
-        If refresh And Not ch Then
+        If refresh And Not ravno Then
             dat.Cells(di, j).Interior.Color = yel
             src.Cells(si, j).Interior.Color = yel
             changed = True
@@ -171,7 +182,7 @@ Dim changed As Boolean
     Range(dat.Cells(di, cFile), dat.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
     errors = Verify.Verify(dat, src, di, si, changed)
     If errors Then
-        copyRecord = 2
+        copyRecord = True
     Else
         'Если нет ошибок, и это не обновление, присваиваем номер
         If Not refresh Then
