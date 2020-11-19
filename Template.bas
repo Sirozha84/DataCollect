@@ -1,7 +1,7 @@
 Attribute VB_Name = "Template"
 Public Const Secret = "123"     'Пароль для защиты
 
-Const FirstClient = 6   'Первая строка списка клиентов
+Const FirstClient = 7   'Первая строка списка клиентов
 Const MaxRecords = 100  'Максимальное количество записей
 Const maxBuyers = 100   'Максимальное количество покупателей
 Const maxSellers = 100  'Максимальное количество продавцов
@@ -41,21 +41,31 @@ Public Sub Generate()
         i = i + 1
     Loop
             
-Exit Sub
-        
     'Генерируем шаблоны
     Dim total As Long
     total = i - 1
     Set dat = Application.ActiveSheet
+    fold = Cells(1, 3).text
     For i = FirstClient To total
         Message "Создение шаблона " + CStr(i - FirstClient + 1) + " из " + _
-        CStr(total - FirstClient + 1)
-        name = Cells(1, 3) + "\" + Cells(i, 1) + ".xlsx"
-        Call NewTemplate(Cells(i, 1), name, Cells(i, 2))
+            CStr(total - FirstClient + 1)
+        cln = Cells(i, 1).text
+        cod = Cells(i, 2).text
+        folder (fold + "\" + cod)
+        name = fold + "\" + cod + "\" + Cells(i, 1) + ".xlsx"
+        Call NewTemplate(cln, name, cod)
+        Cells(i, 3) = name
     Next
     
     Message "Готово!"
     
+End Sub
+
+'Создание папки
+Sub folder(name As String)
+    On Error GoTo er
+    MkDir (name)
+er:
 End Sub
 
 'Генерация кода
@@ -65,7 +75,7 @@ End Function
 
 
 'Создание нового файла
-Sub NewTemplate(ByVal client As String, ByVal fileName As String, cod As String)
+Sub NewTemplate(ByVal client As String, ByVal fileName As String, ByVal cod As String)
     
     'Если файл существует - пропустим
     If Dir$(fileName) <> "" Then Exit Sub
