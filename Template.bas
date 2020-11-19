@@ -1,31 +1,47 @@
 Attribute VB_Name = "Template"
 Public Const Secret = "123"     'Пароль для защиты
 
-Const MaxRecords = 100  'Максимальное количество записей
 Const FirstClient = 6   'Первая строка списка клиентов
+Const MaxRecords = 100  'Максимальное количество записей
 Const maxBuyers = 100   'Максимальное количество покупателей
 Const maxSellers = 100  'Максимальное количество продавцов
 
 Dim temp As Variant
 Dim dat As Variant
+Dim codes As Object
 
 Public Sub Generate()
-
-    'Находим максимальный код (если он есть)
+    
+    'Смотрим какие коды уже есть
+    Set codes = CreateObject("Scripting.Dictionary")
     Dim i As Long
     i = FirstClient
-    max = 0
     Do While Cells(i, 1) <> ""
-        If max < Cells(i, 2) Then max = Cells(i, 2)
+        c = Cells(i, 2).text
+        If c <> "" Then If codes(c) = "" Then codes(c) = 0
         i = i + 1
     Loop
     
-    'Проставляем коды остальным клиентам, у которых его нет
+    'Генерируем коды для оставшихся клиентов
     i = FirstClient
     Do While Cells(i, 1) <> ""
-        If Cells(i, 2) = "" Then max = max + 1: Cells(i, 2) = max
+        If Cells(i, 2).text = "" Then
+            n = 1
+            Do
+                Find = False
+                nc = newCode(Cells(i, 1), n)
+                If codes(nc) = "" Then
+                    codes(nc) = 0
+                    Cells(i, 2) = nc
+                    Find = True
+                End If
+                n = n + 1
+            Loop While Not Find
+        End If
         i = i + 1
     Loop
+            
+Exit Sub
         
     'Генерируем шаблоны
     Dim total As Long
@@ -34,19 +50,25 @@ Public Sub Generate()
     For i = FirstClient To total
         Message "Создение шаблона " + CStr(i - FirstClient + 1) + " из " + _
         CStr(total - FirstClient + 1)
-        Call NewTemplate(Cells(i, 1), Cells(i, 2))
+        name = Cells(1, 3) + "\" + Cells(i, 1) + ".xlsx"
+        Call NewTemplate(Cells(i, 1), name, Cells(i, 2))
     Next
     
     Message "Готово!"
     
 End Sub
 
+'Генерация кода
+Function newCode(name As String, ByVal n As Integer)
+    newCode = UCase(Left(name, 1)) + Right(CStr(n + 1000), 3)
+End Function
+
+
 'Создание нового файла
-Sub NewTemplate(name As String, cod As Long)
+Sub NewTemplate(ByVal client As String, ByVal fileName As String, cod As String)
     
     'Если файл существует - пропустим
-    Filename = Cells(1, 3) + "\" + name + ".xlsx"
-    If Dir$(Filename) <> "" Then Exit Sub
+    If Dir$(fileName) <> "" Then Exit Sub
     
     'Создаём файл с нужными вкладками
     Workbooks.Add
@@ -54,7 +76,7 @@ Sub NewTemplate(name As String, cod As Long)
     Application.DisplayAlerts = False
     Sheets.Add
     Sheets.Add
-    Sheets(1).name = name
+    Sheets(1).name = client
     Sheets(2).name = "Покупатели"
     Sheets(3).name = "Продавцы"
     Sheets(4).Delete
@@ -187,7 +209,7 @@ er2:
     
     'Защита и сохранение книги
     temp.Protect Secret, UserInterfaceOnly:=True
-    ActiveWorkbook.SaveAs Filename:=Filename    'Для тестов эти строки комментируем и смотрим
+    ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
     ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
 er:
 End Sub
