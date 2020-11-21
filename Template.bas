@@ -215,6 +215,7 @@ er2:
     Call setValidation(6, "s")
     Call allowEdit(temp, 6, "Продавец")
     'Поле 7 - Стоимость
+    Call setValidation(7, "num")
     Call setFormat(7, "money")
     Cells(1, 7).Borders.Weight = 3
     Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(4 + MaxRecords) + ")"
@@ -273,7 +274,7 @@ End Sub
 Sub setFormatConditions(c As Integer)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
     With rang.FormatConditions
-        .Add Type:=16
+        .Add Type:=xlErrorsCondition
         .Item(.count).Font.Color = vbWhite
     End With
 End Sub
@@ -289,6 +290,13 @@ Sub setValidation(c As Integer, typ As String)
             .Delete
             .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Formula1:=formul
             .ErrorMessage = "Только из списка, пожалуйста!"
+        End With
+    End If
+    If typ = "num" Then
+        With rang.Validation
+            .Delete
+            .Add Type:=xlValidateDecimal, AlertStyle:=xlValidAlertStop, Operator:=xlGreater, Formula1:="0"
+            .ErrorMessage = "Число должно быть больше 0"
         End With
     End If
     If typ = "date" Then
