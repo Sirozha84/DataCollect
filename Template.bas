@@ -11,37 +11,23 @@ Dim dat As Variant
 Dim codes As Object
 
 Public Sub Generate()
-    
-    'Смотрим какие коды уже есть
-    Set codes = CreateObject("Scripting.Dictionary")
+        
+    'Ищем максимальный код, из существующих и проверяем на дубликаты
+    Dim max As Long
+    max = 0
     Dim i As Long
     i = FirstClient
-    Do While Cells(i, 1) <> ""
-        c = Cells(i, 2).text
-        If c <> "" Then If codes(c) = "" Then codes(c) = 0
+    Do While Cells(i, 1) <> "" Or Cells(i, 2) <> ""
+        If isCode(Cells(i, 3)) Then
+            If max < Cells(i, 3) Then max = Cells(i, 3)
+        Else
+            Cells(i, 3) = ""
+            End If
         i = i + 1
     Loop
-    
-    'Генерируем коды для оставшихся клиентов
-    i = FirstClient
-    Do While Cells(i, 1) <> ""
-        If Cells(i, 2).text = "" Then
-            n = 1
-            Do
-                Find = False
-                nc = newCode(Cells(i, 1), n)
-                If codes(nc) = "" Then
-                    codes(nc) = 0
-                    Cells(i, 2) = nc
-                    Find = True
-                End If
-                n = n + 1
-            Loop While Not Find
-        End If
-        i = i + 1
-    Loop
-            
+           
     'Генерируем шаблоны
+    Set codes = CreateObject("Scripting.Dictionary")
     Dim total As Long
     total = i - 1
     Set dat = Application.ActiveSheet
@@ -50,16 +36,50 @@ Public Sub Generate()
         Message "Создение шаблона " + CStr(i - FirstClient + 1) + " из " + _
             CStr(total - FirstClient + 1)
         cln = Cells(i, 1).text
-        cod = Cells(i, 2).text
-        folder (fold + "\" + cod)
-        name = fold + "\" + cod + "\" + Cells(i, 1) + ".xlsx"
-        Call NewTemplate(cln, name, cod)
-        Cells(i, 3) = name
+        tem = Cells(i, 2).text
+        If validName(cln) And validName(tem) Then
+            need = False
+            'If IsNumeric(Cells(i, 3)) And Cells(i, 3).text <> "" Then
+            If isCode(Cells(i, 3)) Then
+                cod = Cells(i, 3)
+                If codes(cod) = "" Then
+                    codes(cod) = 0
+                Else
+                    need = True
+                End If
+            Else
+                need = True
+            End If
+            If need Then
+                max = max + 1
+                cod = max
+                Cells(i, 3) = cod
+            End If
+            name = fold + "\" + cln + "\" + tem + ".xlsx"
+            'folder (fold + "\" + cln)
+            'Call NewTemplate(cln, name, cod)
+            Cells(i, 4) = name
+        Else
+            Cells(i, 3) = "Имя клиента или шаблона не указано или указано некорректно. Шаблон не создан."
+        End If
     Next
     
     Message "Готово!"
     
 End Sub
+
+'Проверка, похоже ли ячейка на код
+Function isCode(n As Variant)
+    isCode = False
+    If IsNumeric(n) Then
+        If n > 0 Then isCode = True
+    End If
+End Function
+
+'Проверка на правильность имени файда/папки
+Function validName(ByVal name As String) As Boolean
+    validName = True
+End Function
 
 'Создание папки
 Sub folder(name As String)
@@ -68,17 +88,11 @@ Sub folder(name As String)
 er:
 End Sub
 
-'Генерация кода
-Function newCode(name As String, ByVal n As Integer)
-    newCode = UCase(Left(name, 1)) + Right(CStr(n + 1000), 3)
-End Function
-
-
 'Создание нового файла
-Sub NewTemplate(ByVal client As String, ByVal fileName As String, ByVal cod As String)
+Function NewTemplate(ByVal client As String, ByVal fileName As String, ByVal cod As String) As Boolean
     
     'Если файл существует - пропустим
-    If Dir$(fileName) <> "" Then Exit Sub
+    If Dir$(fileName) <> "" Then Exit Function
     
     'Создаём файл с нужными вкладками
     Workbooks.Add
@@ -221,8 +235,11 @@ er2:
     temp.Protect Secret, UserInterfaceOnly:=True
     ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
     ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
+    NewTemplate = True
+    Exit Function
 er:
-End Sub
+    NewTemplate = False
+End Function
 
 'Установка формата для колонки
 Sub setFormat(ByVal c As Integer, format As String)
