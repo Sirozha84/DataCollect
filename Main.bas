@@ -43,7 +43,7 @@ Sub DataCollect()
     Message "Подготовка"
     
     'Получаем коллекцию файлов
-    Set Files = Source.GetList(dat.Cells(1, 3))
+    Set files = Source.getFiles(dat.Cells(1, 3))
         
     'Создаём вкладку (если её нет) для списка ошибок
     Call NewTab(errName, True)
@@ -63,14 +63,17 @@ Sub DataCollect()
     Loop
     max = i
     
-    'Инициализируем словарь нумератора
+    'Инициализируем словарь нумератора и сбрасываем счётчики
     Numerator.Init
-    
     n = 1
     s = 0
     e = 0
-    For Each file In Files
-        Message ("Обработка файла " + CStr(n) + " из " + CStr(Files.count) + " (" + Source.FSO.getfilename(file)) + ")"
+    
+    'Обрабатываем список файлов
+    For Each file In files
+        curf = file
+        If Len(curf) > 40 Then curf = "..." + Right(curf, 40)
+        Message ("Обработка файла " + CStr(n) + " из " + CStr(files.count) + " (" + curf) + ")"
         er = AddFile(file)
         If er > 0 Then
             e = e + 1
