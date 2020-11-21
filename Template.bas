@@ -6,10 +6,6 @@ Const MaxRecords = 100  'Максимальное количество записей
 Const maxBuyers = 100   'Максимальное количество покупателей
 Const maxSellers = 100  'Максимальное количество продавцов
 
-Dim temp As Variant
-Dim dat As Variant
-Dim codes As Object
-
 Public Sub Generate()
         
     'Ищем максимальный код, из существующих и проверяем на дубликаты
@@ -22,15 +18,16 @@ Public Sub Generate()
             If max < Cells(i, 3) Then max = Cells(i, 3)
         Else
             Cells(i, 3) = ""
-            End If
+        End If
+        Cells(i, 4) = ""
         i = i + 1
     Loop
            
     'Генерируем шаблоны
+    Set namelist = CreateObject("Scripting.Dictionary")
     Set codes = CreateObject("Scripting.Dictionary")
     Dim total As Long
     total = i - 1
-    Set dat = Application.ActiveSheet
     fold = Cells(1, 3).text
     For i = FirstClient To total
         Message "Создение шаблона " + CStr(i - FirstClient + 1) + " из " + _
@@ -38,29 +35,39 @@ Public Sub Generate()
         cln = Cells(i, 1).text
         tem = Cells(i, 2).text
         If validName(cln) And validName(tem) Then
-            need = False
-            'If IsNumeric(Cells(i, 3)) And Cells(i, 3).text <> "" Then
-            If isCode(Cells(i, 3)) Then
-                cod = Cells(i, 3)
-                If codes(cod) = "" Then
-                    codes(cod) = 0
+            'Проверим, уникальные ли имена
+            uname = cln + "!" + tem
+            If namelist(uname) = "" Then
+                namelist(uname) = 0
+                need = False
+                If isCode(Cells(i, 3)) Then
+                    cod = Cells(i, 3)
+                    If codes(cod) = "" Then
+                        codes(cod) = 0
+                    Else
+                        need = True
+                    End If
                 Else
                     need = True
                 End If
+                If need Then
+                    max = max + 1
+                    cod = max
+                    Cells(i, 3) = cod
+                End If
+                name = fold + "\" + cln + "\" + tem + ".xlsx"
+                'Создаём папку и файл
+                folder (fold + "\" + cln)
+                If NewTemplate(cln, tem, name, cod) Then
+                    Cells(i, 4) = name
+                Else
+                    Cells(i, 4) = "Произошла ошибка при создании файла"
+                End If
             Else
-                need = True
+                Cells(i, 4) = "Имя клиента или шаблона не уникально."
             End If
-            If need Then
-                max = max + 1
-                cod = max
-                Cells(i, 3) = cod
-            End If
-            name = fold + "\" + cln + "\" + tem + ".xlsx"
-            'folder (fold + "\" + cln)
-            'Call NewTemplate(cln, name, cod)
-            Cells(i, 4) = name
         Else
-            Cells(i, 3) = "Имя клиента или шаблона не указано или указано некорректно. Шаблон не создан."
+            Cells(i, 4) = "Имя клиента или шаблона не указано или указано некорректно."
         End If
     Next
     
@@ -79,6 +86,16 @@ End Function
 'Проверка на правильность имени файда/папки
 Function validName(ByVal name As String) As Boolean
     validName = True
+    If name = "" Then validName = False
+    If InStr(name, """") Then validName = False
+    If InStr(name, "*") Then validName = False
+    If InStr(name, "\") Then validName = False
+    If InStr(name, "|") Then validName = False
+    If InStr(name, "/") Then validName = False
+    If InStr(name, "?") Then validName = False
+    If InStr(name, ":") Then validName = False
+    If InStr(name, "<") Then validName = False
+    If InStr(name, ">") Then validName = False
 End Function
 
 'Создание папки
@@ -89,10 +106,11 @@ er:
 End Sub
 
 'Создание нового файла
-Function NewTemplate(ByVal client As String, ByVal fileName As String, ByVal cod As String) As Boolean
+Function NewTemplate(ByVal cln As String, ByVal tem As String, _
+    ByVal fileName As String, ByVal cod As String) As Boolean
     
     'Если файл существует - пропустим
-    If Dir$(fileName) <> "" Then Exit Function
+    If Dir$(fileName) <> "" Then NewTemplate = True: Exit Function
     
     'Создаём файл с нужными вкладками
     Workbooks.Add
@@ -100,7 +118,7 @@ Function NewTemplate(ByVal client As String, ByVal fileName As String, ByVal cod
     Application.DisplayAlerts = False
     Sheets.Add
     Sheets.Add
-    Sheets(1).name = client
+    Sheets(1).name = cln
     Sheets(2).name = "Покупатели"
     Sheets(3).name = "Продавцы"
     Sheets(4).Delete
@@ -111,6 +129,9 @@ er2:
     Set listb = Sheets(2)
     Set lists = Sheets(3)
     Cells(1, 1) = cod
+    Cells(1, 1).Font.Color = vbWhite
+    Cells(1, 2) = "Клиент: " + cln
+    Cells(2, 2) = "Шаблон: " + tem
     
     'Вкладки со справочниками
     listb.Columns(1).ColumnWidth = 30
@@ -174,7 +195,7 @@ er2:
     'Поле 2 - Дата
     Call setFormat(2, "date")
     Call setValidation(2, "date")
-    Call allowEdit(2, "Дата")
+    Call allowEdit(temp, 2, "Дата")
     'Поле 3 - ИНН покупателя, находится с помощью ВПР
     For i = 5 To 4 + MaxRecords
         Cells(i, 3).FormulaLocal = "=ВПР(D" + CStr(i) + ";Покупатели!A2:B" + _
@@ -183,7 +204,7 @@ er2:
     setFormatConditions (3)
     'Поле 4 - Покупатель, выбираем из списка
     Call setValidation(4, "b")
-    Call allowEdit(4, "Покупатель")
+    Call allowEdit(temp, 4, "Покупатель")
     'Поле 5 - ИНН продавца, находится с помлщью ВПР
     For i = 5 To 4 + MaxRecords
         Cells(i, 5).FormulaLocal = "=ВПР(F" + CStr(i) + ";Продавцы!A2:B" + _
@@ -192,15 +213,15 @@ er2:
     setFormatConditions (5)
     'Поле 6 - Продавец, выбираем из списка
     Call setValidation(6, "s")
-    Call allowEdit(6, "Продавец")
+    Call allowEdit(temp, 6, "Продавец")
     'Поле 7 - Стоимость
     Call setFormat(7, "money")
     Cells(1, 7).Borders.Weight = 3
     Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(4 + MaxRecords) + ")"
-    Call allowEdit(7, "Стоимость")
+    Call allowEdit(temp, 7, "Стоимость")
     'Поле 8 - Ставка НДС
     Call setValidation(8, "nds")
-    Call allowEdit(8, "Ставка НДС")
+    Call allowEdit(temp, 8, "Ставка НДС")
     'Общее 9-14
     For i = 9 To 14
         Call setFormat(i, "money")
@@ -281,8 +302,8 @@ Sub setValidation(c As Integer, typ As String)
 End Sub
 
 'Установка разрешения редактирования для колонки
-Sub allowEdit(c As Integer, name As String)
+Sub allowEdit(sh As Variant, c As Integer, name As String)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
-    temp.Protection.AllowEditRanges.Add Title:=name, Range:=rang, Password:=""
+    sh.Protection.AllowEditRanges.Add Title:=name, Range:=rang, Password:=""
     rang.Interior.Color = RGB(255, 255, 192)
 End Sub
