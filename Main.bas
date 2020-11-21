@@ -169,7 +169,7 @@ Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh 
         ravno = dat.Cells(di, j).text = src.Cells(si, j).text
         dat.Cells(di, j) = src.Cells(si, j)
         dat.Cells(di, j).ClearFormats
-        If j = 2 Or j = 4 Or j = 5 Or j = 6 Or j = 7 Or j = 8 Then
+        If j = 2 Or j = 4 Or j = 6 Or j = 7 Or j = 8 Then
             src.Cells(si, j).Interior.Color = yel
         Else
             src.Cells(si, j).Interior.Color = wht

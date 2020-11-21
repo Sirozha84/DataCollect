@@ -32,8 +32,43 @@ changed As Boolean) As Boolean
     If Not isINNKPP(dat.Cells(iC, 5).text) Then
         dat.Cells(iC, 5).Interior.Color = red
         src.Cells(iI, 5).Interior.Color = red
-        AddCom "ИНН введен не корректно"
+        AddCom "ИНН введён не корректно"
     End If
+    
+    '7 - Стоимость
+    dat.Cells(iC, 7).NumberFormat = "### ### ##0.00"
+    If Not isPrice(dat.Cells(iC, 7)) Then
+        dat.Cells(iC, 7).Interior.Color = red
+        src.Cells(iI, 7).Interior.Color = red
+        AddCom "Стоимость введена не корректно"
+    End If
+    
+    '8 - Ставка НДС
+    If Not isNDS(dat.Cells(iC, 8).text) Then
+        dat.Cells(iC, 8).Interior.Color = red
+        src.Cells(iI, 8).Interior.Color = red
+        AddCom "НДС введён не корректно"
+    End If
+    
+    '9-11 - Стоимость продаж облагаемых налогом
+    For i = 9 To 11
+        dat.Cells(iC, i).NumberFormat = "### ### ##0.00"
+        If Not isPriceNDS(dat.Cells(iC, i)) Then
+            dat.Cells(iC, i).Interior.Color = red
+            src.Cells(iI, i).Interior.Color = red
+            AddCom "Стоимость продаж облагаемых налогом введена не корректно"
+        End If
+    Next
+    
+    '12-14 - Сумма НДС
+    For i = 12 To 14
+        dat.Cells(iC, i).NumberFormat = "### ### ##0.00"
+        If Not isPriceNDS(dat.Cells(iC, i)) Then
+            dat.Cells(iC, i).Interior.Color = red
+            src.Cells(iI, i).Interior.Color = red
+            AddCom "Сумма НДС введена не корректно"
+        End If
+    Next
     
     'Пишем комментарий и расскрашиваем его
     col = red
@@ -54,6 +89,27 @@ Sub AddCom(str As String)
     errors = True
 End Sub
 
+'Проверка на корректность цены
+Function isPrice(ByVal var As Variant)
+    isPrice = False
+    If IsNumeric(var) Then
+        If var >= 0 And var <> "" Then isPrice = True
+    End If
+End Function
+
+'Проверка на корректность цены без НДС и его суммы
+Function isPriceNDS(ByVal var As Variant)
+    isPriceNDS = False
+    If IsNumeric(var) Then
+        If var >= 0 Then isPriceNDS = True
+    Else
+        If Not IsError(var) Then
+            If var = "" Then isPriceNDS = True
+        End If
+    End If
+End Function
+
+'Проверка на корректность ИНН/КПП
 Function isINNKPP(ByVal str As String) As Boolean
     If str = "" Then isINNKPP = False: Exit Function
     Dim s() As String
@@ -65,4 +121,12 @@ Function isINNKPP(ByVal str As String) As Boolean
         If Not IsNumeric(s(1)) Then isINNKPP = False
         If Len(s(1)) <> 9 Then isINNKPP = False
     End If
+End Function
+
+'Проверка на корректность НДС
+Function isNDS(ByVal str As String) As Boolean
+    isNDS = False
+    If str = "10" Then isNDS = True
+    If str = "18" Then isNDS = True
+    If str = "20" Then isNDS = True
 End Function
