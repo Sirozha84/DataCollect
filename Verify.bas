@@ -1,11 +1,30 @@
 Attribute VB_Name = "Verify"
 Const cComment = 15
+
 Dim Comment As String
 Dim errors As Boolean
+Dim limitO As Variant
+Dim summO As Variant
+
+'Инициализация словарей лимитов
+Sub Init()
+    Set limitO = CreateObject("Scripting.Dictionary")
+    Set summO = CreateObject("Scripting.Dictionary")
+    Dim i As Long
+    i = 2
+    Set dic = Sheets("Лимиты отгрузок")
+    Do While dic.Cells(i, 1) <> ""
+        cmp = dic.Cells(i, 1).text
+        lim = dic.Cells(i, 2)
+        limitO(cmp) = lim
+        i = i + 1
+    Loop
+End Sub
 
 'Проверка корректности данных
 Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, ByVal iI As Long, _
-changed As Boolean) As Boolean
+    changed As Boolean) As Boolean
+    
     Comment = ""
     errors = False
     red = RGB(255, 192, 192)
@@ -41,6 +60,12 @@ changed As Boolean) As Boolean
         dat.Cells(iC, 7).Interior.Color = red
         src.Cells(iI, 7).Interior.Color = red
         AddCom "Стоимость введена не корректно"
+    Else
+        'Проверка на выход из лимита
+        c = dat.Cells(iC, 6)
+        s = dat.Cells(iC, 7)
+        summO(c) = summO(c) + s
+        If summO(c) > limitO(c) Then AddCom "Общая сумма превышает лимит отгрузок"
     End If
     
     '8 - Ставка НДС
