@@ -52,6 +52,18 @@ Sub DataCollect()
     err.Columns(2).ColumnWidth = 20
     err.Cells(1, 1) = "Файл"
     err.Cells(1, 2) = "Результат"
+            
+    'Очищаем предыдущие строки с ошибками
+    Application.ScreenUpdating = False
+    i = FirstD
+    Do While dat.Cells(i, 2) <> ""
+        If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
+            dat.Rows(i).Delete
+            max = max - 1
+        Else
+            i = i + 1
+        End If
+    Loop
     
     'Индексируем существующие записи
     Set Indexes = CreateObject("Scripting.Dictionary")
@@ -105,17 +117,6 @@ Function AddFile(ByVal file As String) As Byte
         cod = src.Cells(1, 1)
         If cod <> "" Then
         
-            'Очищаем предыдущие строки с ошибками
-            i = FirstD
-            Do While dat.Cells(i, 2) <> ""
-                If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
-                    dat.Rows(i).Delete
-                    max = max - 1
-                Else
-                    i = i + 1
-                End If
-            Loop
-            
             'Обрабатываем строки исходника
             i = FirstS
             Do While NotEmpty(i)
