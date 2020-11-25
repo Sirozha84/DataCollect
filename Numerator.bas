@@ -7,9 +7,13 @@ Dim dTab As Variant
 Sub Init()
     Call NewTab(NumPage, False)
     Set dTab = Sheets(NumPage)
+    dTab.Cells(1, 1) = "Внимание! Здесь находится служебная информация. Ручное редактирование не рекоммендуется."
+    dTab.Cells(3, 1) = "Префикс"
+    dTab.Cells(3, 2) = "Номер"
+    Range(dTab.Cells(1, 1), dTab.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
     Set Nums = CreateObject("Scripting.Dictionary")
     Dim i As Long
-    i = 1
+    i = 4
     Do While dTab.Cells(i, 1) <> ""
         pref = dTab.Cells(i, 1)
         Nums.Add pref, dTab.Cells(i, 2)
@@ -20,7 +24,7 @@ End Sub
 'Сохранение словаря на страницу
 Sub Save()
     Dim i As Long
-    i = 1
+    i = 4
     For Each Key In Nums.keys
         dTab.Cells(i, 1) = Key
         dTab.Cells(i, 2) = Nums(Key)

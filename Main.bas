@@ -27,7 +27,10 @@ End Sub
 'Удаление всех данных (оставляя шапку)
 Sub Clear()
     On Error GoTo er
-    If isRelease Then If MsgBox("Данная процедура очистит собранные данные список ошибок и нумераторы. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    If isRelease Then If MsgBox("Внимание! " + Chr(10) + Chr(10) + _
+        "Данная процедура очистит все собранные данные список ошибок и нумераторы. " + _
+        "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код." + _
+        Chr(10) + Chr(10) + "Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Range(Cells(FirstD, 1), Cells(1048576, 50)).Clear
     Sheets(errName).Cells.Clear
 er:
@@ -52,28 +55,7 @@ Sub DataCollect()
     err.Columns(2).ColumnWidth = 20
     err.Cells(1, 1) = "Файл"
     err.Cells(1, 2) = "Результат"
-            
-    'Очищаем предыдущие строки с ошибками
-    Application.ScreenUpdating = False
-    i = FirstD
-    Do While dat.Cells(i, 2) <> ""
-        If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
-            dat.Rows(i).Delete
-            max = max - 1
-        Else
-            i = i + 1
-        End If
-    Loop
-    
-    'Индексируем существующие записи
-    Set Indexes = CreateObject("Scripting.Dictionary")
-    i = FirstD
-    Do While dat.Cells(i, 2) <> ""
-        uid = dat.Cells(i, 1)
-        If uid <> "" Then Indexes.Add uid, i
-        i = i + 1
-    Loop
-    max = i
+    Range(err.Cells(1, 1), err.Cells(1, 100)).Interior.Color = RGB(214, 214, 214)
     
     'Инициализируем словари и сбрасываем счётчики
     Numerator.Init
@@ -86,7 +68,7 @@ Sub DataCollect()
     For Each file In files
         curf = file
         If Len(curf) > 40 Then curf = "..." + Right(curf, 40)
-        Message ("Обработка файла " + CStr(n) + " из " + CStr(files.count) + " (" + curf) + ")"
+        Message ("Обработка файла " + CStr(n) + " из " + CStr(files.Count) + " (" + curf) + ")"
         er = AddFile(file)
         If er > 0 Then
             e = e + 1
@@ -116,6 +98,27 @@ Function AddFile(ByVal file As String) As Byte
         src.Unprotect Template.Secret
         cod = src.Cells(1, 1)
         If cod <> "" Then
+            
+            'Очищаем предыдущие строки с ошибками
+            i = FirstD
+            Do While dat.Cells(i, 2) <> ""
+                If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
+                    dat.Rows(i).Delete
+                    max = max - 1
+                Else
+                    i = i + 1
+                End If
+            Loop
+        
+            'Индексируем существующие записи
+            Set Indexes = CreateObject("Scripting.Dictionary")
+            i = FirstD
+            Do While dat.Cells(i, 2) <> ""
+                uid = dat.Cells(i, 1)
+                If uid <> "" Then Indexes.Add uid, i
+                i = i + 1
+            Loop
+            max = i
         
             'Обрабатываем строки исходника
             i = FirstS
@@ -157,7 +160,7 @@ Function NotEmpty(si As Long) As Boolean
     NotEmpty = False
     For j = 1 To 14
         txt = src.Cells(si, j).text
-        If txt <> "" And txt <> "#Н/Д" Then NotEmpty = True
+        If txt <> "" And txt <> "#Н/Д" Then NotEmpty = True: Exit For
     Next
 End Function
 
