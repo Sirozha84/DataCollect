@@ -86,7 +86,11 @@ Sub DataCollect()
     
 End Sub
 
-'Добавление данных из файла (возвращает 0 - всё хорошо, 1 - ошибка загрузки, 2 - ошибка в данных, 3 - нет кода)
+'Добавление данных из файла. Возвращает:
+'0 - всё хорошо
+'1 - ошибка загрузки
+'2 - ошибка в данных
+'3 - нет кода
 Function AddFile(ByVal file As String) As Byte
     errors = False
     On Error GoTo er
@@ -129,14 +133,14 @@ Function AddFile(ByVal file As String) As Byte
                     ind = Indexes(uid)
                     If ind <> Empty Then
                         'И строка действительно есть, обновляем данные
-                        If copyRecord(file, ind, i, True) Then errors = True
+                        If copyRecord(ind, i, True) Then errors = True
                     Else
                         'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
                         uid = ""
                     End If
                 End If
                 'Новая строка
-                If uid = "" Then If copyRecord(file, max, i, False) Then errors = True
+                If uid = "" Then If copyRecord(max, i, False) Then errors = True
                 i = i + 1
             Loop
             
@@ -155,18 +159,21 @@ er:
     AddFile = 1
 End Function
 
-'Возвращает True если строка si в исходнике не пустая
-Function NotEmpty(si As Long) As Boolean
+'Проверка на пустую строку
+'Возвращает True, если строка в исходнике не пустая
+Function NotEmpty(i As Long) As Boolean
     NotEmpty = False
     For j = 1 To 14
-        txt = src.Cells(si, j).text
+        txt = src.Cells(i, j).text
         If txt <> "" And txt <> "#Н/Д" Then NotEmpty = True: Exit For
     Next
 End Function
 
-'Копирование записи. refresh - обновление данных (проверять что поменялось)
-'Возвращает True - если в данных есть ошибка
-Function copyRecord(file As String, ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
+'Копирование записи. Возвращает True, если в данных есть ошибка
+'di - строка в данных
+'si - строка в исходниках
+'refresh - true, если обновление данных (проверять что поменялось)
+Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
     Dim changed As Boolean
     wht = RGB(255, 255, 255)
     yel = RGB(256, 256, 192)
