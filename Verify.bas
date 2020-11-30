@@ -20,6 +20,7 @@ Dim summPA As Variant   'Счётчики сумм продажи всем
 Sub Init()
     
     Set dic = Sheets("Лимиты")
+    Set dates = CreateObject("Scripting.Dictionary")
     Set limitO = CreateObject("Scripting.Dictionary")
     Set limitP = CreateObject("Scripting.Dictionary")
     limitP1 = dic.Cells(1, 4)
@@ -29,10 +30,18 @@ Sub Init()
     Set summP1 = CreateObject("Scripting.Dictionary")
     Set summPA = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")
-
-    
-    'Чтение словаря лимитов отгрузок
     Dim i As Long
+
+    'Чтение словаря дат регистраций компаний
+    i = startLimits
+    Do While dic.Cells(i, 1) <> ""
+        cmp = dic.Cells(i, 1).text
+        dtt = dic.Cells(i, 2)
+        dates(cmp) = dtt
+        i = i + 1
+    Loop
+
+    'Чтение словаря лимитов отгрузок
     i = startLimits
     Do While dic.Cells(i, 1) <> ""
         cmp = dic.Cells(i, 1).text
@@ -157,7 +166,9 @@ End Function
 
 'Проверка правильности даты
 Sub DateTest(ByRef dat As Variant, ByVal i As Long)
-
+    sel = dat.Cells(i, 6)
+    dtt = dat.Cells(i, 2)
+    If dtt < dates(sel) Then AddCom "Дата операции не может быть ранее регистрации компании"
 End Sub
 
 'Вычисляет из даты Год+Квартал
