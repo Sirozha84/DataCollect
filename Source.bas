@@ -15,11 +15,14 @@ End Function
 
 'Чтение списка файлов и папок
 Private Sub readDir(ByVal pat As String)
+    On Error GoTo er:
+    If InStr(1, pat, ".sync") > 0 Then Exit Sub
     Set curfold = FSO.getfolder(pat)
     For Each file In curfold.files
-        If file.name Like "*.xls*" Then files.Add file.Path
+        If file.name Like "*.xls*" And InStr(1, file.name, "~$") = 0 Then files.Add file.Path
     Next
     For Each subfolder In curfold.subFolders
          readDir subfolder
     Next subfolder
+er:
 End Sub
