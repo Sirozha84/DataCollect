@@ -1,50 +1,70 @@
 Attribute VB_Name = "Verify"
 Const cComment = 15     'Колонка для комментария
-Const startLimits = 3   'Первые строки в таблицах лимитов
+Const startLimits = 4   'Первые строки в таблицах лимитов
 
 Dim Comment As String   'Строка с комментариями
 Dim errors As Boolean   'Флаг наличия ошибок
-Dim limitO As Variant   'Словарь лимитов на отгрузку
-Dim summO As Variant    'Счётчики сумм на отгрузку
-Dim limitP As Variant   'Словарь лимитов на покупку
-Dim summP As Variant    'Счётчики сумм на покупку
 Dim groups As Variant   'Словарь групп
+
+Dim dates As Variant    'Словарь дат регистраций
+Dim limitO As Variant   'Словарь лимитов на отгрузку
+Dim limitP As Variant   'Словарь лимитов на покупку
+Dim limitP1 As Variant  'Общий лимит на отгрузку одному покупателю
+Dim limitPA As Variant  'Общий лимит на отгрузку
+Dim summO As Variant    'Счётчики сумм на отгрузку
+Dim summP As Variant    'Счётчики сумм на покупку
+Dim summP1 As Variant   'Счётчики сумм продажи одному покупателю
+Dim summPA As Variant   'Счётчики сумм продажи всем
 
 'Инициализация словарей лимитов
 Sub Init()
-
-    'Чтение словаря лимитов отгрузок
-    Set dic = Sheets("Лимиты отгрузок")
+    
+    Set dic = Sheets("Лимиты")
+    Set dates = CreateObject("Scripting.Dictionary")
     Set limitO = CreateObject("Scripting.Dictionary")
+    Set limitP = CreateObject("Scripting.Dictionary")
+    limitP1 = dic.Cells(1, 4)
+    limitPA = dic.Cells(2, 4)
     Set summO = CreateObject("Scripting.Dictionary")
+    Set summP = CreateObject("Scripting.Dictionary")
+    Set summP1 = CreateObject("Scripting.Dictionary")
+    Set summPA = CreateObject("Scripting.Dictionary")
+    Set groups = CreateObject("Scripting.Dictionary")
     Dim i As Long
+
+    'Чтение словаря дат регистраций компаний
     i = startLimits
     Do While dic.Cells(i, 1) <> ""
         cmp = dic.Cells(i, 1).text
-        lim = dic.Cells(i, 2)
+        dtt = dic.Cells(i, 2)
+        dates(cmp) = dtt
+        i = i + 1
+    Loop
+
+    'Чтение словаря лимитов отгрузок
+    i = startLimits
+    Do While dic.Cells(i, 1) <> ""
+        cmp = dic.Cells(i, 1).text
+        lim = dic.Cells(i, 4)
         limitO(cmp) = lim
         i = i + 1
     Loop
     
     'Чтение словаря групп
-    Set dic = Sheets("Лимиты покупок")
-    Set groups = CreateObject("Scripting.Dictionary")
     i = startLimits
     Do While dic.Cells(i, 1) <> ""
         cmp = dic.Cells(i, 1).text
-        grp = dic.Cells(i, 2).text
+        grp = dic.Cells(i, 3).text
         groups(cmp) = grp
         i = i + 1
     Loop
     
     'Чтение словаря лимитов продаж
-    Set limitP = CreateObject("Scripting.Dictionary")
-    Set summP = CreateObject("Scripting.Dictionary")
     i = startLimits
-    Do While dic.Cells(i, 2) <> ""
-        grp = dic.Cells(i, 2).text
-        If dic.Cells(i, 3).text <> "" And IsNumeric(dic.Cells(i, 3)) Then
-            lim = dic.Cells(i, 3)
+    Do While dic.Cells(i, 3) <> ""
+        grp = dic.Cells(i, 3).text
+        If dic.Cells(i, 5).text <> "" And IsNumeric(dic.Cells(i, 5)) Then
+            lim = dic.Cells(i, 5)
             limitP(grp) = lim
         End If
         i = i + 1
@@ -75,6 +95,8 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
         dat.Cells(iC, 2).Interior.Color = red
         src.Cells(iI, 2).Interior.Color = red
         AddCom "Дата введена не корректно"
+    Else
+        Call DateTest(dat, iC)
     End If
     
     '3 - ИНН
@@ -142,19 +164,37 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
     
 End Function
 
+'Проверка правильности даты
+Sub DateTest(ByRef dat As Variant, ByVal i As Long)
+    sel = dat.Cells(i, 6)
+    dtt = dat.Cells(i, 2)
+    If dtt < dates(sel) Then AddCom "Дата операции не может быть ранее регистрации компании"
+End Sub
+
+'Вычисляет из даты Год+Квартал
+Function Kvartal(dat As Date) As String
+    Kvartal = CStr(Year(dat)) + CStr((Month(dat) - 1) \ 3 + 1)
+End Function
+
 'Проверка лимитов
 Sub LimitsTest(ByRef dat As Variant, ByVal i As Long)
+    kvr = Kvartal(dat.Cells(i, 2))
     sel = dat.Cells(i, 6)
+    selK = sel + "!" + kvr
     grp = groups(sel)
     buy = dat.Cells(i, 4) + "!" + grp
     Sum = 0
     For j = 12 To 14
         If IsNumeric(dat.Cells(i, j)) Then Sum = Sum + dat.Cells(i, j)
     Next
-    summO(sel) = summO(sel) + Sum
+    summO(selK) = summO(selK) + Sum
     summP(buy) = summP(buy) + Sum
-    If summO(sel) > limitO(sel) Then AddCom "Превышен лимит отгрузок"
-    If summP(buy) > limitP(grp) Then AddCom "Превышен лимит покупок"
+    summP1(sel + buy) = summPA(sel + buy) + Sum
+    summPA(selK) = summPA(selK) + Sum
+    If summO(selK) > limitO(sel) Then AddCom "Превышен лимит отгрузок" 'Персональный
+    If summP(buy) > limitP(grp) Then AddCom "Превышен лимит покупок"  'Персональный
+    If summP1(sel + buy) > limitP1 Then AddCom "Превышен общий лимит продаж одному покупателю"
+    If summPA(selK) > limitPA Then AddCom "Превышен общий лимит продаж"
 End Sub
 
 'Добавление комментария к строке
