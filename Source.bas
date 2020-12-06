@@ -30,10 +30,12 @@ End Sub
 
 'Проверка файлов на наличие дубликатов по коду
 Sub DuplicateFinder()
-    Message "Проверка на дубликаты"
     Set codes = CreateObject("Scripting.Dictionary")
     Set dupl = New Collection
+    n = 1
+    a = files.Count
     For Each file1 In files
+        Message ("Проверка на дубликаты: " + CStr(n) + " из " + CStr(a))
         c = GetCode(file1)
         file2 = codes(c)
         If codes(c) = Empty Then
@@ -42,12 +44,14 @@ Sub DuplicateFinder()
             dupl.Add file1 + "*" + c
             dupl.Add file2 + "*" + c
         End If
+        n = n + 1
     Next
     'Удаляем из списка файлов файлы, найденные как дубликаты и переименовываем их
     For Each file In dupl
         s = Split(file, "*")
         f = s(0)
         c = s(1)
+        Call Log.Rec(f, 4)
         Call RenameFile(f, c)
         For i = files.Count To 1 Step -1
             If files(i) = f Then files.Remove (i)
@@ -71,7 +75,7 @@ er:
 End Function
 
 Sub RenameFile(ByVal file As String, ByVal c As String)
-    ins = " Дубликат! Код "
+    ins = " Дубликат! Код формы "
     On Error GoTo er
     If InStr(1, file, ins) = 0 Then
         newname = Replace(file, ".xls", ins + c + ".xls")

@@ -18,7 +18,6 @@ Public colYellow As Long
 
 Dim dat As Variant      'Таблица с данными
 Dim src As Variant      'Таблица с исходниками
-Dim err As Variant      'Таблица с ошибками
 Dim Indexes As Object   'Словарь индексов
 Dim max As Long         'Последняя строка в данных
 Dim i As Long
@@ -51,32 +50,22 @@ Sub DataCollect()
     Set dat = ActiveSheet
     noEmpty = (dat.Cells(FirstD, 2) <> "")
     If isRelease And noEmpty Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Message "Подготовка"
     
-    'Инициализация цветов
+    'Инициализация
+    Message "Подготовка"
     colWhite = RGB(255, 255, 255)
     colRed = RGB(255, 192, 192)
     colGreen = RGB(192, 255, 192)
     colYellow = RGB(255, 255, 192)
-    
-    'Получаем коллекцию файлов
-    Set files = Source.getFiles(dat.Cells(1, 3))
-        
-    'Создаём вкладку (если её нет) для списка ошибок
-    Call NewTab(tabErr, True)
-    Set err = Sheets(tabErr)
-    err.Columns(1).ColumnWidth = 100
-    err.Columns(2).ColumnWidth = 20
-    err.Cells(1, 1) = "Файл"
-    err.Cells(1, 2) = "Результат"
-    Range(err.Cells(1, 1), err.Cells(1, 100)).Interior.Color = RGB(214, 214, 214)
-    
-    'Инициализируем словари и сбрасываем счётчики
     Numerator.Init
+    Log.Init
     Verify.Init
     n = 1
     s = 0
     e = 0
+    
+    'Получаем коллекцию файлов
+    Set files = Source.getFiles(dat.Cells(1, 3))
     
     'Обрабатываем список файлов
     For Each file In files
@@ -85,11 +74,8 @@ Sub DataCollect()
         Message ("Обработка файла " + CStr(n) + " из " + CStr(files.Count) + " (" + curf) + ")"
         er = AddFile(file)
         If er > 0 Then
+            Call Log.Rec(file, er)
             e = e + 1
-            err.Cells(e + 1, 1) = file
-            If er = 1 Then err.Cells(e + 1, 2) = "Ошибка загрузки файла"
-            If er = 2 Then err.Cells(e + 1, 2) = "Ошибка в данных"
-            If er = 3 Then err.Cells(e + 1, 2) = "Отсутствует код"
         Else
             s = s + 1
         End If
