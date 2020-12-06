@@ -19,7 +19,7 @@ Dim summPA As Variant   'Счётчики сумм продажи всем
 'Инициализация словарей лимитов
 Sub Init()
     
-    Set dic = Sheets("Лимиты")
+    Set dic = Sheets("Справочник")
     Set dates = CreateObject("Scripting.Dictionary")
     Set limitO = CreateObject("Scripting.Dictionary")
     Set limitP = CreateObject("Scripting.Dictionary")

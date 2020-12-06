@@ -10,6 +10,7 @@ Function getFiles(ByVal pat As String) As Collection
     Set files = New Collection
     Set FSO = CreateObject("Scripting.FileSystemObject")
     readDir pat
+    DuplicateFinder
     Set getFiles = files
 End Function
 
@@ -24,5 +25,57 @@ Private Sub readDir(ByVal pat As String)
     For Each subfolder In curfold.subFolders
          readDir subfolder
     Next subfolder
+er:
+End Sub
+
+'Проверка файлов на наличие дубликатов по коду
+Sub DuplicateFinder()
+    Message "Проверка на дубликаты"
+    Set codes = CreateObject("Scripting.Dictionary")
+    Set dupl = New Collection
+    For Each file1 In files
+        c = GetCode(file1)
+        file2 = codes(c)
+        If codes(c) = Empty Then
+            codes(c) = file1
+        Else
+            dupl.Add file1 + "*" + c
+            dupl.Add file2 + "*" + c
+        End If
+    Next
+    'Удаляем из списка файлов файлы, найденные как дубликаты и переименовываем их
+    For Each file In dupl
+        s = Split(file, "*")
+        f = s(0)
+        c = s(1)
+        Call RenameFile(f, c)
+        For i = files.Count To 1 Step -1
+            If files(i) = f Then files.Remove (i)
+        Next
+    Next
+End Sub
+
+'Извлечение кода из файла
+Function GetCode(ByVal file As String) As String
+    On Error GoTo er
+    Application.ScreenUpdating = False
+    Set impBook = Nothing
+    Set impBook = Workbooks.Open(file, False, False)
+    If Not impBook Is Nothing Then
+        Set src = impBook.Worksheets(1) 'Пока берём данные с первого листа
+        src.Unprotect Template.Secret
+        GetCode = src.Cells(1, 1)
+        impBook.Close False
+    End If
+er:
+End Function
+
+Sub RenameFile(ByVal file As String, ByVal c As String)
+    ins = " Дубликат! Код "
+    On Error GoTo er
+    If InStr(1, file, ins) = 0 Then
+        newname = Replace(file, ".xls", ins + c + ".xls")
+        Name file As newname
+    End If
 er:
 End Sub
