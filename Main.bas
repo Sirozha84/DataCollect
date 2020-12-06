@@ -1,12 +1,20 @@
 Attribute VB_Name = "Main"
-Const isRelease = True 'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
+Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
+
+Public Const startLimits = 5    'Первые строки в таблицах лимитов
+Public Const cCom = 15          'Колонка для комментария
+Public Const tabDic = "Справочник"
+Public Const tabErr = "Ошибки"
 
 Const FirstD = 8        'Первая строка в коллекции данных
 Const FirstS = 5        'Первая строка в исходных файлах
 Const cFile = 16        'Колонка с именем файла
 Const cCode = 17        'Колонка с кодом файла
 
-Const errName = "Ошибки"
+Public colWhite As Long 'Цвета
+Public colRed As Long
+Public colGreen As Long
+Public colYellow As Long
 
 Dim dat As Variant      'Таблица с данными
 Dim src As Variant      'Таблица с исходниками
@@ -45,12 +53,18 @@ Sub DataCollect()
     If isRelease And noEmpty Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Message "Подготовка"
     
+    'Инициализация цветов
+    colWhite = RGB(255, 255, 255)
+    colRed = RGB(255, 192, 192)
+    colGreen = RGB(192, 255, 192)
+    colYellow = RGB(255, 255, 192)
+    
     'Получаем коллекцию файлов
     Set files = Source.getFiles(dat.Cells(1, 3))
         
     'Создаём вкладку (если её нет) для списка ошибок
-    Call NewTab(errName, True)
-    Set err = Sheets(errName)
+    Call NewTab(tabErr, True)
+    Set err = Sheets(tabErr)
     err.Columns(1).ColumnWidth = 100
     err.Columns(2).ColumnWidth = 20
     err.Cells(1, 1) = "Файл"
@@ -93,7 +107,7 @@ End Sub
 '3 - нет кода
 Function AddFile(ByVal file As String) As Byte
     errors = False
-    On Error GoTo er
+    If isRelease Then On Error GoTo er
     Application.ScreenUpdating = False
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
@@ -125,11 +139,13 @@ Function AddFile(ByVal file As String) As Byte
             max = i
         
             'Обрабатываем строки исходника
+            Set resuids = CreateObject("Scripting.Dictionary") '
             i = FirstS
             Do While NotEmpty(i)
                 uid = src.Cells(i, 1)
                 'Строка уже есть (наверное)
                 If uid <> "" Then
+                    
                     ind = Indexes(uid)
                     If ind <> Empty Then
                         'И строка действительно есть, обновляем данные
@@ -141,6 +157,22 @@ Function AddFile(ByVal file As String) As Byte
                 End If
                 'Новая строка
                 If uid = "" Then If copyRecord(max, i, False) Then errors = True
+                resuids.Add src.Cells(i, 1).text, 1
+                i = i + 1
+            Loop
+            
+            'Проверяем исходник на удалённые записи
+            
+            i = FirstD
+            Do While dat.Cells(i, 2) <> ""
+                uid = dat.Cells(i, 1)
+                If uid <> "" And dat.Cells(i, cCode) = cod Then
+                    If resuids(uid) = Empty Then
+                        dat.Cells(i, cCom) = "Данные удалены!"
+                        dat.Cells(i, cCom).Interior.Color = colRed
+                        AddFile = 2
+                    End If
+                End If
                 i = i + 1
             Loop
             
@@ -175,20 +207,18 @@ End Function
 'refresh - true, если обновление данных (проверять что поменялось)
 Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
     Dim changed As Boolean
-    wht = RGB(255, 255, 255)
-    yel = RGB(256, 256, 192)
     For j = 2 To 14
         ravno = dat.Cells(di, j).text = src.Cells(si, j).text
         dat.Cells(di, j) = src.Cells(si, j)
         dat.Cells(di, j).ClearFormats
         If j = 2 Or j = 4 Or j = 6 Or j = 7 Or j = 8 Then
-            src.Cells(si, j).Interior.Color = yel
+            src.Cells(si, j).Interior.Color = colYellow
         Else
-            src.Cells(si, j).Interior.Color = wht
+            src.Cells(si, j).Interior.Color = colWhite
         End If
         If refresh And Not ravno Then
-            dat.Cells(di, j).Interior.Color = yel
-            src.Cells(si, j).Interior.Color = yel
+            dat.Cells(di, j).Interior.Color = colYellow
+            src.Cells(si, j).Interior.Color = colYellow
             changed = True
         End If
     Next

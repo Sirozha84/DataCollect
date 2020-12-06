@@ -1,11 +1,7 @@
 Attribute VB_Name = "Verify"
-Const cComment = 15     'Колонка для комментария
-Const startLimits = 4   'Первые строки в таблицах лимитов
-
 Dim Comment As String   'Строка с комментариями
 Dim errors As Boolean   'Флаг наличия ошибок
 Dim groups As Variant   'Словарь групп
-
 Dim dates As Variant    'Словарь дат регистраций
 Dim limitO As Variant   'Словарь лимитов на отгрузку
 Dim limitP As Variant   'Словарь лимитов на покупку
@@ -19,7 +15,7 @@ Dim summPA As Variant   'Счётчики сумм продажи всем
 'Инициализация словарей лимитов
 Sub Init()
     
-    Set dic = Sheets("Справочник")
+    Set dic = Sheets(tabDic)
     Set dates = CreateObject("Scripting.Dictionary")
     Set limitO = CreateObject("Scripting.Dictionary")
     Set limitP = CreateObject("Scripting.Dictionary")
@@ -81,10 +77,6 @@ End Sub
 Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, ByVal iI As Long, _
     changed As Boolean) As Boolean
     
-    red = RGB(255, 192, 192)
-    grn = RGB(192, 255, 192)
-    yel = RGB(255, 255, 192)
-    
     Comment = ""
     errors = False
     Verify = True
@@ -92,8 +84,8 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
     '2 - Дата
     dat.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
     If Not IsDate(dat.Cells(iC, 2)) Then
-        dat.Cells(iC, 2).Interior.Color = red
-        src.Cells(iI, 2).Interior.Color = red
+        dat.Cells(iC, 2).Interior.Color = colRed
+        src.Cells(iI, 2).Interior.Color = colRed
         AddCom "Дата введена не корректно"
     Else
         Call DateTest(dat, iC)
@@ -101,30 +93,30 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
     
     '3 - ИНН
     If Not isINNKPP(dat.Cells(iC, 3).text) Then
-        dat.Cells(iC, 3).Interior.Color = red
-        src.Cells(iI, 3).Interior.Color = red
+        dat.Cells(iC, 3).Interior.Color = colRed
+        src.Cells(iI, 3).Interior.Color = colRed
         AddCom "ИНН/КПП введены не корректно"
     End If
     
     '5 - ИНН
     If Not isINNKPP(dat.Cells(iC, 5).text) Then
-        dat.Cells(iC, 5).Interior.Color = red
-        src.Cells(iI, 5).Interior.Color = red
+        dat.Cells(iC, 5).Interior.Color = colRed
+        src.Cells(iI, 5).Interior.Color = colRed
         AddCom "ИНН введён не корректно"
     End If
     
     '7 - Стоимость
     dat.Cells(iC, 7).NumberFormat = "### ### ##0.00"
     If Not isPrice(dat.Cells(iC, 7)) Then
-        dat.Cells(iC, 7).Interior.Color = red
-        src.Cells(iI, 7).Interior.Color = red
+        dat.Cells(iC, 7).Interior.Color = colRed
+        src.Cells(iI, 7).Interior.Color = colRed
         AddCom "Стоимость введена не корректно"
     End If
     
     '8 - Ставка НДС
     If Not isNDS(dat.Cells(iC, 8).text) Then
-        dat.Cells(iC, 8).Interior.Color = red
-        src.Cells(iI, 8).Interior.Color = red
+        dat.Cells(iC, 8).Interior.Color = colRed
+        src.Cells(iI, 8).Interior.Color = colRed
         AddCom "НДС введён не корректно"
     End If
     
@@ -132,8 +124,8 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
     For i = 9 To 11
         dat.Cells(iC, i).NumberFormat = "### ### ##0.00"
         If Not isPriceNDS(dat.Cells(iC, i)) Then
-            dat.Cells(iC, i).Interior.Color = red
-            src.Cells(iI, i).Interior.Color = red
+            dat.Cells(iC, i).Interior.Color = colRed
+            src.Cells(iI, i).Interior.Color = colRed
             AddCom "Стоимость продаж облагаемых налогом введена не корректно"
         End If
     Next
@@ -145,20 +137,20 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
         If Not isPriceNDS(dat.Cells(iC, i)) Then e = True
     Next
     If e Then
-        dat.Cells(iC, i).Interior.Color = red
-        src.Cells(iI, i).Interior.Color = red
+        dat.Cells(iC, i).Interior.Color = colRed
+        src.Cells(iI, i).Interior.Color = colRed
         AddCom "Сумма НДС введена не корректно"
     Else
         Call LimitsTest(dat, iC)
     End If
     
     'Пишем комментарий и расскрашиваем его
-    col = red
-    If Not errors Then col = grn: Comment = "Принято"
-    dat.Cells(iC, cComment) = Comment
-    dat.Cells(iC, cComment).Interior.Color = col
-    src.Cells(iI, cComment) = Comment
-    src.Cells(iI, cComment).Interior.Color = col
+    col = colRed
+    If Not errors Then col = colGreen: Comment = "Принято"
+    dat.Cells(iC, cCom) = Comment
+    dat.Cells(iC, cCom).Interior.Color = col
+    src.Cells(iI, cCom) = Comment
+    src.Cells(iI, cCom).Interior.Color = col
     
     Verify = errors
     
