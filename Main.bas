@@ -1,15 +1,17 @@
 Attribute VB_Name = "Main"
 Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 
-Public Const startLimits = 5    'Первые строки в таблицах лимитов
+Public Const FirstD = 8         'Первая строка в коллекции данных
+Public Const FirstS = 5         'Первая строка в исходных файлах
 Public Const cCom = 15          'Колонка для комментария
+Public Const cStatus = 16       'Колонка статуса
+Public Const cFile = 17         'Колонка с именем файла
+Public Const cCode = 18         'Колонка с кодом файла
+Public Const startLimits = 5    'Первые строки в таблицах лимитов
+
 Public Const tabDic = "Справочник"
 Public Const tabErr = "Ошибки"
-
-Const FirstD = 8        'Первая строка в коллекции данных
-Const FirstS = 5        'Первая строка в исходных файлах
-Const cFile = 16        'Колонка с именем файла
-Const cCode = 17        'Колонка с кодом файла
+Public Const tabNum = "Словарь нумератора"
 
 Public colWhite As Long 'Цвета
 Public colRed As Long
@@ -125,7 +127,7 @@ Function AddFile(ByVal file As String) As Byte
             max = i
         
             'Обрабатываем строки исходника
-            Set resuids = CreateObject("Scripting.Dictionary") '
+            Set resuids = CreateObject("Scripting.Dictionary")
             i = FirstS
             Do While NotEmpty(i)
                 uid = src.Cells(i, 1)
@@ -148,7 +150,6 @@ Function AddFile(ByVal file As String) As Byte
             Loop
             
             'Проверяем исходник на удалённые записи
-            
             i = FirstD
             Do While dat.Cells(i, 2) <> ""
                 uid = dat.Cells(i, 1)

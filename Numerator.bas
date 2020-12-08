@@ -1,12 +1,11 @@
 Attribute VB_Name = "Numerator"
-Const NumPage = "Словарь нумератора"
 Dim Nums As Object
 Dim dTab As Variant
 
 'Инициализация словаря
 Sub Init()
-    Call NewTab(NumPage, False)
-    Set dTab = Sheets(NumPage)
+    Call NewTab(tabNum, False)
+    Set dTab = Sheets(tabNum)
     dTab.Cells(1, 1) = "Внимание! Здесь находится служебная информация. Ручное редактирование не рекоммендуется."
     dTab.Cells(3, 1) = "Префикс"
     dTab.Cells(3, 2) = "Номер"
@@ -35,7 +34,7 @@ End Sub
 'Очистка словаря
 Sub Clear()
     On Error GoTo er
-    Sheets(NumPage).Cells.Clear
+    Sheets(tabNum).Cells.Clear
 er:
 End Sub
 
