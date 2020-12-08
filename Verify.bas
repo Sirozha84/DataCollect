@@ -29,7 +29,7 @@ Sub Init()
     Dim i As Long
 
     'Чтение словаря дат регистраций компаний
-    i = startLimits
+    i = firstDic
     Do While dic.Cells(i, 1) <> ""
         cmp = dic.Cells(i, 1).text
         dtt = dic.Cells(i, 2)
@@ -38,7 +38,7 @@ Sub Init()
     Loop
 
     'Чтение словаря лимитов отгрузок
-    i = startLimits
+    i = firstDic
     Do While dic.Cells(i, 1) <> ""
         cmp = dic.Cells(i, 1).text
         lim = dic.Cells(i, 4)
@@ -47,7 +47,7 @@ Sub Init()
     Loop
     
     'Чтение словаря групп
-    i = startLimits
+    i = firstDic
     Do While dic.Cells(i, 1) <> ""
         cmp = dic.Cells(i, 1).text
         grp = dic.Cells(i, 3).text
@@ -56,7 +56,7 @@ Sub Init()
     Loop
     
     'Чтение словаря лимитов продаж
-    i = startLimits
+    i = firstDic
     Do While dic.Cells(i, 3) <> ""
         grp = dic.Cells(i, 3).text
         If dic.Cells(i, 5).text <> "" And IsNumeric(dic.Cells(i, 5)) Then

@@ -1,13 +1,13 @@
 Attribute VB_Name = "Main"
 Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 
-Public Const FirstD = 8         'Первая строка в коллекции данных
-Public Const FirstS = 5         'Первая строка в исходных файлах
+Public Const firstDat = 8       'Первая строка в коллекции данных
+Public Const firstSrc = 5       'Первая строка в исходных файлах
+Public Const firstDic = 5       'Первая строка в справочнике
 Public Const cCom = 15          'Колонка для комментария
 Public Const cStatus = 16       'Колонка статуса
 Public Const cFile = 17         'Колонка с именем файла
 Public Const cCode = 18         'Колонка с кодом файла
-Public Const startLimits = 5    'Первые строки в таблицах лимитов
 
 Public Const tabDic = "Справочник"
 Public Const tabErr = "Ошибки"
@@ -40,7 +40,7 @@ Sub Clear()
         "Данная процедура очистит все собранные данные список ошибок и нумераторы. " + _
         "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код." + _
         Chr(10) + Chr(10) + "Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Range(Cells(FirstD, 1), Cells(1048576, 50)).Clear
+    Range(Cells(firstDat, 1), Cells(1048576, 50)).Clear
     Sheets(errName).Cells.Clear
 er:
     Numerator.Clear
@@ -50,7 +50,7 @@ End Sub
 Sub DataCollect()
     
     Set dat = ActiveSheet
-    noEmpty = (dat.Cells(FirstD, 2) <> "")
+    noEmpty = (dat.Cells(firstDat, 2) <> "")
     If isRelease And noEmpty Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     
     'Инициализация
@@ -107,7 +107,7 @@ Function AddFile(ByVal file As String) As Byte
         If cod <> "" Then
             
             'Очищаем предыдущие строки с ошибками
-            i = FirstD
+            i = firstDat
             Do While dat.Cells(i, 2) <> ""
                 If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
                     dat.Rows(i).Delete
@@ -119,7 +119,7 @@ Function AddFile(ByVal file As String) As Byte
         
             'Индексируем существующие записи
             Set Indexes = CreateObject("Scripting.Dictionary")
-            i = FirstD
+            i = firstDat
             Do While dat.Cells(i, 2) <> ""
                 uid = dat.Cells(i, 1)
                 If uid <> "" Then Indexes.Add uid, i
@@ -129,7 +129,7 @@ Function AddFile(ByVal file As String) As Byte
         
             'Обрабатываем строки исходника
             Set resuids = CreateObject("Scripting.Dictionary")
-            i = FirstS
+            i = firstSrc
             Do While NotEmpty(i)
                 uid = src.Cells(i, 1)
                 'Строка уже есть (наверное)
@@ -168,7 +168,7 @@ Function AddFile(ByVal file As String) As Byte
             Loop
             
             'Проверяем исходник на удалённые записи
-            i = FirstD
+            i = firstDat
             Do While dat.Cells(i, 2) <> ""
                 uid = dat.Cells(i, 1)
                 If uid <> "" And dat.Cells(i, cCode) = cod Then
