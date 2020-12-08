@@ -15,12 +15,11 @@ Dim summPA As Variant   'Счётчики сумм продажи всем
 'Инициализация словарей лимитов
 Sub Init()
     
-    Set dic = Sheets(tabDic)
     Set dates = CreateObject("Scripting.Dictionary")
     Set limitO = CreateObject("Scripting.Dictionary")
     Set limitP = CreateObject("Scripting.Dictionary")
-    limitP1 = dic.Cells(1, 4)
-    limitPA = dic.Cells(2, 4)
+    limitP1 = DIC.Cells(1, 4)
+    limitPA = DIC.Cells(2, 4)
     Set summO = CreateObject("Scripting.Dictionary")
     Set summP = CreateObject("Scripting.Dictionary")
     Set summP1 = CreateObject("Scripting.Dictionary")
@@ -30,37 +29,37 @@ Sub Init()
 
     'Чтение словаря дат регистраций компаний
     i = firstDic
-    Do While dic.Cells(i, 1) <> ""
-        cmp = dic.Cells(i, 1).text
-        dtt = dic.Cells(i, 2)
+    Do While DIC.Cells(i, 1) <> ""
+        cmp = DIC.Cells(i, 1).text
+        dtt = DIC.Cells(i, 2)
         dates(cmp) = dtt
         i = i + 1
     Loop
 
     'Чтение словаря лимитов отгрузок
     i = firstDic
-    Do While dic.Cells(i, 1) <> ""
-        cmp = dic.Cells(i, 1).text
-        lim = dic.Cells(i, 4)
+    Do While DIC.Cells(i, 1) <> ""
+        cmp = DIC.Cells(i, 1).text
+        lim = DIC.Cells(i, 4)
         limitO(cmp) = lim
         i = i + 1
     Loop
     
     'Чтение словаря групп
     i = firstDic
-    Do While dic.Cells(i, 1) <> ""
-        cmp = dic.Cells(i, 1).text
-        grp = dic.Cells(i, 3).text
+    Do While DIC.Cells(i, 1) <> ""
+        cmp = DIC.Cells(i, 1).text
+        grp = DIC.Cells(i, 3).text
         groups(cmp) = grp
         i = i + 1
     Loop
     
     'Чтение словаря лимитов продаж
     i = firstDic
-    Do While dic.Cells(i, 3) <> ""
-        grp = dic.Cells(i, 3).text
-        If dic.Cells(i, 5).text <> "" And IsNumeric(dic.Cells(i, 5)) Then
-            lim = dic.Cells(i, 5)
+    Do While DIC.Cells(i, 3) <> ""
+        grp = DIC.Cells(i, 3).text
+        If DIC.Cells(i, 5).text <> "" And IsNumeric(DIC.Cells(i, 5)) Then
+            lim = DIC.Cells(i, 5)
             limitP(grp) = lim
         End If
         i = i + 1
@@ -74,7 +73,7 @@ End Sub
 'iC - строка в данных
 'iI - строка в исходниках
 'changed - true если данные уже были зарегистрированы и запись проверяется на изменения
-Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, ByVal iI As Long, _
+Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, ByVal iI As Long, _
     changed As Boolean) As Boolean
     
     Comment = ""
@@ -82,50 +81,50 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
     Verify = True
     
     '2 - Дата
-    dat.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
-    If Not IsDate(dat.Cells(iC, 2)) Then
-        dat.Cells(iC, 2).Interior.Color = colRed
-        src.Cells(iI, 2).Interior.Color = colRed
+    DAT.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
+    If Not IsDate(DAT.Cells(iC, 2)) Then
+        DAT.Cells(iC, 2).Interior.Color = colRed
+        SRC.Cells(iI, 2).Interior.Color = colRed
         AddCom "Дата введена не корректно"
     Else
-        Call DateTest(dat, iC)
+        Call DateTest(DAT, iC)
     End If
     
     '3 - ИНН
-    If Not isINNKPP(dat.Cells(iC, 3).text) Then
-        dat.Cells(iC, 3).Interior.Color = colRed
-        src.Cells(iI, 3).Interior.Color = colRed
+    If Not isINNKPP(DAT.Cells(iC, 3).text) Then
+        DAT.Cells(iC, 3).Interior.Color = colRed
+        SRC.Cells(iI, 3).Interior.Color = colRed
         AddCom "ИНН/КПП введены не корректно"
     End If
     
     '5 - ИНН
-    If Not isINNKPP(dat.Cells(iC, 5).text) Then
-        dat.Cells(iC, 5).Interior.Color = colRed
-        src.Cells(iI, 5).Interior.Color = colRed
+    If Not isINNKPP(DAT.Cells(iC, 5).text) Then
+        DAT.Cells(iC, 5).Interior.Color = colRed
+        SRC.Cells(iI, 5).Interior.Color = colRed
         AddCom "ИНН введён не корректно"
     End If
     
     '7 - Стоимость
-    dat.Cells(iC, 7).NumberFormat = "### ### ##0.00"
-    If Not isPrice(dat.Cells(iC, 7)) Then
-        dat.Cells(iC, 7).Interior.Color = colRed
-        src.Cells(iI, 7).Interior.Color = colRed
+    DAT.Cells(iC, 7).NumberFormat = "### ### ##0.00"
+    If Not isPrice(DAT.Cells(iC, 7)) Then
+        DAT.Cells(iC, 7).Interior.Color = colRed
+        SRC.Cells(iI, 7).Interior.Color = colRed
         AddCom "Стоимость введена не корректно"
     End If
     
     '8 - Ставка НДС
-    If Not isNDS(dat.Cells(iC, 8).text) Then
-        dat.Cells(iC, 8).Interior.Color = colRed
-        src.Cells(iI, 8).Interior.Color = colRed
+    If Not isNDS(DAT.Cells(iC, 8).text) Then
+        DAT.Cells(iC, 8).Interior.Color = colRed
+        SRC.Cells(iI, 8).Interior.Color = colRed
         AddCom "НДС введён не корректно"
     End If
     
     '9-11 - Стоимость продаж облагаемых налогом
     For i = 9 To 11
-        dat.Cells(iC, i).NumberFormat = "### ### ##0.00"
-        If Not isPriceNDS(dat.Cells(iC, i)) Then
-            dat.Cells(iC, i).Interior.Color = colRed
-            src.Cells(iI, i).Interior.Color = colRed
+        DAT.Cells(iC, i).NumberFormat = "### ### ##0.00"
+        If Not isPriceNDS(DAT.Cells(iC, i)) Then
+            DAT.Cells(iC, i).Interior.Color = colRed
+            SRC.Cells(iI, i).Interior.Color = colRed
             AddCom "Стоимость продаж облагаемых налогом введена не корректно"
         End If
     Next
@@ -133,51 +132,51 @@ Function Verify(ByRef dat As Variant, ByRef src As Variant, ByVal iC As Long, By
     '12-14 - Сумма НДС
     e = False
     For i = 12 To 14
-        dat.Cells(iC, i).NumberFormat = "### ### ##0.00"
-        If Not isPriceNDS(dat.Cells(iC, i)) Then e = True
+        DAT.Cells(iC, i).NumberFormat = "### ### ##0.00"
+        If Not isPriceNDS(DAT.Cells(iC, i)) Then e = True
     Next
     If e Then
-        dat.Cells(iC, i).Interior.Color = colRed
-        src.Cells(iI, i).Interior.Color = colRed
+        DAT.Cells(iC, i).Interior.Color = colRed
+        SRC.Cells(iI, i).Interior.Color = colRed
         AddCom "Сумма НДС введена не корректно"
     Else
-        Call LimitsTest(dat, iC)
+        Call LimitsTest(DAT, iC)
     End If
     
     'Пишем комментарий и расскрашиваем его
     col = colRed
     If Not errors Then col = colGreen: Comment = "Принято"
-    dat.Cells(iC, cCom) = Comment
-    dat.Cells(iC, cCom).Interior.Color = col
-    src.Cells(iI, cCom) = Comment
-    src.Cells(iI, cCom).Interior.Color = col
+    DAT.Cells(iC, cCom) = Comment
+    DAT.Cells(iC, cCom).Interior.Color = col
+    SRC.Cells(iI, cCom) = Comment
+    SRC.Cells(iI, cCom).Interior.Color = col
     
     Verify = errors
     
 End Function
 
 'Проверка правильности даты
-Sub DateTest(ByRef dat As Variant, ByVal i As Long)
-    sel = dat.Cells(i, 6)
-    dtt = dat.Cells(i, 2)
+Sub DateTest(ByRef DAT As Variant, ByVal i As Long)
+    sel = DAT.Cells(i, 6)
+    dtt = DAT.Cells(i, 2)
     If dtt < dates(sel) Then AddCom "Дата операции не может быть ранее регистрации компании"
 End Sub
 
 'Вычисляет из даты Год+Квартал
-Function Kvartal(dat As Date) As String
-    Kvartal = CStr(Year(dat)) + CStr((Month(dat) - 1) \ 3 + 1)
+Function Kvartal(DAT As Date) As String
+    Kvartal = CStr(Year(DAT)) + CStr((Month(DAT) - 1) \ 3 + 1)
 End Function
 
 'Проверка лимитов
-Sub LimitsTest(ByRef dat As Variant, ByVal i As Long)
-    kvr = Kvartal(dat.Cells(i, 2))
-    sel = dat.Cells(i, 6)
+Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
+    kvr = Kvartal(DAT.Cells(i, 2))
+    sel = DAT.Cells(i, 6)
     selK = sel + "!" + kvr
     grp = groups(sel)
-    buy = dat.Cells(i, 4) + "!" + grp
+    buy = DAT.Cells(i, 4) + "!" + grp
     Sum = 0
     For j = 12 To 14
-        If IsNumeric(dat.Cells(i, j)) Then Sum = Sum + dat.Cells(i, j)
+        If IsNumeric(DAT.Cells(i, j)) Then Sum = Sum + DAT.Cells(i, j)
     Next
     summO(selK) = summO(selK) + Sum
     summP(buy) = summP(buy) + Sum

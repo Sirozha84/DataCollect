@@ -25,7 +25,7 @@ Public Sub Generate()
            
     'Генерируем шаблоны
     Set namelist = CreateObject("Scripting.Dictionary")
-    Set codes = CreateObject("Scripting.Dictionary")
+    Set Codes = CreateObject("Scripting.Dictionary")
     Dim total As Long
     total = i - 1
     fold = Cells(1, 3).text
@@ -42,8 +42,8 @@ Public Sub Generate()
                 need = False
                 If isCode(Cells(i, 3)) Then
                     cod = Cells(i, 3)
-                    If codes(cod) = "" Then
-                        codes(cod) = 0
+                    If Codes(cod) = "" Then
+                        Codes(cod) = 0
                     Else
                         need = True
                     End If
@@ -275,7 +275,7 @@ Sub setFormatConditions(c As Integer)
     Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
     With rang.FormatConditions
         .Add Type:=xlErrorsCondition
-        .Item(.count).Font.Color = vbWhite
+        .Item(.Count).Font.Color = vbWhite
     End With
 End Sub
 

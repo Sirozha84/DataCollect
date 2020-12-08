@@ -1,6 +1,6 @@
 Attribute VB_Name = "Main"
-Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
-
+Public Const isRelease = False  'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
+Public Const saveSource = True  'True - сохранение данных в формах, False - данные не записываются (отладка)
 Public Const firstDat = 8       'Первая строка в коллекции данных
 Public Const firstSrc = 5       'Первая строка в исходных файлах
 Public Const firstDic = 5       'Первая строка в справочнике
@@ -9,17 +9,19 @@ Public Const cStatus = 16       'Колонка статуса
 Public Const cFile = 17         'Колонка с именем файла
 Public Const cCode = 18         'Колонка с кодом файла
 
-Public Const tabDic = "Справочник"
-Public Const tabErr = "Ошибки"
-Public Const tabNum = "Словарь нумератора"
-
-Public colWhite As Long 'Цвета
+'Цвета
+Public colWhite As Long
 Public colRed As Long
 Public colGreen As Long
 Public colYellow As Long
 
-Dim dat As Variant      'Таблица с данными
-Dim src As Variant      'Таблица с исходниками
+'Ссылки на таблицы
+Public DAT As Variant   'Данные
+Public SRC As Variant   'Исходные данные
+Public DIC As Variant   'Справочники
+Public ERR As Variant   'Список ошибок
+Public NUM As Variant   'Словарь нумератора
+
 Dim Indexes As Object   'Словарь индексов
 Dim max As Long         'Последняя строка в данных
 Dim i As Long
@@ -49,27 +51,17 @@ End Sub
 'Сбор данных
 Sub DataCollect()
     
-    Set dat = ActiveSheet
-    noEmpty = (dat.Cells(firstDat, 2) <> "")
-    If isRelease And noEmpty Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    If isRelease Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     
-    'Инициализация
-    Message "Подготовка"
-    colWhite = RGB(255, 255, 255)
-    colRed = RGB(255, 192, 192)
-    colGreen = RGB(192, 255, 192)
-    colYellow = RGB(255, 255, 192)
-    Numerator.Init
-    Log.Init
-    Verify.Init
+    Init
+    
+    'Получаем коллекцию файлов
+    Set files = Source.getFiles(DAT.Cells(1, 3))
+    
+    'Обрабатываем список файлов
     n = 1
     s = 0
     e = 0
-    
-    'Получаем коллекцию файлов
-    Set files = Source.getFiles(dat.Cells(1, 3))
-    
-    'Обрабатываем список файлов
     For Each file In files
         curf = file
         If Len(curf) > 40 Then curf = "..." + Right(curf, 40)
@@ -88,6 +80,31 @@ Sub DataCollect()
     
 End Sub
 
+'Инициализация таблиц, цветов
+Sub Init()
+    
+    'On Error GoTo er
+    Message "Подготовка..."
+    
+    Set DAT = ActiveSheet
+    Set DIC = Sheets("Справочник")
+    Set ERR = Sheets("Ошибки")
+    Set NUM = Sheets("Словарь нумератора")
+    
+    colWhite = RGB(255, 255, 255)
+    colRed = RGB(255, 192, 192)
+    colGreen = RGB(192, 255, 192)
+    colYellow = RGB(255, 255, 192)
+    
+    Numerator.Init
+    Log.Init
+    Verify.Init
+    
+    Exit Sub
+er:
+    MsgBox ("Ошибка целостности документа!")
+End Sub
+
 'Добавление данных из файла. Возвращает:
 '0 - всё хорошо
 '1 - ошибка загрузки
@@ -101,16 +118,16 @@ Function AddFile(ByVal file As String) As Byte
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
-        Set src = impBook.Worksheets(1) 'Пока берём данные с первого листа
-        src.Unprotect Template.Secret
-        cod = src.Cells(1, 1)
+        Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
+        SRC.Unprotect Template.Secret
+        cod = SRC.Cells(1, 1)
         If cod <> "" Then
             
             'Очищаем предыдущие строки с ошибками
             i = firstDat
-            Do While dat.Cells(i, 2) <> ""
-                If dat.Cells(i, 1) = "" And dat.Cells(i, cCode) = cod Then
-                    dat.Rows(i).Delete
+            Do While DAT.Cells(i, 2) <> ""
+                If DAT.Cells(i, 1) = "" And DAT.Cells(i, cCode) = cod Then
+                    DAT.Rows(i).Delete
                     max = max - 1
                 Else
                     i = i + 1
@@ -120,8 +137,8 @@ Function AddFile(ByVal file As String) As Byte
             'Индексируем существующие записи
             Set Indexes = CreateObject("Scripting.Dictionary")
             i = firstDat
-            Do While dat.Cells(i, 2) <> ""
-                uid = dat.Cells(i, 1)
+            Do While DAT.Cells(i, 2) <> ""
+                uid = DAT.Cells(i, 1)
                 If uid <> "" Then Indexes.Add uid, i
                 i = i + 1
             Loop
@@ -131,7 +148,7 @@ Function AddFile(ByVal file As String) As Byte
             Set resuids = CreateObject("Scripting.Dictionary")
             i = firstSrc
             Do While NotEmpty(i)
-                uid = src.Cells(i, 1)
+                uid = SRC.Cells(i, 1)
                 'Строка уже есть (наверное)
                 If uid <> "" Then
                     
@@ -142,18 +159,18 @@ Function AddFile(ByVal file As String) As Byte
                         If copyRecord(ind, i, True) Then errors = True
                         
                         'Данные не обновлены
-                        stat = dat.Cells(ind, cStatus).text
+                        stat = DAT.Cells(ind, cStatus).text
                         If stat = "0" Then
-                            dat.Cells(ind, cCom) = "Данные аннулированы!"
-                            dat.Cells(ind, cCom).Interior.Color = colRed
-                            src.Cells(i, cCom) = "Данные аннулированы!"
-                            src.Cells(i, cCom).Interior.Color = colRed
+                            DAT.Cells(ind, cCom) = "Данные аннулированы!"
+                            DAT.Cells(ind, cCom).Interior.Color = colRed
+                            SRC.Cells(i, cCom) = "Данные аннулированы!"
+                            SRC.Cells(i, cCom).Interior.Color = colRed
                         End If
                         If stat = "2" Then
-                            dat.Cells(ind, cCom) = "Данные зафиксированы!"
-                            dat.Cells(ind, cCom).Interior.Color = colGreen
-                            src.Cells(i, cCom) = "Данные зафиксированы!"
-                            src.Cells(i, cCom).Interior.Color = colGreen
+                            DAT.Cells(ind, cCom) = "Данные зафиксированы!"
+                            DAT.Cells(ind, cCom).Interior.Color = colGreen
+                            SRC.Cells(i, cCom) = "Данные зафиксированы!"
+                            SRC.Cells(i, cCom).Interior.Color = colGreen
                         End If
                         
                     Else
@@ -163,18 +180,18 @@ Function AddFile(ByVal file As String) As Byte
                 End If
                 'Новая строка
                 If uid = "" Then If copyRecord(max, i, False) Then errors = True
-                resuids.Add src.Cells(i, 1).text, 1
+                resuids.Add SRC.Cells(i, 1).text, 1
                 i = i + 1
             Loop
             
             'Проверяем исходник на удалённые записи
             i = firstDat
-            Do While dat.Cells(i, 2) <> ""
-                uid = dat.Cells(i, 1)
-                If uid <> "" And dat.Cells(i, cCode) = cod Then
+            Do While DAT.Cells(i, 2) <> ""
+                uid = DAT.Cells(i, 1)
+                If uid <> "" And DAT.Cells(i, cCode) = cod Then
                     If resuids(uid) = Empty Then
-                        dat.Cells(i, cCom) = "Данные удалены!"
-                        dat.Cells(i, cCom).Interior.Color = colRed
+                        DAT.Cells(i, cCom) = "Данные удалены!"
+                        DAT.Cells(i, cCom).Interior.Color = colRed
                         AddFile = 2
                     End If
                 End If
@@ -184,8 +201,8 @@ Function AddFile(ByVal file As String) As Byte
         Else
             AddFile = 3
         End If
-        src.Protect Template.Secret
-        impBook.Close isRelease
+        SRC.Protect Template.Secret
+        impBook.Close saveSource
     End If
     Numerator.Save
     Application.ScreenUpdating = True
@@ -201,7 +218,7 @@ End Function
 Function NotEmpty(i As Long) As Boolean
     NotEmpty = False
     For j = 1 To 14
-        txt = src.Cells(i, j).text
+        txt = SRC.Cells(i, j).text
         If txt <> "" And txt <> "#Н/Д" Then NotEmpty = True: Exit For
     Next
 End Function
@@ -212,39 +229,39 @@ End Function
 'refresh - true, если обновление данных (проверять что поменялось)
 Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
     
-    stat = dat.Cells(di, cStatus).text
+    stat = DAT.Cells(di, cStatus).text
     If stat = "0" Or stat = "2" Then Exit Function
     
     Dim changed As Boolean
     For j = 2 To 14
-        ravno = dat.Cells(di, j).text = src.Cells(si, j).text
-        dat.Cells(di, j) = src.Cells(si, j)
-        dat.Cells(di, j).ClearFormats
+        ravno = DAT.Cells(di, j).text = SRC.Cells(si, j).text
+        DAT.Cells(di, j) = SRC.Cells(si, j)
+        DAT.Cells(di, j).ClearFormats
         If j = 2 Or j = 4 Or j = 6 Or j = 7 Or j = 8 Then
-            src.Cells(si, j).Interior.Color = colYellow
+            SRC.Cells(si, j).Interior.Color = colYellow
         Else
-            src.Cells(si, j).Interior.Color = colWhite
+            SRC.Cells(si, j).Interior.Color = colWhite
         End If
         If refresh And Not ravno Then
-            dat.Cells(di, j).Interior.Color = colYellow
-            src.Cells(si, j).Interior.Color = colYellow
+            DAT.Cells(di, j).Interior.Color = colYellow
+            SRC.Cells(si, j).Interior.Color = colYellow
             changed = True
         End If
     Next
-    dat.Cells(di, cFile) = file
-    dat.Cells(di, cCode) = cod
-    Range(dat.Cells(di, cFile), dat.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
-    errors = Verify.Verify(dat, src, di, si, changed)
+    DAT.Cells(di, cFile) = file
+    DAT.Cells(di, cCode) = cod
+    Range(DAT.Cells(di, cFile), DAT.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
+    errors = Verify.Verify(DAT, SRC, di, si, changed)
     If errors Then
         copyRecord = True
     Else
         'Если нет ошибок, и это не обновление, присваиваем номер
         If Not refresh Then
-            num = Numerator.Generate(dat.Cells(di, 2), dat.Cells(di, 4))
-            dat.Cells(di, 1) = num
-            src.Cells(si, 1) = num
+            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, 4))
+            DAT.Cells(di, 1) = n
+            SRC.Cells(si, 1) = n
         End If
     End If
     If Not refresh Then max = max + 1
-    If dat.Cells(di, cStatus).text = "" Then dat.Cells(di, cStatus) = 1
+    If DAT.Cells(di, cStatus).text = "" Then DAT.Cells(di, cStatus) = 1
 End Function

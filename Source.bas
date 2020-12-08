@@ -30,16 +30,16 @@ End Sub
 
 'Проверка файлов на наличие дубликатов по коду
 Sub DuplicateFinder()
-    Set codes = CreateObject("Scripting.Dictionary")
+    Set Codes = CreateObject("Scripting.Dictionary")
     Set dupl = New Collection
     n = 1
     a = files.Count
     For Each file1 In files
         Message ("Проверка на дубликаты: " + CStr(n) + " из " + CStr(a))
         c = GetCode(file1)
-        file2 = codes(c)
-        If codes(c) = Empty Then
-            codes(c) = file1
+        file2 = Codes(c)
+        If Codes(c) = Empty Then
+            Codes(c) = file1
         Else
             dupl.Add file1 + "*" + c
             dupl.Add file2 + "*" + c
@@ -66,9 +66,9 @@ Function GetCode(ByVal file As String) As String
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
-        Set src = impBook.Worksheets(1) 'Пока берём данные с первого листа
-        src.Unprotect Template.Secret
-        GetCode = src.Cells(1, 1)
+        Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
+        SRC.Unprotect Template.Secret
+        GetCode = SRC.Cells(1, 1)
         impBook.Close False
     End If
 er:
