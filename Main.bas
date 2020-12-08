@@ -93,6 +93,7 @@ End Sub
 '1 - ошибка загрузки
 '2 - ошибка в данных
 '3 - нет кода
+'4 - запись аннулирована
 Function AddFile(ByVal file As String) As Byte
     errors = False
     If isRelease Then On Error GoTo er
@@ -136,8 +137,25 @@ Function AddFile(ByVal file As String) As Byte
                     
                     ind = Indexes(uid)
                     If ind <> Empty Then
+                        
                         'И строка действительно есть, обновляем данные
                         If copyRecord(ind, i, True) Then errors = True
+                        
+                        'Данные не обновлены
+                        stat = dat.Cells(ind, cStatus).text
+                        If stat = "0" Then
+                            dat.Cells(ind, cCom) = "Данные аннулированы!"
+                            dat.Cells(ind, cCom).Interior.Color = colRed
+                            src.Cells(i, cCom) = "Данные аннулированы!"
+                            src.Cells(i, cCom).Interior.Color = colRed
+                        End If
+                        If stat = "2" Then
+                            dat.Cells(ind, cCom) = "Данные зафиксированы!"
+                            dat.Cells(ind, cCom).Interior.Color = colGreen
+                            src.Cells(i, cCom) = "Данные зафиксированы!"
+                            src.Cells(i, cCom).Interior.Color = colGreen
+                        End If
+                        
                     Else
                         'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
                         uid = ""
@@ -193,6 +211,10 @@ End Function
 'si - строка в исходниках
 'refresh - true, если обновление данных (проверять что поменялось)
 Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
+    
+    stat = dat.Cells(di, cStatus).text
+    If stat = "0" Or stat = "2" Then Exit Function
+    
     Dim changed As Boolean
     For j = 2 To 14
         ravno = dat.Cells(di, j).text = src.Cells(si, j).text
@@ -224,4 +246,5 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         End If
     End If
     If Not refresh Then max = max + 1
+    If dat.Cells(di, cStatus).text = "" Then dat.Cells(di, cStatus) = 1
 End Function
