@@ -1,37 +1,26 @@
 Attribute VB_Name = "Template"
 Public Const Secret = "123"     'Пароль для защиты
-
-Const FirstClient = 7   'Первая строка списка клиентов
-Const MaxRecords = 100  'Максимальное количество записей
-Const maxBuyers = 100   'Максимальное количество покупателей
-Const maxSellers = 100  'Максимальное количество продавцов
+Const MaxRecords = 1000         'Максимальное количество записей
+Const maxBuyers = 100           'Максимальное количество покупателей
+Const maxSellers = 100          'Максимальное количество продавцов
 
 Public Sub Generate()
-        
-    'Ищем максимальный код, из существующих и проверяем на дубликаты
-    Dim max As Long
-    max = 0
+    
+    Main.Init
+    If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)
     Dim i As Long
-    i = FirstClient
+    Dim max As Long
+    i = firstTempl
     Do While Cells(i, 1) <> "" Or Cells(i, 2) <> ""
-        If isCode(Cells(i, 3)) Then
-            If max < Cells(i, 3) Then max = Cells(i, 3)
-        Else
-            Cells(i, 3) = ""
-        End If
-        Cells(i, 4) = ""
         i = i + 1
     Loop
-           
     'Генерируем шаблоны
     Set namelist = CreateObject("Scripting.Dictionary")
-    Set Codes = CreateObject("Scripting.Dictionary")
-    Dim total As Long
-    total = i - 1
+    max = i - 1
     fold = Cells(1, 3).text
-    For i = FirstClient To total
-        Message "Создение шаблона " + CStr(i - FirstClient + 1) + " из " + _
-            CStr(total - FirstClient + 1)
+    For i = firstTempl To max
+        Message "Создение шаблона " + CStr(i - firstTempl + 1) + " из " + _
+            CStr(max - FirstClient + 1)
         cln = Cells(i, 1).text
         tem = Cells(i, 2).text
         If validName(cln) And validName(tem) Then
@@ -39,37 +28,36 @@ Public Sub Generate()
             uname = cln + "!" + tem
             If namelist(uname) = "" Then
                 namelist(uname) = 0
-                need = False
-                If isCode(Cells(i, 3)) Then
-                    cod = Cells(i, 3)
-                    If Codes(cod) = "" Then
-                        Codes(cod) = 0
-                    Else
-                        need = True
-                    End If
-                Else
-                    need = True
-                End If
-                If need Then
-                    max = max + 1
-                    cod = max
+                'need = False
+                If Not isCode(Cells(i, 3)) Then
+                    cod = last + 1
+                    last = cod
                     Cells(i, 3) = cod
                 End If
                 name = fold + "\" + cln + "\" + tem + ".xlsx"
                 'Создаём папку и файл
                 folder (fold + "\" + cln)
-                If NewTemplate(cln, tem, name, cod) Then
-                    Cells(i, 4) = name
-                Else
+                res = NewTemplate(cln, tem, name, cod)
+                If res = 0 Then
                     Cells(i, 4) = "Произошла ошибка при создании файла"
+                    Cells(i, 5) = "Ошибка"
+                End If
+                If res = 1 Then
+                    Cells(i, 4) = name
+                    Cells(i, 5) = "Успешно!"
+                End If
+                If res = 2 Then
+                    Cells(i, 4) = name
+                    Cells(i, 5) = "Файл уже существует, пропущено"
                 End If
             Else
-                Cells(i, 4) = "Имя клиента или шаблона не уникально."
+                Cells(i, 5) = "Имя клиента или шаблона не уникально."
             End If
         Else
-            Cells(i, 4) = "Имя клиента или шаблона не указано или указано некорректно."
+            Cells(i, 5) = "Имя клиента или шаблона не указано или указано некорректно."
         End If
     Next
+    NUM.Cells(2, 1) = last
     
     Message "Готово!"
     
@@ -106,11 +94,12 @@ er:
 End Sub
 
 'Создание нового файла
+'Возвращает 0 - файл не создан, 1 - файл создан, 2 - файл уже есть, промущено
 Function NewTemplate(ByVal cln As String, ByVal tem As String, _
-    ByVal fileName As String, ByVal cod As String) As Boolean
+    ByVal fileName As String, ByVal cod As String) As Byte
     
     'Если файл существует - пропустим
-    If Dir$(fileName) <> "" Then NewTemplate = True: Exit Function
+    If Dir$(fileName) <> "" Then NewTemplate = 2: Exit Function
     
     'Создаём файл с нужными вкладками
     Workbooks.Add
@@ -257,10 +246,11 @@ er2:
     temp.Protect Secret, UserInterfaceOnly:=True
     ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
     ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
-    NewTemplate = True
+    NewTemplate = 1
     Exit Function
 er:
-    NewTemplate = False
+    ActiveWorkbook.Close
+    NewTemplate = 0
 End Function
 
 'Установка формата для колонки
