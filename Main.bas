@@ -99,7 +99,9 @@ Sub DataCollect()
         n = n + 1
     Next
     
-    Message ("Готово!")
+    ActiveWorkbook.Save
+    
+    Message "Готово! Файл сохранён."
     
     If isRelease Then MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
     

@@ -59,7 +59,9 @@ Public Sub Generate()
     Next
     NUM.Cells(2, 1) = last
     
-    Message "Готово!"
+    ActiveWorkbook.Save
+    
+    Message "Готово! Файл сохранён."
     
 End Sub
 
