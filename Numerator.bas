@@ -1,57 +1,72 @@
 Attribute VB_Name = "Numerator"
-Dim UIDs As Object      'Словарь нумератора
 Dim Prefixes As Object  'Словарь префиксов
+Dim Liters As Object    'Словарь литеров
 Dim Codes As Object     'Словарь кодов
 
 'Инициализация словаря
 Sub Init()
     
     'Загрузка словаря нумератора
-    NUM.Cells(1, 1) = "Внимание! Здесь находится служебная информация. Ручное редактирование не рекоммендуется."
-    NUM.Cells(3, 1) = "Префикс"
-    NUM.Cells(3, 2) = "Номер"
     Range(NUM.Cells(1, 1), NUM.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
-    Set UIDs = CreateObject("Scripting.Dictionary")
+    Set Prefixes = CreateObject("Scripting.Dictionary")
     Dim i As Long
-    i = 4
+    i = firstNum
     Do While NUM.Cells(i, 1) <> ""
         pref = NUM.Cells(i, 1)
-        UIDs.Add pref, NUM.Cells(i, 2)
+        Prefixes.Add pref, NUM.Cells(i, 2)
         i = i + 1
     Loop
     
     'Загрузка префиксов и кодов
+    Set Liters = CreateObject("Scripting.Dictionary")
+    Set Codes = CreateObject("Scripting.Dictionary")
     i = firstDic
-    'while
+    Do While DIC.Cells(i, 1) <> ""
+        buyer = DIC.Cells(i, 1)
+        Liters.Add buyer, GetLiter(buyer, DIC.Cells(i, 8).text)
+        Codes.Add buyer, DIC.Cells(i, 9).text
+        i = i + 1
+    Loop
+
 End Sub
 
 'Сохранение словаря на страницу
 Sub Save()
     Dim i As Long
-    i = 4
-    For Each Key In UIDs.keys
+    i = firstNum
+    For Each Key In Prefixes.keys
         NUM.Cells(i, 1) = Key
-        NUM.Cells(i, 2) = UIDs(Key)
+        NUM.Cells(i, 2) = Prefixes(Key)
         i = i + 1
     Next
 End Sub
 
-'Очистка словаря
-Sub Clear()
-    On Error GoTo er
-    Sheets(tabNum).Cells.Clear
-er:
-End Sub
-
 'Генерация уникального номера
-Function Generate(DAT As Date, buyer As String) As String
-    pref = GetPrefix(buyer) + Right(CStr(Year(DAT)), 2) + CStr(Month(DAT)) + CStr(Day(DAT))
-    If Not UIDs.exists(pref) Then UIDs.Add pref, 0
-    UIDs(pref) = UIDs(pref) + 1
-    Generate = pref + Right(CStr(UIDs(pref) + 1000), 3)
+Function Generate(recDate As Date, buyer As String) As String
+    
+    lit = Liters(buyer)
+    cod = Codes(buyer)
+    d = 5
+    If cod = "" Then
+        cod = Right(CStr(Year(recDate)), 2) + _
+            Right(CStr(Month(recDate) + 100), 2) + _
+            Right(CStr(Day(recDate) + 100), 2)
+        d = 3
+    End If
+    
+    pref = lit + cod
+    If Not Prefixes.exists(pref) Then Prefixes.Add pref, 0
+    Prefixes(pref) = Prefixes(pref) + 1
+
+    Generate = pref + Right(CStr(Prefixes(pref) + 10 ^ d), d)
+
 End Function
 
-'Поиск в словаре или генерация префикса
-Function GetPrefix(buyer As String) As String
-    GetPrefix = UCase(Left(buyer, 1))
+'Поиск в словаре или генерация литера
+Function GetLiter(ByVal buyer As String, lit As String) As String
+    If lit <> "" Then
+        GetLiter = UCase(lit)
+    Else
+        GetLiter = UCase(Left(buyer, 1))
+    End If
 End Function

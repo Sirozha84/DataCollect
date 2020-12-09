@@ -9,7 +9,7 @@ Sub Init()
     ERR.Cells(1, 1) = "Файл"
     ERR.Cells(1, 2) = "Результат"
     Range(ERR.Cells(1, 1), ERR.Cells(1, 100)).Interior.Color = RGB(214, 214, 214)
-    recN = 2
+    recN = firstErr
 End Sub
 
 'Запись ошибки

@@ -4,10 +4,17 @@ Public Const saveSource = True  'True - сохранение данных в формах, False - данн
 Public Const firstDat = 8       'Первая строка в коллекции данных
 Public Const firstSrc = 5       'Первая строка в исходных файлах
 Public Const firstDic = 5       'Первая строка в справочнике
-Public Const cCom = 15          'Колонка для комментария
-Public Const cStatus = 16       'Колонка статуса
-Public Const cFile = 17         'Колонка с именем файла
-Public Const cCode = 18         'Колонка с кодом файла
+Public Const firstErr = 2       'Первая строка в списке ошибок
+Public Const firstNum = 4       'Первая строка в словаре нумератора
+Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
+Public Const maxCol = 50        'Последняя колонка везде (для очистки)
+
+'Колонки
+Public Const cBuyer = 6         'Продавец
+Public Const cCom = 15          'Комментарий
+Public Const cStatus = 16       'Статус
+Public Const cFile = 17         'Имя файла
+Public Const cCode = 18         'Код формы
 
 'Цвета
 Public colWhite As Long
@@ -37,15 +44,23 @@ End Sub
 
 'Удаление всех данных (оставляя шапку)
 Sub Clear()
-    On Error GoTo er
+
+    Message "Удаление данных"
+    Init
+    'On Error GoTo er
     If isRelease Then If MsgBox("Внимание! " + Chr(10) + Chr(10) + _
         "Данная процедура очистит все собранные данные список ошибок и нумераторы. " + _
         "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код." + _
         Chr(10) + Chr(10) + "Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Range(Cells(firstDat, 1), Cells(1048576, 50)).Clear
-    Sheets(errName).Cells.Clear
+    Range(DAT.Cells(firstDat, 1), DAT.Cells(maxRow, maxCol)).Clear
+    Range(ERR.Cells(firstErr, 1), ERR.Cells(maxRow, maxCol)).Clear
+    Range(NUM.Cells(firstNum, 1), NUM.Cells(maxRow, maxCol)).Clear
+    Exit Sub
+    
+    Message "Готово!"
+    
 er:
-    Numerator.Clear
+    MsgBox ("Ошибка целостности документа!")
 End Sub
 
 'Сбор данных
@@ -53,7 +68,12 @@ Sub DataCollect()
     
     If isRelease Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     
+    Message "Подготовка..."
+    
     Init
+    Numerator.Init
+    Log.Init
+    Verify.Init
     
     'Получаем коллекцию файлов
     Set files = Source.getFiles(DAT.Cells(1, 3))
@@ -75,7 +95,9 @@ Sub DataCollect()
         End If
         n = n + 1
     Next
+    
     Message ("Готово!")
+    
     If isRelease Then MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
     
 End Sub
@@ -84,7 +106,6 @@ End Sub
 Sub Init()
     
     'On Error GoTo er
-    Message "Подготовка..."
     
     Set DAT = ActiveSheet
     Set DIC = Sheets("Справочник")
@@ -95,10 +116,6 @@ Sub Init()
     colRed = RGB(255, 192, 192)
     colGreen = RGB(192, 255, 192)
     colYellow = RGB(255, 255, 192)
-    
-    Numerator.Init
-    Log.Init
-    Verify.Init
     
     Exit Sub
 er:
@@ -145,7 +162,7 @@ Function AddFile(ByVal file As String) As Byte
             max = i
         
             'Обрабатываем строки исходника
-            Set resuids = CreateObject("Scripting.Dictionary")
+            Set resUIDs = CreateObject("Scripting.Dictionary")
             i = firstSrc
             Do While NotEmpty(i)
                 uid = SRC.Cells(i, 1)
@@ -180,7 +197,8 @@ Function AddFile(ByVal file As String) As Byte
                 End If
                 'Новая строка
                 If uid = "" Then If copyRecord(max, i, False) Then errors = True
-                resuids.Add SRC.Cells(i, 1).text, 1
+                rUID = SRC.Cells(i, 1).text
+                If rUID <> "" Then resUIDs.Add rUID, 1
                 i = i + 1
             Loop
             
@@ -189,7 +207,7 @@ Function AddFile(ByVal file As String) As Byte
             Do While DAT.Cells(i, 2) <> ""
                 uid = DAT.Cells(i, 1)
                 If uid <> "" And DAT.Cells(i, cCode) = cod Then
-                    If resuids(uid) = Empty Then
+                    If resUIDs(uid) = Empty Then
                         DAT.Cells(i, cCom) = "Данные удалены!"
                         DAT.Cells(i, cCom).Interior.Color = colRed
                         AddFile = 2
@@ -257,7 +275,7 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     Else
         'Если нет ошибок, и это не обновление, присваиваем номер
         If Not refresh Then
-            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, 4))
+            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cBuyer))
             DAT.Cells(di, 1) = n
             SRC.Cells(si, 1) = n
         End If
