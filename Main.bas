@@ -155,8 +155,8 @@ Function AddFile(ByVal file As String) As Byte
             Set Indexes = CreateObject("Scripting.Dictionary")
             i = firstDat
             Do While DAT.Cells(i, 2) <> ""
-                uid = DAT.Cells(i, 1)
-                If uid <> "" Then Indexes.Add uid, i
+                UID = DAT.Cells(i, 1)
+                If UID <> "" Then Indexes.Add UID, i
                 i = i + 1
             Loop
             max = i
@@ -165,11 +165,11 @@ Function AddFile(ByVal file As String) As Byte
             Set resUIDs = CreateObject("Scripting.Dictionary")
             i = firstSrc
             Do While NotEmpty(i)
-                uid = SRC.Cells(i, 1)
+                UID = SRC.Cells(i, 1)
                 'Строка уже есть (наверное)
-                If uid <> "" Then
+                If UID <> "" Then
                     
-                    ind = Indexes(uid)
+                    ind = Indexes(UID)
                     If ind <> Empty Then
                         
                         'И строка действительно есть, обновляем данные
@@ -192,11 +192,11 @@ Function AddFile(ByVal file As String) As Byte
                         
                     Else
                         'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
-                        uid = ""
+                        UID = ""
                     End If
                 End If
                 'Новая строка
-                If uid = "" Then If copyRecord(max, i, False) Then errors = True
+                If UID = "" Then If copyRecord(max, i, False) Then errors = True
                 rUID = SRC.Cells(i, 1).text
                 If rUID <> "" Then resUIDs.Add rUID, 1
                 i = i + 1
@@ -205,9 +205,9 @@ Function AddFile(ByVal file As String) As Byte
             'Проверяем исходник на удалённые записи
             i = firstDat
             Do While DAT.Cells(i, 2) <> ""
-                uid = DAT.Cells(i, 1)
-                If uid <> "" And DAT.Cells(i, cCode) = cod Then
-                    If resUIDs(uid) = Empty Then
+                UID = DAT.Cells(i, 1)
+                If UID <> "" And DAT.Cells(i, cCode) = cod Then
+                    If resUIDs(UID) = Empty Then
                         DAT.Cells(i, cCom) = "Данные удалены!"
                         DAT.Cells(i, cCom).Interior.Color = colRed
                         AddFile = 2
@@ -250,6 +250,7 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     stat = DAT.Cells(di, cStatus).text
     If stat = "0" Or stat = "2" Then Exit Function
     
+    'Копирование записей с проверкой на изменение
     Dim changed As Boolean
     For j = 2 To 14
         ravno = DAT.Cells(di, j).text = SRC.Cells(si, j).text
@@ -270,16 +271,26 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     DAT.Cells(di, cCode) = cod
     Range(DAT.Cells(di, cFile), DAT.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
     errors = Verify.Verify(DAT, SRC, di, si, changed)
-    If errors Then
-        copyRecord = True
-    Else
-        'Если нет ошибок, и это не обновление, присваиваем номер
-        If Not refresh Then
-            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cBuyer))
+    
+    'Если нужно, присваиваем записи новый номер
+    If Not errors Then
+        Dim needNum As Boolean
+        If refresh Then
+            needNum = Not Numerator.CheckPrefix(DAT.Cells(di, 1).text, _
+                DAT.Cells(di, 2), DAT.Cells(di, cBuyer).text)
+        Else
+            needNum = True
+        End If
+        If needNum Then
+            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cBuyer).text)
             DAT.Cells(di, 1) = n
             SRC.Cells(si, 1) = n
         End If
+    Else
+        copyRecord = True
     End If
+    
     If Not refresh Then max = max + 1
     If DAT.Cells(di, cStatus).text = "" Then DAT.Cells(di, cStatus) = 1
+    
 End Function

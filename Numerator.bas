@@ -42,17 +42,11 @@ Sub Save()
 End Sub
 
 'Генерация уникального номера
-Function Generate(recDate As Date, buyer As String) As String
+Public Function Generate(recDate As Date, buyer As String) As String
     
     lit = Liters(buyer)
-    cod = Codes(buyer)
-    d = 5
-    If cod = "" Then
-        cod = Right(CStr(Year(recDate)), 2) + _
-            Right(CStr(Month(recDate) + 100), 2) + _
-            Right(CStr(Day(recDate) + 100), 2)
-        d = 3
-    End If
+    Dim d As Byte
+    cod = GetCode(buyer, recDate, d)
     
     pref = lit + cod
     If Not Prefixes.exists(pref) Then Prefixes.Add pref, 0
@@ -69,4 +63,23 @@ Function GetLiter(ByVal buyer As String, lit As String) As String
     Else
         GetLiter = UCase(Left(buyer, 1))
     End If
+End Function
+
+'Поиск с вловаре или генерация кода
+Function GetCode(ByVal buyer As String, dateR As Date, ByRef d As Byte)
+    GetCode = Codes(buyer)
+    d = 5
+    If GetCode = "" Then
+        GetCode = Right(CStr(Year(recDate)), 2) + _
+            Right(CStr(Month(recDate) + 100), 2) + _
+            Right(CStr(Day(recDate) + 100), 2)
+        d = 3
+    End If
+End Function
+
+'Проверка правильности префикса (сравнивается существующий уид и наименование продавца)
+Function CheckPrefix(UID As String, ByVal dateS As Date, buyer As String) As Boolean
+    Dim d As Byte
+    pref = Liters(buyer) + GetCode(buyer, dateS, d)
+    CheckPrefix = pref = Left(UID, Len(pref))
 End Function
