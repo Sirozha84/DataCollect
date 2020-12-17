@@ -6,3 +6,10 @@ Sub Message(text As String)
     DoEvents
     Application.ScreenUpdating = False
 End Sub
+
+'Создание папки
+Sub folder(name As String)
+    On Error GoTo er
+    MkDir (name)
+er:
+End Sub

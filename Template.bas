@@ -7,7 +7,7 @@ Const maxSellers = 100          'Максимальное количество продавцов
 Public Sub Generate()
     
     Main.Init
-    If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)
+    If IsNumeric(num.Cells(2, 1)) Then last = num.Cells(2, 1)
     Dim i As Long
     Dim max As Long
     i = firstTempl
@@ -57,7 +57,7 @@ Public Sub Generate()
             Cells(i, 5) = "Имя клиента или шаблона не указано или указано некорректно."
         End If
     Next
-    NUM.Cells(2, 1) = last
+    num.Cells(2, 1) = last
     
     ActiveWorkbook.Save
     
@@ -87,13 +87,6 @@ Function validName(ByVal name As String) As Boolean
     If InStr(name, "<") Then validName = False
     If InStr(name, ">") Then validName = False
 End Function
-
-'Создание папки
-Sub folder(name As String)
-    On Error GoTo er
-    MkDir (name)
-er:
-End Sub
 
 'Создание нового файла
 'Возвращает 0 - файл не создан, 1 - файл создан, 2 - файл уже есть, промущено
