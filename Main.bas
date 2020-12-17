@@ -1,11 +1,12 @@
 Attribute VB_Name = "Main"
-Public Const isRelease = False  'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
+Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 Public Const saveSource = True  'True - сохранение данных в формах, False - данные не записываются (отладка)
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const maxCol = 50        'Последняя колонка везде (для очистки)
 
 'Колонки
-Public Const cBuyer = 6         'Продавец
+Public Const cDates = 2         'Дата
+Public Const cSeller = 6        'Продавец
 Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
 Public Const cFile = 17         'Имя файла
@@ -30,7 +31,7 @@ Public DAT As Variant   'Данные
 Public SRC As Variant   'Исходные данные
 Public DIC As Variant   'Справочники
 Public ERR As Variant   'Список ошибок
-Public NUM As Variant   'Словарь нумератора
+Public num As Variant   'Словарь нумератора
 
 Dim Indexes As Object   'Словарь индексов
 Dim max As Long         'Последняя строка в данных
@@ -45,6 +46,10 @@ Sub DirSelect()
     Cells(1, 3) = diag.SelectedItems(1)
 End Sub
 
+Sub Export()
+    FormExport.Show
+End Sub
+
 'Удаление всех данных (оставляя шапку)
 Sub Clear()
 
@@ -57,7 +62,7 @@ Sub Clear()
         Chr(10) + Chr(10) + "Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Range(DAT.Cells(firstDat, 1), DAT.Cells(maxRow, maxCol)).Clear
     Range(ERR.Cells(firstErr, 1), ERR.Cells(maxRow, maxCol)).Clear
-    Range(NUM.Cells(firstNum, 1), NUM.Cells(maxRow, maxCol)).Clear
+    Range(num.Cells(firstNum, 1), num.Cells(maxRow, maxCol)).Clear
     Exit Sub
     
     Message "Готово!"
@@ -115,7 +120,7 @@ Sub Init()
     Set DAT = ActiveSheet
     Set DIC = Sheets("Справочник")
     Set ERR = Sheets("Ошибки")
-    Set NUM = Sheets("Словарь нумератора")
+    Set num = Sheets("Словарь нумератора")
     
     colWhite = RGB(255, 255, 255)
     colRed = RGB(255, 192, 192)
@@ -282,12 +287,12 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         Dim needNum As Boolean
         If refresh Then
             needNum = Not Numerator.CheckPrefix(DAT.Cells(di, 1).text, _
-                DAT.Cells(di, 2), DAT.Cells(di, cBuyer).text)
+                DAT.Cells(di, 2), DAT.Cells(di, cSeller).text)
         Else
             needNum = True
         End If
         If needNum Then
-            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cBuyer).text)
+            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSeller).text)
             DAT.Cells(di, 1) = n
             SRC.Cells(si, 1) = n
         End If

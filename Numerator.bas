@@ -7,13 +7,13 @@ Dim Codes As Object     'Словарь кодов
 Sub Init()
     
     'Загрузка словаря нумератора
-    Range(NUM.Cells(1, 1), NUM.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
+    Range(num.Cells(1, 1), num.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
     Set Prefixes = CreateObject("Scripting.Dictionary")
     Dim i As Long
     i = firstNum
-    Do While NUM.Cells(i, 1) <> ""
-        pref = NUM.Cells(i, 1)
-        Prefixes.Add pref, NUM.Cells(i, 2)
+    Do While num.Cells(i, 1) <> ""
+        pref = num.Cells(i, 1)
+        Prefixes.Add pref, num.Cells(i, 2)
         i = i + 1
     Loop
     
@@ -22,9 +22,9 @@ Sub Init()
     Set Codes = CreateObject("Scripting.Dictionary")
     i = firstDic
     Do While DIC.Cells(i, 1) <> ""
-        buyer = DIC.Cells(i, 1)
-        Liters.Add buyer, GetLiter(buyer, DIC.Cells(i, 8).text)
-        Codes.Add buyer, DIC.Cells(i, 9).text
+        seller = DIC.Cells(i, 1)
+        Liters.Add seller, GetLiter(seller, DIC.Cells(i, 8).text)
+        Codes.Add seller, DIC.Cells(i, 9).text
         i = i + 1
     Loop
 
@@ -35,18 +35,18 @@ Sub Save()
     Dim i As Long
     i = firstNum
     For Each Key In Prefixes.keys
-        NUM.Cells(i, 1) = Key
-        NUM.Cells(i, 2) = Prefixes(Key)
+        num.Cells(i, 1) = Key
+        num.Cells(i, 2) = Prefixes(Key)
         i = i + 1
     Next
 End Sub
 
 'Генерация уникального номера
-Public Function Generate(recDate As Date, buyer As String) As String
+Public Function Generate(recDate As Date, seller As String) As String
     
-    lit = Liters(buyer)
+    lit = Liters(seller)
     Dim d As Byte
-    cod = GetCode(buyer, recDate, d)
+    cod = GetCode(seller, recDate, d)
     
     pref = lit + cod
     If Not Prefixes.exists(pref) Then Prefixes.Add pref, 0
@@ -57,17 +57,17 @@ Public Function Generate(recDate As Date, buyer As String) As String
 End Function
 
 'Поиск в словаре или генерация литера
-Function GetLiter(ByVal buyer As String, lit As String) As String
+Function GetLiter(ByVal seller As String, lit As String) As String
     If lit <> "" Then
         GetLiter = UCase(lit)
     Else
-        GetLiter = UCase(Left(buyer, 1))
+        GetLiter = UCase(Left(seller, 1))
     End If
 End Function
 
 'Поиск с вловаре или генерация кода
-Function GetCode(ByVal buyer As String, dateR As Date, ByRef d As Byte)
-    GetCode = Codes(buyer)
+Function GetCode(ByVal seller As String, dateR As Date, ByRef d As Byte)
+    GetCode = Codes(seller)
     d = 5
     If GetCode = "" Then
         GetCode = Right(CStr(Year(recDate)), 2) + _
@@ -78,8 +78,8 @@ Function GetCode(ByVal buyer As String, dateR As Date, ByRef d As Byte)
 End Function
 
 'Проверка правильности префикса (сравнивается существующий уид и наименование продавца)
-Function CheckPrefix(UID As String, ByVal dateS As Date, buyer As String) As Boolean
+Function CheckPrefix(UID As String, ByVal dateS As Date, seller As String) As Boolean
     Dim d As Byte
-    pref = Liters(buyer) + GetCode(buyer, dateS, d)
+    pref = Liters(seller) + GetCode(seller, dateS, d)
     CheckPrefix = pref = Left(UID, Len(pref))
 End Function
