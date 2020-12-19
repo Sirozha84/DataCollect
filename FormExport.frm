@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FormExport 
    Caption         =   "Выгрузка данных"
-   ClientHeight    =   3240
-   ClientLeft      =   120
-   ClientTop       =   465
-   ClientWidth     =   4560
+   ClientHeight    =   3241
+   ClientLeft      =   119
+   ClientTop       =   462
+   ClientWidth     =   4564
    OleObjectBlob   =   "FormExport.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -35,8 +35,8 @@ Private Sub UserForm_Initialize()
     Loop
     
     ComboBoxBuyers.AddItem "Все"
-    For Each Seller In Sellers
-        ComboBoxBuyers.AddItem Seller
+    For Each seller In Sellers
+        ComboBoxBuyers.AddItem seller
     Next
     ComboBoxBuyers.ListIndex = 0
     
@@ -98,8 +98,8 @@ Private Sub CommandExport_Click()
     If ComboBoxBuyers.ListIndex = 0 Then
         n = 1
         a = Sellers.Count
-        For Each Seller In Sellers
-            ExportFile Seller, CStr(n) + " из " + CStr(a) + ": "
+        For Each seller In Sellers
+            ExportFile seller, CStr(n) + " из " + CStr(a) + ": "
             n = n + 1
         Next
     Else
@@ -110,8 +110,11 @@ Private Sub CommandExport_Click()
 End Sub
 
 'Экспорт файла
-Private Sub ExportFile(ByVal Seller As String, num As String)
-    Message "Экспорт файла " + num + Seller
+Private Sub ExportFile(ByVal seller As String, num As String)
+    Dim i As Long
+    Dim j As Long
+    
+    Message "Экспорт файла " + num + seller
     
     'Определяемся с путём и именем файла
     patch = Cells(2, 3)
@@ -123,35 +126,80 @@ Private Sub ExportFile(ByVal Seller As String, num As String)
     If mnC Then fol = "\" + mn
     If qrC Then fol = "\" + qr
     If fol <> "" Then folder (patch + fol)
-    fileName = patch + fol + "\" + Seller + ".xlsx"
+    fileName = patch + fol + "\" + seller + ".xlsx"
     
     'Создаём книгу
     'On Error GoTo er
     Workbooks.Add
-    
+    i = 1
+    Cells(i, 1) = "Код вида" + Chr(10) + "операции"
+    Cells(i, 2) = "№ счет" + Chr(10) + "фактуры"
+    Cells(i, 3) = "Дата счет" + Chr(10) + "фактуры"
+    Cells(i, 4) = "ИНН"
+    Cells(i, 5) = "КПП"
+    Cells(i, 6) = "Наименование"
+    Cells(i, 7) = "Сумма в руб." + Chr(10) + "и коп."
+    Cells(i, 8) = "Сумма" + Chr(10) + "без НДС 20%"
+    Cells(i, 9) = "Сумма" + Chr(10) + "без НДС 18%"
+    Cells(i, 10) = "Сумма" + Chr(10) + "без НДС 10%"
+    Cells(i, 11) = "НДС 20%"
+    Cells(i, 12) = "НДС 18%"
+    Cells(i, 13) = "НДС 10%"
+    Cells(i, 14) = "Период НД"
+    Columns(1).ColumnWidth = 10
+    Columns(2).ColumnWidth = 13
+    Columns(3).ColumnWidth = 10
+    Columns(4).ColumnWidth = 11
+    Columns(5).ColumnWidth = 10
+    Columns(6).ColumnWidth = 15
+    Columns(7).ColumnWidth = 12
+    Columns(8).ColumnWidth = 12
+    Columns(9).ColumnWidth = 12
+    Columns(10).ColumnWidth = 12
+    Columns(11).ColumnWidth = 10
+    Columns(12).ColumnWidth = 10
+    Columns(13).ColumnWidth = 10
+    Columns(14).ColumnWidth = 10
+    Rows(1).RowHeight = 30
+    Set hat = Range(Cells(1, 1), Cells(1, 14))
+    hat.HorizontalAlignment = xlCenter
+    hat.VerticalAlignment = xlCenter
+    hat.Interior.Color = colGray
+    hat.Borders.Weight = 3
+    firstEx = i + 1
     
     
     'Заполняем книгу
-    Dim i As Long
     i = firstDat
-    Dim j As Long
-    j = 3
+    j = firstEx
     Do While DAT.Cells(i, 2) <> "" Or DAT.Cells(i, 15) <> ""
         cp = True
-        If DAT.Cells(i, cSeller) <> Seller Then cp = False
+        If DAT.Cells(i, cSeller) <> seller Then cp = False
         d = DAT.Cells(i, cDates)
         If mnC Then If YearAndMonth(d) <> mn Then cp = False
         If qrC Then If YearAndQuartal(d) <> qr Then cp = False
         If cp Then
-            For c = 1 To 14
-                Cells(j, c) = DAT.Cells(i, c)
+            Cells(j, 1).NumberFormat = "@"
+            Cells(j, 1) = "01"
+            Cells(j, 2) = DAT.Cells(i, 1)
+            Cells(j, 3).NumberFormat = "dd.MM.yyyy"
+            Cells(j, 3) = DAT.Cells(i, 2)
+            innkpp = Split(DAT.Cells(i, 3), "/")
+            Cells(j, 4) = innkpp(0)
+            If UBound(innkpp) > 0 Then Cells(j, 5) = innkpp(1)
+            Cells(j, 6) = DAT.Cells(i, 4)
+            Cells(j, 7).NumberFormat = "### ### ##0.00"
+            Cells(j, 7) = DAT.Cells(i, 7)
+            For c = 0 To 5
+                Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
+                Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
             Next
             j = j + 1
         End If
         i = i + 1
     Loop
-    ActiveWorkbook.SaveAs fileName:=fileName
-    ActiveWorkbook.Close
+    If j > firstEx Then ActiveWorkbook.SaveAs fileName:=fileName
+    'ActiveWorkbook.Close
 
 er:
 End Sub

@@ -25,6 +25,7 @@ Public colWhite As Long
 Public colRed As Long
 Public colGreen As Long
 Public colYellow As Long
+Public colGray As Long
 
 'Ссылки на таблицы
 Public DAT As Variant   'Данные
@@ -126,6 +127,7 @@ Sub Init()
     colRed = RGB(255, 192, 192)
     colGreen = RGB(192, 255, 192)
     colYellow = RGB(255, 255, 192)
+    colGray = RGB(224, 224, 224)
     
     Exit Sub
 er:

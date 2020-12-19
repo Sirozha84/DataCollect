@@ -173,7 +173,7 @@ er2:
     Set hat = Range(Cells(3, 1), Cells(4, 14))
     hat.HorizontalAlignment = xlCenter
     hat.VerticalAlignment = xlCenter
-    hat.Interior.Color = RGB(224, 224, 224)
+    hat.Interior.Color = colGray
     hat.Borders.Weight = 3
     
     'Поле 2 - Дата
