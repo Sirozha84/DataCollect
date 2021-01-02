@@ -4,11 +4,12 @@ Dim errors As Boolean   'Флаг наличия ошибок
 Dim groups As Variant   'Словарь групп
 Dim dateS As Variant    'Словарь дат регистраций
 Dim limitPrs As Variant 'Словарь лимитов на отгрузку
-Dim limitOne As Variant  'Общий лимит на отгрузку одному покупателю
+Dim limitOne As Variant 'Общий лимит на отгрузку одному покупателю
 Dim limitAll As Variant 'Общий лимит на отгрузку
-Dim summPrs As Variant    'Счётчики сумм на отгрузку
-Dim summOne As Variant   'Счётчики сумм продажи одному покупателю
+Dim summPrs As Variant  'Счётчики сумм на отгрузку
+Dim summOne As Variant  'Счётчики сумм продажи одному покупателю
 Dim summAll As Variant  'Счётчики сумм продажи всем
+Dim buyers As Variant   'Словарь покупателей "у кого покупаем"
 
 'Инициализация словарей лимитов
 Sub Init()
@@ -19,6 +20,7 @@ Sub Init()
     Set summOne = CreateObject("Scripting.Dictionary")
     Set summAll = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")
+    Set buyers = CreateObject("Scripting.Dictionary")
     Dim i As Long
     
     'Чтение словаря дат регистраций компаний
@@ -132,7 +134,7 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, By
         SRC.Cells(iI, i).Interior.Color = colRed
         AddCom "Сумма НДС введена не корректно"
     Else
-        Call LimitsTest(DAT, iC)
+        LimitsTest DAT, iC
     End If
     
     'Пишем комментарий и расскрашиваем его
@@ -161,9 +163,11 @@ End Function
 
 'Проверка лимитов
 Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
+    kv = "!" + Kvartal(DAT.Cells(i, 2)) + "!"
     sel = DAT.Cells(i, 6)
-    selCur = sel + "!" + Kvartal(DAT.Cells(i, 2)) + "!"
+    selCur = sel + kv
     buy = DAT.Cells(i, 4)
+    buyCur = buy + kv
     grp = groups(sel)
     Sum = 0
     For j = 12 To 14
@@ -175,6 +179,12 @@ Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
     If summPrs(selCur) > limitPrs(sel) Then AddCom "Превышен лимит отгрузок" 'Персональный
     If summOne(selCur + buy) > limitOne Then AddCom "Превышен общий лимит продаж одному покупателю"
     If summAll(selCur) > limitAll Then AddCom "Превышен общий лимит продаж"
+    If buyers(buyCur + grp) = "" Then
+        buyers(buyCur + grp) = sel
+    Else
+        If buyers(buyCur + grp) <> sel Then AddCom "Покупка у другого продавца группы"
+    End If
+
 End Sub
 
 'Добавление комментария к строке
