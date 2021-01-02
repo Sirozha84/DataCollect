@@ -7,13 +7,13 @@ Dim Codes As Object     'Словарь кодов
 Sub Init()
     
     'Загрузка словаря нумератора
-    Range(num.Cells(1, 1), num.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
+    Range(NUM.Cells(1, 1), NUM.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
     Set Prefixes = CreateObject("Scripting.Dictionary")
     Dim i As Long
     i = firstNum
-    Do While num.Cells(i, 1) <> ""
-        pref = num.Cells(i, 1)
-        Prefixes.Add pref, num.Cells(i, 2)
+    Do While NUM.Cells(i, 1) <> ""
+        pref = NUM.Cells(i, 1)
+        Prefixes.Add pref, NUM.Cells(i, 2)
         i = i + 1
     Loop
     
@@ -35,8 +35,8 @@ Sub Save()
     Dim i As Long
     i = firstNum
     For Each Key In Prefixes.keys
-        num.Cells(i, 1) = Key
-        num.Cells(i, 2) = Prefixes(Key)
+        NUM.Cells(i, 1) = Key
+        NUM.Cells(i, 2) = Prefixes(Key)
         i = i + 1
     Next
 End Sub
@@ -70,9 +70,9 @@ Function GetCode(ByVal seller As String, dateR As Date, ByRef d As Byte)
     GetCode = Codes(seller)
     d = 5
     If GetCode = "" Then
-        GetCode = Right(CStr(Year(recDate)), 2) + _
-            Right(CStr(Month(recDate) + 100), 2) + _
-            Right(CStr(Day(recDate) + 100), 2)
+        GetCode = Right(CStr(Year(dateR)), 2) + _
+            Right(CStr(Month(dateR) + 100), 2) + _
+            Right(CStr(Day(dateR) + 100), 2)
         d = 3
     End If
 End Function
