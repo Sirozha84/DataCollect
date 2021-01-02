@@ -11,12 +11,14 @@ Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
 Public Const cFile = 17         'Имя файла
 Public Const cCode = 18         'Код формы
+Public Const cPLiter = 6        'Префикс - литер
+Public Const cPCode = 7         'Префикс - код
 
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных
 Public Const firstSrc = 5       'Первая строка в исходных файлах
 Public Const firstTempl = 7     'Первая строка в списке шаблонов
-Public Const firstDic = 5       'Первая строка в справочнике
+Public Const firstDic = 4       'Первая строка в справочнике
 Public Const firstErr = 2       'Первая строка в списке ошибок
 Public Const firstNum = 4       'Первая строка в словаре нумератора
 

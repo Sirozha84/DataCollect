@@ -23,8 +23,8 @@ Sub Init()
     i = firstDic
     Do While DIC.Cells(i, 1) <> ""
         seller = DIC.Cells(i, 1)
-        Liters.Add seller, GetLiter(seller, DIC.Cells(i, 8).text)
-        Codes.Add seller, DIC.Cells(i, 9).text
+        Liters.Add seller, GetLiter(seller, DIC.Cells(i, cPLiter).text)
+        Codes.Add seller, DIC.Cells(i, cPCode).text
         i = i + 1
     Loop
 
