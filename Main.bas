@@ -4,15 +4,24 @@ Public Const saveSource = True  'True - сохранение данных в формах, False - данн
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const maxCol = 50        'Последняя колонка везде (для очистки)
 
-'Колонки
+'Колонки "Данные"
 Public Const cDates = 2         'Дата
+Public Const cBuyINN = 3        'ИНН покупателя
+Public Const cSellINN = 5       'ИНН продавца
 Public Const cSeller = 6        'Продавец
 Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
 Public Const cFile = 17         'Имя файла
 Public Const cCode = 18         'Код формы
-Public Const cPLiter = 5        'Префикс - литер
-Public Const cPCode = 6         'Префикс - код
+
+'Колонки "Справочник"
+Public Const cSellerName = 1    'Наименование продавца
+Public Const cINN = 2           'ИНН
+Public Const cSDate = 3         'Дата регистрации
+Public Const cGroup = 4         'Группы
+Public Const cLimits = 5        'Лимиты
+Public Const cPLiter = 6        'Префикс - литер
+Public Const cPCode = 7         'Префикс - код
 
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных
@@ -34,7 +43,8 @@ Public DAT As Variant   'Данные
 Public SRC As Variant   'Исходные данные
 Public DIC As Variant   'Справочники
 Public ERR As Variant   'Список ошибок
-Public num As Variant   'Словарь нумератора
+Public NUM As Variant   'Словарь нумератора
+Public VAL As Variant   'Значения объёмов
 
 Dim Indexes As Object   'Словарь индексов
 Dim max As Long         'Последняя строка в данных
@@ -65,7 +75,7 @@ Sub Clear()
         Chr(10) + Chr(10) + "Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Range(DAT.Cells(firstDat, 1), DAT.Cells(maxRow, maxCol)).Clear
     Range(ERR.Cells(firstErr, 1), ERR.Cells(maxRow, maxCol)).Clear
-    Range(num.Cells(firstNum, 1), num.Cells(maxRow, maxCol)).Clear
+    Range(NUM.Cells(firstNum, 1), NUM.Cells(maxRow, maxCol)).Clear
     Exit Sub
     
     Message "Готово!"
@@ -124,7 +134,8 @@ Sub Init()
     Set DAT = ActiveSheet
     Set DIC = Sheets("Справочник")
     Set ERR = Sheets("Ошибки")
-    Set num = Sheets("Словарь нумератора")
+    Set NUM = Sheets("Словарь нумератора")
+    Set VAL = Sheets("Объёмы")
     
     colWhite = RGB(255, 255, 255)
     colRed = RGB(255, 192, 192)

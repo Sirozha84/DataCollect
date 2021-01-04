@@ -21,33 +21,19 @@ Sub Init()
     Set buyers = CreateObject("Scripting.Dictionary")
     Dim i As Long
     
-    'Чтение словаря дат регистраций компаний
-    i = firstDic
-    Do While DIC.Cells(i, 1) <> ""
-        cmp = DIC.Cells(i, 1).text
-        dtt = DIC.Cells(i, 2)
-        dateS(cmp) = dtt
-        i = i + 1
-    Loop
-    
     'Чтение общих лимитов
-    limitOne = DIC.Cells(1, 4)
-    limitAll = DIC.Cells(2, 4)
-
-    'Чтение словаря лимитов отгрузок
-    i = firstDic
-    Do While DIC.Cells(i, 1) <> ""
-        cmp = DIC.Cells(i, 1).text
-        lim = DIC.Cells(i, 4)
-        limitPrs(cmp) = lim
-        i = i + 1
-    Loop
+    limitOne = DIC.Cells(1, cLimits)
+    limitAll = DIC.Cells(2, cLimits)
     
-    'Чтение словаря групп
+    'Чтение словарей дат регистрации, лимитов отгрузок и групп
     i = firstDic
     Do While DIC.Cells(i, 1) <> ""
-        cmp = DIC.Cells(i, 1).text
-        grp = DIC.Cells(i, 3).text
+        cmp = DIC.Cells(i, cINN).text
+        dtt = DIC.Cells(i, cSDate)
+        dateS(cmp) = dtt
+        lim = DIC.Cells(i, cLimits)
+        limitPrs(cmp) = lim
+        grp = DIC.Cells(i, cGroup).text
         groups(cmp) = grp
         i = i + 1
     Loop
@@ -191,9 +177,9 @@ End Function
 'Проверка лимитов
 Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
     kv = "!" + Kvartal(DAT.Cells(i, 2)) + "!"
-    sel = DAT.Cells(i, 6)
+    sel = DAT.Cells(i, cSellINN).text
     selCur = sel + kv
-    buy = DAT.Cells(i, 4)
+    buy = DAT.Cells(i, cBuyINN).text
     buyCur = buy + kv
     grp = groups(sel)
     Sum = 0

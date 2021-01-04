@@ -21,8 +21,8 @@ Sub Init()
     Set Liters = CreateObject("Scripting.Dictionary")
     Set Codes = CreateObject("Scripting.Dictionary")
     i = firstDic
-    Do While DIC.Cells(i, 1) <> ""
-        seller = DIC.Cells(i, 1)
+    Do While DIC.Cells(i, cSellerName) <> ""
+        seller = DIC.Cells(i, cSellerName)
         Liters.Add seller, GetLiter(seller, DIC.Cells(i, cPLiter).text)
         Codes.Add seller, DIC.Cells(i, cPCode).text
         i = i + 1
@@ -65,7 +65,8 @@ Function GetLiter(ByVal seller As String, lit As String) As String
     End If
 End Function
 
-'Поиск с вловаре или генерация кода
+'Поиск в словаре или генерация кода
+'d - количество цифр номера
 Function GetCode(ByVal seller As String, dateR As Date, ByRef d As Byte)
     GetCode = Codes(seller)
     d = 5
