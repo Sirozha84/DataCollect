@@ -51,8 +51,8 @@ Sub DuplicateFinder()
         s = Split(file, "*")
         f = s(0)
         c = s(1)
-        Call Log.Rec(f, 4)
-        Call RenameFile(f, c)
+        Log.Rec f, 5
+        RenameFile f, c
         For i = files.Count To 1 Step -1
             If files(i) = f Then files.Remove (i)
         Next

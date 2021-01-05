@@ -3,6 +3,7 @@ Public Const isRelease = True   'True - полноценная работа, False - режим отладк
 Public Const saveSource = True  'True - сохранение данных в формах, False - данные не записываются (отладка)
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const maxCol = 50        'Последняя колонка везде (для очистки)
+Public Const tmpVersion = "20210105"    'Версия шаблона
 
 'Колонки "Данные"
 Public Const cDates = 2         'Дата
@@ -153,7 +154,9 @@ End Sub
 '1 - ошибка загрузки
 '2 - ошибка в данных
 '3 - нет кода
-'4 - запись аннулирована
+'4 - версия файла не поддерживается
+'5 не использовать, это код дубликата (провеяется в Source)
+'Сообщения об ошибках по этим кодам пишется в Log
 Function AddFile(ByVal file As String) As Byte
     errors = False
     If isRelease Then On Error GoTo er
@@ -163,6 +166,12 @@ Function AddFile(ByVal file As String) As Byte
     If Not impBook Is Nothing Then
         Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
         SRC.Unprotect Template.Secret
+        ver = SRC.Cells(2, 1).text
+        If ver <> tmpVersion And ver <> "" Then 'And ver<>"" в случае обновления шаблона убрать!
+            AddFile = 4
+            impBook.Close False
+            Exit Function
+        End If
         cod = SRC.Cells(1, 1)
         If cod <> "" Then
             

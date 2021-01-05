@@ -7,7 +7,7 @@ Const maxSellers = 100          'Максимальное количество продавцов
 Public Sub Generate()
     
     Main.Init
-    If IsNumeric(num.Cells(2, 1)) Then last = num.Cells(2, 1)
+    If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)
     Dim i As Long
     Dim max As Long
     i = firstTempl
@@ -57,7 +57,7 @@ Public Sub Generate()
             Cells(i, 5) = "Имя клиента или шаблона не указано или указано некорректно."
         End If
     Next
-    num.Cells(2, 1) = last
+    NUM.Cells(2, 1) = last
     
     ActiveWorkbook.Save
     
@@ -113,7 +113,8 @@ er2:
     Set listb = Sheets(2)
     Set lists = Sheets(3)
     Cells(1, 1) = cod
-    Cells(1, 1).Font.Color = vbWhite
+    Cells(2, 1) = tmpVersion
+    Range(Cells(1, 1), Cells(2, 1)).Font.Color = vbWhite
     Cells(1, 2) = "Клиент: " + cln
     Cells(2, 2) = "Шаблон: " + tem
     
@@ -238,7 +239,7 @@ er2:
     Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(4 + MaxRecords) + ")"
     
     'Защита и сохранение книги
-    temp.Protect Secret, UserInterfaceOnly:=True
+    temp.Protect Secret, UserInterfaceOnly:=True, AllowFormattingColumns:=True
     ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
     ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
     NewTemplate = 1
