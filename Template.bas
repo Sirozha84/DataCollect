@@ -1,6 +1,6 @@
 Attribute VB_Name = "Template"
 Public Const Secret = "123"     'Пароль для защиты
-Const MaxRecords = 1000         'Максимальное количество записей
+Const lastRec = 10000           'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxBuyers = 100           'Максимальное количество покупателей
 Const maxSellers = 100          'Максимальное количество продавцов
 
@@ -178,65 +178,58 @@ er2:
     hat.Borders.Weight = 3
     
     'Поле 2 - Дата
-    Call setFormat(2, "date")
-    Call setValidation(2, "date")
-    Call allowEdit(temp, 2, "Дата")
+    setFormat 2, "date"
+    setValidation 2, "date"
+    allowEdit temp, 2, "Дата"
+    
     'Поле 3 - ИНН покупателя, находится с помощью ВПР
-    For i = 5 To 4 + MaxRecords
-        Cells(i, 3).FormulaLocal = "=ВПР(D" + CStr(i) + ";Покупатели!A2:B" + _
-        CStr(maxBuyers) + ";2;0)"
-    Next
-    setFormatConditions (3)
+    setRange(3).FormulaLocal = "=ВПР(F5;Покупатели!A$2:B$" + CStr(maxBuyers) + ";2;0)"
+    setFormatConditions 3
+    
     'Поле 4 - Покупатель, выбираем из списка
-    Call setValidation(4, "b")
-    Call allowEdit(temp, 4, "Покупатель")
+    setValidation 4, "buy"
+    allowEdit temp, 4, "Покупатель"
+    
     'Поле 5 - ИНН продавца, находится с помлщью ВПР
-    For i = 5 To 4 + MaxRecords
-        Cells(i, 5).FormulaLocal = "=ВПР(F" + CStr(i) + ";Продавцы!A2:B" + _
-        CStr(maxSellers) + ";2;0)"
-    Next
-    setFormatConditions (5)
+    setRange(5).FormulaLocal = "=ВПР(F5;Продавцы!A$2:B$" + CStr(maxSellers) + ";2;0)"
+    setFormatConditions 5
+    
     'Поле 6 - Продавец, выбираем из списка
-    Call setValidation(6, "s")
-    Call allowEdit(temp, 6, "Продавец")
+    setValidation 6, "sell"
+    allowEdit temp, 6, "Продавец"
+    
     'Поле 7 - Стоимость
-    Call setValidation(7, "num")
-    Call setFormat(7, "money")
+    setValidation 7, "num"
+    setFormat 7, "money"
+    allowEdit temp, 7, "Стоимость"
     Cells(1, 7).Borders.Weight = 3
-    Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(4 + MaxRecords) + ")"
-    Call allowEdit(temp, 7, "Стоимость")
+    Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(lastRec) + ")"
+    
     'Поле 8 - Ставка НДС
-    Call setValidation(8, "nds")
-    Call allowEdit(temp, 8, "Ставка НДС")
+    setValidation 8, "nds"
+    allowEdit temp, 8, "Ставка НДС"
+    
     'Общее 9-14
     For i = 9 To 14
-        Call setFormat(i, "money")
+        setFormat i, "money"
         Cells(1, i).Borders.Weight = 3
     Next
+    
     'Поле 9-11 - Сумма с НДС 20,18,10%      Формула G/(100+H)*100
-    For i = 5 To 4 + MaxRecords
-        Cells(i, 9).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=20);" + _
-        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*100;2);"""")"
-        Cells(i, 10).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=18);" + _
-        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*100;2);"""")"
-        Cells(i, 11).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=10);" + _
-        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*100;2);"""")"
-    Next
-    Cells(1, 9).FormulaLocal = "=СУММ(I5:I" + CStr(4 + MaxRecords) + ")"
-    Cells(1, 10).FormulaLocal = "=СУММ(J5:J" + CStr(4 + MaxRecords) + ")"
-    Cells(1, 11).FormulaLocal = "=СУММ(K5:K" + CStr(4 + MaxRecords) + ")"
+    setRange(9).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=20);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
+    setRange(10).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=18);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
+    setRange(11).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=10);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
+    Cells(1, 9).FormulaLocal = "=СУММ(I5:I" + CStr(lastRec) + ")"
+    Cells(1, 10).FormulaLocal = "=СУММ(J5:J" + CStr(lastRec) + ")"
+    Cells(1, 11).FormulaLocal = "=СУММ(K5:K" + CStr(lastRec) + ")"
+    
     'Поле 12-14 - Сумма без НДС 20,18,10%   Формула G/(100+H)*H
-    For i = 5 To 4 + MaxRecords
-        Cells(i, 12).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=20);" + _
-        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*H" + CStr(i) + ";2);"""")"
-        Cells(i, 13).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=18);" + _
-        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*H" + CStr(i) + ";2);"""")"
-        Cells(i, 14).FormulaLocal = "=ЕСЛИ(И(G" + CStr(i) + "<>"""";H" + CStr(i) + "=10);" + _
-        "ОКРУГЛ(G" + CStr(i) + "/(100+H" + CStr(i) + ")*H" + CStr(i) + ";2);"""")"
-    Next
-    Cells(1, 12).FormulaLocal = "=СУММ(L5:L" + CStr(4 + MaxRecords) + ")"
-    Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(4 + MaxRecords) + ")"
-    Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(4 + MaxRecords) + ")"
+    setRange(12).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=20);ОКРУГЛ(G5/(100+H5)*H5;2);"""")"
+    setRange(13).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=18);ОКРУГЛ(G5/(100+H5)*H5;2);"""")"
+    setRange(14).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=10);ОКРУГЛ(G5/(100+H5)*H5;2);"""")"
+    Cells(1, 12).FormulaLocal = "=СУММ(L5:L" + CStr(lastRec) + ")"
+    Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(lastRec) + ")"
+    Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(lastRec) + ")"
     
     'Защита и сохранение книги
     temp.Protect Secret, UserInterfaceOnly:=True, AllowFormattingColumns:=True
@@ -249,16 +242,20 @@ er:
     NewTemplate = 0
 End Function
 
+Function setRange(ByVal c As Integer) As Range
+    Set setRange = Range(Cells(5, c), Cells(lastRec, c))
+End Function
+
 'Установка формата для колонки
 Sub setFormat(ByVal c As Integer, format As String)
-    Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
+    Set rang = Range(Cells(5, c), Cells(lastRec, c))
     If format = "date" Then rang.NumberFormat = "dd.MM.yyyy"
     If format = "money" Then rang.NumberFormat = "### ### ##0.00"
 End Sub
 
 'Установка условного форматирования для колонки
 Sub setFormatConditions(c As Integer)
-    Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
+    Set rang = Range(Cells(5, c), Cells(lastRec, c))
     With rang.FormatConditions
         .Add Type:=xlErrorsCondition
         .Item(.Count).Font.Color = vbWhite
@@ -267,15 +264,29 @@ End Sub
 
 'Установка проверки значений
 Sub setValidation(c As Integer, typ As String)
-    Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
-    If typ = "b" Then formul = "=Покупатели!$A$2:$A$" + CStr(maxBuyers)
-    If typ = "s" Then formul = "=Продавцы!$A$2:$A$" + CStr(maxSellers)
-    If typ = "nds" Then formul = "10,18,20"
-    If formul <> "" Then
+    Set rang = Range(Cells(5, c), Cells(lastRec, c))
+    If typ = "buy" Then
+        formul = "=Покупатели!$A$2:$A$" + CStr(maxBuyers)
         With rang.Validation
             .Delete
             .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Formula1:=formul
             .ErrorMessage = "Только из списка, пожалуйста!"
+        End With
+    End If
+    If typ = "sell" Then
+        formul = "=Продавцы!$A$2:$A$" + CStr(maxSellers)
+        With rang.Validation
+            .Delete
+            .Add Type:=xlValidateList, AlertStyle:=xlValidAlertStop, Formula1:=formul
+            .ErrorMessage = "Только из списка, пожалуйста!"
+        End With
+    End If
+    If typ = "date" Then
+        formul = "=OR(AND(H5=10),AND(H5=18,B5<43466),AND(H5=20,B5>=43466))"
+        With rang.Validation
+            .Delete
+            .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:=formul
+            .ErrorMessage = "До 01.01.2019 ндс был 18%, после - 20%, или 10% в любое время"
         End With
     End If
     If typ = "num" Then
@@ -285,19 +296,19 @@ Sub setValidation(c As Integer, typ As String)
             .ErrorMessage = "Число должно быть больше 0"
         End With
     End If
-    If typ = "date" Then
+    If typ = "nds" Then
+        formul = "=OR(AND(H5=10),AND(H5=18,B5<43466),AND(H5=20,B5>=43466))"
         With rang.Validation
             .Delete
-            '30000 - какая-то дата 82-го года, так и не понял как записать человеческую дату
-            .Add Type:=xlValidateDate, AlertStyle:=xlValidAlertStop, Operator:=xlGreater, Formula1:="30000"
-            .ErrorMessage = "Тут должна быть дата!"
+            .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:=formul
+            .ErrorMessage = "До 01.01.2019 ндс был 18%, после - 20%, или 10% в любое время"
         End With
     End If
 End Sub
 
 'Установка разрешения редактирования для колонки
 Sub allowEdit(sh As Variant, c As Integer, name As String)
-    Set rang = Range(Cells(5, c), Cells(4 + MaxRecords, c))
+    Set rang = Range(Cells(5, c), Cells(lastRec, c))
     sh.Protection.AllowEditRanges.Add Title:=name, Range:=rang, Password:=""
     rang.Interior.Color = RGB(255, 255, 192)
 End Sub
