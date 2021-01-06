@@ -34,9 +34,10 @@ Public Sub Generate()
                     last = cod
                     Cells(i, 3) = cod
                 End If
-                name = fold + "\" + cln + "\" + tem + ".xlsx"
                 'Создаём папку и файл
-                folder (fold + "\" + cln)
+                folder fold + "\" + cln
+                folder fold + "\" + cln + "\" + tem
+                name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
                 res = NewTemplate(cln, tem, name, cod)
                 If res = 0 Then
                     Cells(i, 4) = "Произошла ошибка при создании файла"
