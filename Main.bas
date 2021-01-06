@@ -8,8 +8,10 @@ Public Const tmpVersion = "20210105"    'Версия шаблона
 'Колонки "Данные"
 Public Const cDates = 2         'Дата
 Public Const cBuyINN = 3        'ИНН покупателя
+Public Const cBuyer = 4
 Public Const cSellINN = 5       'ИНН продавца
 Public Const cSeller = 6        'Продавец
+Public Const cPrice = 7         'Стоимость с НДС
 Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
 Public Const cFile = 17         'Имя файла
@@ -54,17 +56,38 @@ Dim file As Variant
 Dim cod As String
 
 'Выбор директории с данными
-Sub DirSelect()
+Sub DirSelectImport()
     Set diag = Application.FileDialog(msoFileDialogFolderPicker)
     If diag.Show = 0 Then Exit Sub
     Cells(1, 3) = diag.SelectedItems(1)
 End Sub
 
-Sub Export()
+'Выбор директории для экспорта
+Sub DirSelectExport()
+    Set diag = Application.FileDialog(msoFileDialogFolderPicker)
+    If diag.Show = 0 Then Exit Sub
+    Cells(2, 3) = diag.SelectedItems(1)
+End Sub
+
+'Кнопка "Книги продаж"
+Sub ExportSellBook()
+    
+    'ExportBook ByVal CStr("c:\Users\SG\OneDrive\Работа\Сбор данных\Данные\Клиент1\Шаблон1.xlsx")
+    'end
+    
+    file = Application.GetOpenFilename("Файлы Excel(*.xls*),*.xls*", 1, _
+        "Выберите файл шаблона", , False)
+    If VarType(file) = vbBoolean Then Exit Sub
+    ExportBook ByVal CStr(file)
+    
+End Sub
+
+'Кнопка "Экспорт в 1С"
+Sub ExportTo1C()
     FormExport.Show
 End Sub
 
-'Удаление всех данных (оставляя шапку)
+'Кнопка "Удаление данных"
 Sub Clear()
 
     Message "Удаление данных"
