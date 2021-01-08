@@ -165,7 +165,7 @@ End Sub
 'Инициализация таблиц, цветов
 Sub Init()
     
-    'On Error GoTo er
+    On Error GoTo er
     
     Set DAT = ActiveSheet
     Set DIC = Sheets("Справочник")
@@ -187,12 +187,15 @@ End Sub
 'Добавление данных из файла. Возвращает:
 '0 - всё хорошо
 '1 - ошибка загрузки
-'2 - ошибка в данных
+'2 - ошибка в данных (errors=true)
 '3 - нет кода
 '4 - версия файла не поддерживается
 '5 не использовать, это код дубликата (провеяется в Source)
+'6 - файл уже открыт
 'Сообщения об ошибках по этим кодам пишется в Log
 Function AddFile(ByVal file As String) As Byte
+    
+    If IsBookOpen(file) Then AddFile = 6: Exit Function
     errors = False
     If isRelease Then On Error GoTo er
     Application.ScreenUpdating = False
