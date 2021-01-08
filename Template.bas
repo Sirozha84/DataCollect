@@ -1,5 +1,4 @@
 Attribute VB_Name = "Template"
-Public Const Secret = "123"     'Пароль для защиты
 Const lastRec = 10000           'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxBuyers = 100           'Максимальное количество покупателей
 Const maxSellers = 100          'Максимальное количество продавцов
@@ -132,7 +131,7 @@ er2:
     'Основная вкладка. Рисуем шапку формы
     Columns(1).ColumnWidth = 20
     Columns(2).ColumnWidth = 15
-    Columns(3).ColumnWidth = 30
+    Columns(3).ColumnWidth = 22
     Columns(4).ColumnWidth = 15
     Columns(5).ColumnWidth = 10
     Columns(6).ColumnWidth = 15

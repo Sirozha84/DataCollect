@@ -1,9 +1,12 @@
 Attribute VB_Name = "Main"
 Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 Public Const saveSource = True  'True - сохранение данных в формах, False - данные не записываются (отладка)
+
+Public Const Secret = "123"     'Пароль для защиты
+
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const maxCol = 50        'Последняя колонка везде (для очистки)
-Public Const tmpVersion = "20210105"    'Версия шаблона
+Public Const tmpVersion = "20210108"    'Версия шаблона
 
 'Колонки "Данные"
 Public Const cDates = 2         'Дата
@@ -90,6 +93,7 @@ End Sub
 'Кнопка "Удаление данных"
 Sub Clear()
 
+
     Message "Удаление данных"
     Init
     'On Error GoTo er
@@ -97,7 +101,11 @@ Sub Clear()
         "Данная процедура очистит все собранные данные список ошибок и нумераторы. " + _
         "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код." + _
         Chr(10) + Chr(10) + "Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Range(DAT.Cells(firstDat, 1), DAT.Cells(maxRow, maxCol)).Clear
+    DAT.Unprotect Secret
+    Range(Cells(firstDat, 1), Cells(maxRow, maxCol)).Clear
+    Range(Cells(firstDat, cStatus), Cells(maxRow, cStatus)).Interior.Color = colYellow
+    DAT.Protect Secret, AllowFormattingColumns:=True
+    
     Range(ERR.Cells(firstErr, 1), ERR.Cells(maxRow, maxCol)).Clear
     Range(NUM.Cells(firstNum, 1), NUM.Cells(maxRow, maxCol)).Clear
     Exit Sub
@@ -124,6 +132,7 @@ Sub DataCollect()
     Set files = Source.getFiles(DAT.Cells(1, 3))
     
     'Обрабатываем список файлов
+    DAT.Unprotect Secret
     n = 1
     s = 0
     e = 0
@@ -142,6 +151,9 @@ Sub DataCollect()
     Next
     
     Verify.SaveValues
+    
+    DAT.Protect Secret, AllowFormattingColumns:=True
+    
     ActiveWorkbook.Save
     
     Message "Готово! Файл сохранён."
@@ -188,9 +200,9 @@ Function AddFile(ByVal file As String) As Byte
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
         Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
-        SRC.Unprotect Template.Secret
+        SRC.Unprotect Secret
         ver = SRC.Cells(2, 1).text
-        If ver <> tmpVersion And ver <> "" Then 'And ver<>"" в случае обновления шаблона убрать!
+        If ver <> tmpVersion Then
             AddFile = 4
             impBook.Close False
             Exit Function
@@ -277,7 +289,7 @@ Function AddFile(ByVal file As String) As Byte
         Else
             AddFile = 3
         End If
-        SRC.Protect Template.Secret, AllowFormattingColumns:=True
+        SRC.Protect Secret, AllowFormattingColumns:=True
         impBook.Close saveSource
     End If
     Numerator.Save
