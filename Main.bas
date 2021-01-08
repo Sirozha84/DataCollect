@@ -277,7 +277,7 @@ Function AddFile(ByVal file As String) As Byte
         Else
             AddFile = 3
         End If
-        SRC.Protect Template.Secret
+        SRC.Protect Template.Secret, AllowFormattingColumns:=True
         impBook.Close saveSource
     End If
     Numerator.Save
