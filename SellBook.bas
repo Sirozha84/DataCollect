@@ -104,11 +104,10 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     If Finded.Count = 0 Then Exit Sub
     
     'Какие-то данные всёже нашли, создаём книгу
-    name = cutBadSymbold("КнПрод " + s + " - " + b + " " + q)
+    name = cutBadSymbols("КнПрод " + s + " - " + b + " " + q)
     fileName = Patch + name + ".xlsx"
     Message "Формирование книги " + name
     Workbooks.Add
-    Application.DisplayAlerts = False
     Range(Cells(1, 1), Cells(1048576, 24)).Font.name = "Arial"
     Range(Cells(1, 1), Cells(1048576, 24)).Font.Size = 9
     
@@ -277,9 +276,9 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     If s6 > 0 Then Cells(i, 23) = s6
     Range(Cells(7, 1), Cells(i, 24)).Borders.Weight = 2
     
-    'End
-    
+    'Сохранение и закрытие документа
     On Error GoTo er
+    Application.DisplayAlerts = False
     ActiveWorkbook.SaveAs fileName:=fileName
     ActiveWorkbook.Close
     Exit Sub

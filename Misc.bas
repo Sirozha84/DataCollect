@@ -15,7 +15,7 @@ er:
 End Sub
 
 'Удаление неугодных символов для имени файла
-Function cutBadSymbold(ByVal name As String) As String
+Function cutBadSymbols(ByVal name As String) As String
     name = Replace(name, """", "")
     name = Replace(name, "*", "")
     name = Replace(name, "\", "")
@@ -25,5 +25,5 @@ Function cutBadSymbold(ByVal name As String) As String
     name = Replace(name, ":", "")
     name = Replace(name, "<", "")
     name = Replace(name, ">", "")
-    cutBadSymbold = name
+    cutBadSymbols = name
 End Function

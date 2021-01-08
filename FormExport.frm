@@ -34,6 +34,11 @@ Private Sub UserForm_Initialize()
         i = i + 1
     Loop
     
+    If Months.Count = 0 Or Quartals.Count = 0 Then
+        MsgBox "Нет данных для выгрузки"
+        End
+    End If
+    
     ComboBoxBuyers.AddItem "Все"
     For Each seller In Sellers
         ComboBoxBuyers.AddItem seller
@@ -110,14 +115,14 @@ Private Sub CommandExport_Click()
 End Sub
 
 'Экспорт файла
-Private Sub ExportFile(ByVal seller As String, num As String)
+Private Sub ExportFile(ByVal seller As String, NUM As String)
     Dim i As Long
     Dim j As Long
     
-    Message "Экспорт файла " + num + seller
+    Message "Экспорт файла " + NUM + seller
     
     'Определяемся с путём и именем файла
-    patch = Cells(2, 3)
+    Patch = DAT.Cells(2, 3)
     fol = ""
     mnC = OptionMonth.Value
     mn = ComboBoxMonths.Value
@@ -125,11 +130,10 @@ Private Sub ExportFile(ByVal seller As String, num As String)
     qr = ComboBoxQuartals.Value
     If mnC Then fol = "\" + mn
     If qrC Then fol = "\" + qr
-    If fol <> "" Then folder (patch + fol)
-    fileName = patch + fol + "\" + seller + ".xlsx"
+    If fol <> "" Then folder (Patch + fol)
+    fileName = Patch + fol + "\" + cutBadSymbols(seller) + ".xlsx"
     
     'Создаём книгу
-    'On Error GoTo er
     Workbooks.Add
     i = 1
     Cells(i, 1) = "Код вида" + Chr(10) + "операции"
@@ -198,8 +202,14 @@ Private Sub ExportFile(ByVal seller As String, num As String)
         End If
         i = i + 1
     Loop
+    
+    'Сохранение и закрытие документа
+    On Error GoTo er
+    Application.DisplayAlerts = False
     If j > firstEx Then ActiveWorkbook.SaveAs fileName:=fileName
-    'ActiveWorkbook.Close
-
+    ActiveWorkbook.Close
+    Exit Sub
 er:
+    ActiveWorkbook.Close
+    MsgBox "Произошла ошибка при сохранении файла " + fileName
 End Sub
