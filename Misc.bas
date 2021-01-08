@@ -13,3 +13,17 @@ Sub folder(name As String)
     MkDir (name)
 er:
 End Sub
+
+'Удаление неугодных символов для имени файла
+Function cutBadSymbold(ByVal name As String) As String
+    name = Replace(name, """", "")
+    name = Replace(name, "*", "")
+    name = Replace(name, "\", "")
+    name = Replace(name, "|", "")
+    name = Replace(name, "/", "")
+    name = Replace(name, "?", "")
+    name = Replace(name, ":", "")
+    name = Replace(name, "<", "")
+    name = Replace(name, ">", "")
+    cutBadSymbold = name
+End Function

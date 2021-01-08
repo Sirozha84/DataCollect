@@ -1,7 +1,7 @@
 Attribute VB_Name = "SellBook"
 Dim Patch As String
-Dim Buyers As Collection
-Dim Sellers As Collection
+Dim BuyersList As Collection
+Dim SellersList As Collection
 Dim Where As Collection
 Dim Quartals As Object
 Dim i As Long
@@ -16,8 +16,8 @@ Public Sub ExportBook(ByVal file As String)
     GetQuartalsAndIndexes
 
     For Each q In Quartals
-        For Each b In Buyers
-            For Each s In Sellers
+        For Each b In BuyersList
+            For Each s In SellersList
                 MakeBook q, b, s
             Next
         Next
@@ -29,8 +29,8 @@ End Sub
 'Чтение справочников покупателей и продавцов из шаблона
 Sub GetLists(ByVal file As String)
     Message "Чтение данных из шаблона"
-    Set Buyers = New Collection
-    Set Sellers = New Collection
+    Set BuyersList = New Collection
+    Set SellersList = New Collection
     On Error GoTo er
     Application.ScreenUpdating = False
     Set templ = Workbooks.Open(file, False, False)
@@ -38,13 +38,13 @@ Sub GetLists(ByVal file As String)
         Set SRC = templ.Worksheets("Покупатели")
         i = 2
         Do While SRC.Cells(i, 1) <> ""
-            Buyers.Add SRC.Cells(i, 1).text, SRC.Cells(i, 1).text
+            BuyersList.Add SRC.Cells(i, 1).text, SRC.Cells(i, 1).text
             i = i + 1
         Loop
         Set SRC = templ.Worksheets("Продавцы")
         i = 2
         Do While SRC.Cells(i, 1) <> ""
-            Sellers.Add SRC.Cells(i, 1).text, SRC.Cells(i, 1).text
+            SellersList.Add SRC.Cells(i, 1).text, SRC.Cells(i, 1).text
             i = i + 1
         Loop
         templ.Close False
@@ -66,9 +66,9 @@ Sub GetQuartalsAndIndexes()
         If Cells(i, 1) <> "" And Cells(i, cDates) <> "" And _
                 Cells(i, cBuyer) <> "" And Cells(i, cSeller) <> "" Then
             b = ""
-            b = Buyers(Cells(i, cBuyer))
+            b = BuyersList(Cells(i, cBuyer))
             s = ""
-            s = Sellers(Cells(i, cSeller))
+            s = SellersList(Cells(i, cSeller))
             If b <> "" And s <> "" Then
                 Where.Add i
                 Quartals(GetQuartal(Cells(i, cDates))) = 1
@@ -104,8 +104,8 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     If Finded.Count = 0 Then Exit Sub
     
     'Какие-то данные всёже нашли, создаём книгу
-    name = "КнПрод " + s + " - " + b + " " + q
-    filename = Patch + name + ".xlsx"
+    name = cutBadSymbold("КнПрод " + s + " - " + b + " " + q)
+    fileName = Patch + name + ".xlsx"
     Message "Формирование книги " + name
     Workbooks.Add
     Application.DisplayAlerts = False
@@ -279,10 +279,13 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     
     'End
     
-    On Error Resume Next
-    ActiveWorkbook.SaveAs filename:=filename
+    On Error GoTo er
+    ActiveWorkbook.SaveAs fileName:=fileName
     ActiveWorkbook.Close
-
+    Exit Sub
+er:
+    ActiveWorkbook.Close
+    MsgBox "Произошла ошибка при сохранении файла " + fileName
 End Sub
 
 Sub bigCell(txt As String, r As Variant, c As Variant, height As Variant, width As Variant)
