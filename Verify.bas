@@ -170,8 +170,12 @@ Sub DateTest(ByRef DAT As Variant, ByVal i As Long)
 End Sub
 
 'Вычисляет из даты Год+Квартал
-Function Kvartal(DAT As Date) As String
+Function Kvartal(DAT As Variant) As String
+    On Error GoTo er
     Kvartal = CStr(Year(DAT)) + CStr((Month(DAT) - 1) \ 3 + 1)
+    Exit Function
+er:
+    Kvartal = ""
 End Function
 
 'Проверка лимитов
