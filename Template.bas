@@ -38,7 +38,7 @@ Public Sub Generate()
                 folder fold + "\" + cln
                 folder fold + "\" + cln + "\" + tem
                 name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
-                res = NewTemplate(cln, tem, name, cod)
+                res = NewTemplate(cln, tem, name, Cells(i, 3).text)
                 If res = 0 Then
                     Cells(i, 4) = "Произошла ошибка при создании файла"
                     Cells(i, 5) = "Ошибка"
@@ -147,18 +147,18 @@ er2:
     Rows(3).RowHeight = 30
     Rows(4).RowHeight = 30
     Cells(3, 1) = "СФ"
-    Range(Cells(3, 1), Cells(3, 2)).Merge
+    Range(Cells(3, 1), Cells(3, 2)).merge
     Cells(3, 3) = "Сведения о покупателе"
-    Range(Cells(3, 3), Cells(3, 4)).Merge
+    Range(Cells(3, 3), Cells(3, 4)).merge
     Cells(3, 5) = "Сведения о продавце"
-    Range(Cells(3, 5), Cells(3, 6)).Merge
+    Range(Cells(3, 5), Cells(3, 6)).merge
     Cells(3, 7) = "Стоимость" + Chr(10) + "продаж с НДС"
     Cells(3, 8) = "Ставка" + Chr(10) + "НДС, %"
-    Range(Cells(3, 8), Cells(4, 8)).Merge
+    Range(Cells(3, 8), Cells(4, 8)).merge
     Cells(3, 9) = "Стоимость продаж облагаемых налогом" + Chr(10) + "(в руб.) без НДС"
-    Range(Cells(3, 9), Cells(3, 11)).Merge
+    Range(Cells(3, 9), Cells(3, 11)).merge
     Cells(3, 12) = "Сумма НДС"
-    Range(Cells(3, 12), Cells(3, 14)).Merge
+    Range(Cells(3, 12), Cells(3, 14)).merge
     Cells(4, 1) = "№" + Chr(10) + "(стр. 020)"
     Cells(4, 2) = "Дата" + Chr(10) + "(стр. 030)"
     Cells(4, 3) = "ИНН/КПП"
@@ -184,7 +184,7 @@ er2:
     allowEdit temp, 2, "Дата"
     
     'Поле 3 - ИНН покупателя, находится с помощью ВПР
-    setRange(3).FormulaLocal = "=ВПР(F5;Покупатели!A$2:B$" + CStr(maxBuyers) + ";2;0)"
+    setRange(3).FormulaLocal = "=ВПР(D5;Покупатели!A$2:B$" + CStr(maxBuyers) + ";2;0)"
     setFormatConditions 3
     
     'Поле 4 - Покупатель, выбираем из списка
