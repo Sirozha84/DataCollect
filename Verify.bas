@@ -19,7 +19,6 @@ Sub Init()
     Set summAll = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")
     Set buyers = CreateObject("Scripting.Dictionary")
-    Dim i As Long
     
     'Чтение общих лимитов
     limitOne = DIC.Cells(1, cLimits)
@@ -200,7 +199,6 @@ Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
     Else
         If buyers(buyCur + grp) <> sel Then AddCom "Покупка у другого продавца группы"
     End If
-
 End Sub
 
 'Добавление комментария к строке

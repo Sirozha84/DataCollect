@@ -18,7 +18,7 @@ End Function
 Private Sub readDir(ByVal pat As String)
     On Error GoTo er:
     If InStr(1, pat, ".sync") > 0 Then Exit Sub
-    Set curfold = FSO.getfolder(pat)
+    Set curfold = FSO.GetFolder(pat)
     For Each file In curfold.files
         If file.name Like "*.xls*" And InStr(1, file.name, "~$") = 0 Then files.Add file.Path
     Next
@@ -62,12 +62,13 @@ End Sub
 'Извлечение кода из файла
 Function GetCode(ByVal file As String) As String
     On Error GoTo er
+    If IsBookOpen(file) Then Exit Function
     Application.ScreenUpdating = False
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
         Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
-        SRC.Unprotect Template.Secret
+        SetProtect SRC
         GetCode = SRC.Cells(1, 1)
         impBook.Close False
     End If

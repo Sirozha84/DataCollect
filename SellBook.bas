@@ -4,7 +4,6 @@ Dim BuyersList As Collection
 Dim SellersList As Collection
 Dim Where As Collection
 Dim Quartals As Object
-Dim i As Long
 
 Public Sub ExportBook(ByVal file As String)
 

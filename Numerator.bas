@@ -9,7 +9,6 @@ Sub Init()
     'Загрузка словаря нумератора
     Range(NUM.Cells(1, 1), NUM.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
     Set Prefixes = CreateObject("Scripting.Dictionary")
-    Dim i As Long
     i = firstNum
     Do While NUM.Cells(i, 1) <> ""
         pref = NUM.Cells(i, 1)
@@ -32,7 +31,6 @@ End Sub
 
 'Сохранение словаря на страницу
 Sub Save()
-    Dim i As Long
     i = firstNum
     For Each Key In Prefixes.keys
         NUM.Cells(i, 1) = Key

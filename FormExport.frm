@@ -24,13 +24,13 @@ Private Sub UserForm_Initialize()
     Set Quartals = CreateObject("Scripting.Dictionary")
     Set Months = CreateObject("Scripting.Dictionary")
     
-    Dim i As Long
     i = firstDat
     Do While Cells(i, 2) <> "" Or Cells(i, 15) <> ""
-        Sellers(Cells(i, cSeller).text) = 1
-        d = Cells(i, cDates)
-        Months(YearAndMonth(d)) = 1
-        Quartals(YearAndQuartal(d)) = 1
+        If Cells(i, 1).text <> "" Then
+            Sellers(Cells(i, cSeller).text) = 1
+            Months(YearAndMonth(Cells(i, cDates).text)) = 1
+            Quartals(YearAndQuartal(Cells(i, cDates).text)) = 1
+        End If
         i = i + 1
     Loop
     
@@ -59,7 +59,8 @@ Private Sub UserForm_Initialize()
     
 End Sub
 
-Function YearAndMonth(ByVal d As Date)
+Function YearAndMonth(ByVal d As String) As String
+    On Error GoTo er:
     YearAndMonth = CStr(Year(d)) + " - "
     dy = Month(d)
     If dy = 1 Then YearAndMonth = YearAndMonth + "январь"
@@ -74,10 +75,17 @@ Function YearAndMonth(ByVal d As Date)
     If dy = 10 Then YearAndMonth = YearAndMonth + "ќкт€брь"
     If dy = 11 Then YearAndMonth = YearAndMonth + "Ќо€брь"
     If dy = 12 Then YearAndMonth = YearAndMonth + "ƒекадрь"
+    Exit Function
+er:
+    YearAndMonth = ""
 End Function
 
-Function YearAndQuartal(ByVal d As Date)
+Function YearAndQuartal(ByVal d As String) As String
+    On Error GoTo er
     YearAndQuartal = CStr(Year(d)) + " - " + CStr((Month(d) - 1) \ 3 + 1) + " квартал"
+    Exit Function
+er:
+    YearAndQuartal = ""
 End Function
 
 Private Sub OptionAll_Click()
@@ -116,8 +124,6 @@ End Sub
 
 'Ёкспорт файла
 Private Sub ExportFile(ByVal seller As String, NUM As String)
-    Dim i As Long
-    Dim j As Long
     
     Message "Ёкспорт файла " + NUM + seller
     
@@ -177,28 +183,30 @@ Private Sub ExportFile(ByVal seller As String, NUM As String)
     i = firstDat
     j = firstEx
     Do While DAT.Cells(i, 2) <> "" Or DAT.Cells(i, 15) <> ""
-        cp = True
-        If DAT.Cells(i, cSeller) <> seller Then cp = False
-        d = DAT.Cells(i, cDates)
-        If mnC Then If YearAndMonth(d) <> mn Then cp = False
-        If qrC Then If YearAndQuartal(d) <> qr Then cp = False
-        If cp Then
-            Cells(j, 1).NumberFormat = "@"
-            Cells(j, 1) = "01"
-            Cells(j, 2) = DAT.Cells(i, 1)
-            Cells(j, 3).NumberFormat = "dd.MM.yyyy"
-            Cells(j, 3) = DAT.Cells(i, 2)
-            innkpp = Split(DAT.Cells(i, 3), "/")
-            Cells(j, 4) = innkpp(0)
-            If UBound(innkpp) > 0 Then Cells(j, 5) = innkpp(1)
-            Cells(j, 6) = DAT.Cells(i, 4)
-            Cells(j, 7).NumberFormat = "### ### ##0.00"
-            Cells(j, 7) = DAT.Cells(i, 7)
-            For c = 0 To 5
-                Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
-                Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
-            Next
-            j = j + 1
+        If DAT.Cells(i, 1) <> "" Then
+            cp = True
+            If DAT.Cells(i, cSeller) <> seller Then cp = False
+            d = DAT.Cells(i, cDates)
+            If mnC Then If YearAndMonth(d) <> mn Then cp = False
+            If qrC Then If YearAndQuartal(d) <> qr Then cp = False
+            If cp Then
+                Cells(j, 1).NumberFormat = "@"
+                Cells(j, 1) = "01"
+                Cells(j, 2) = DAT.Cells(i, 1)
+                Cells(j, 3).NumberFormat = "dd.MM.yyyy"
+                Cells(j, 3) = DAT.Cells(i, 2)
+                innkpp = Split(DAT.Cells(i, 3), "/")
+                Cells(j, 4) = innkpp(0)
+                If UBound(innkpp) > 0 Then Cells(j, 5) = innkpp(1)
+                Cells(j, 6) = DAT.Cells(i, 4)
+                Cells(j, 7).NumberFormat = "### ### ##0.00"
+                Cells(j, 7) = DAT.Cells(i, 7)
+                For c = 0 To 5
+                    Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
+                    Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
+                Next
+                j = j + 1
+            End If
         End If
         i = i + 1
     Loop

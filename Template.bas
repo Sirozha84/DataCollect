@@ -7,7 +7,6 @@ Public Sub Generate()
     
     Main.Init
     If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)
-    Dim i As Long
     Dim max As Long
     i = firstTempl
     Do While Cells(i, 1) <> "" Or Cells(i, 2) <> ""
@@ -98,7 +97,7 @@ Function NewTemplate(ByVal cln As String, ByVal tem As String, _
     
     'Создаём файл с нужными вкладками
     Workbooks.Add
-    On Error GoTo er2
+    If isRelease Then On Error GoTo er2
     Application.DisplayAlerts = False
     Sheets.Add
     Sheets.Add
@@ -108,7 +107,7 @@ Function NewTemplate(ByVal cln As String, ByVal tem As String, _
     Sheets(4).Delete
     Sheets(4).Delete
 er2:
-    On Error GoTo er
+    If isRelease Then On Error GoTo er
     Set temp = Application.ActiveSheet
     Set listb = Sheets(2)
     Set lists = Sheets(3)
@@ -231,10 +230,15 @@ er2:
     Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(lastRec) + ")"
     Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(lastRec) + ")"
     
+    Range(Cells(4, 1), Cells(4, 14)).Rows.AutoFilter
+    Range("A5").Select
+    ActiveWindow.FreezePanes = False
+    ActiveWindow.FreezePanes = True
+    
     'Защита и сохранение книги
-    temp.Protect Secret, UserInterfaceOnly:=True, AllowFormattingColumns:=True
-    ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
-    ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
+    SetProtect temp
+    'ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
+    'ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
     NewTemplate = 1
     Exit Function
 er:
