@@ -19,47 +19,42 @@ Public Sub Generate()
     For i = firstTempl To max
         Message "Создение шаблона " + CStr(i - firstTempl + 1) + " из " + _
             CStr(max - FirstClient + 1)
-        cln = Cells(i, 1).text
-        tem = Cells(i, 2).text
-        If validName(cln) And validName(tem) Then
-            'Проверим, уникальные ли имена
-            uname = cln + "!" + tem
-            If namelist(uname) = "" Then
-                namelist(uname) = 0
-                'need = False
-                If Not isCode(Cells(i, 3)) Then
-                    cod = last + 1
-                    last = cod
-                    Cells(i, 3) = cod
-                End If
-                'Создаём папку и файл
-                folder fold + "\" + cln
-                folder fold + "\" + cln + "\" + tem
-                name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
-                res = NewTemplate(cln, tem, name, Cells(i, 3).text)
-                If res = 0 Then
-                    Cells(i, 4) = "Произошла ошибка при создании файла"
-                    Cells(i, 5) = "Ошибка"
-                End If
-                If res = 1 Then
-                    Cells(i, 4) = name
-                    Cells(i, 5) = "Успешно!"
-                End If
-                If res = 2 Then
-                    Cells(i, 4) = name
-                    Cells(i, 5) = "Файл уже существует, пропущено"
-                End If
-            Else
-                Cells(i, 5) = "Имя клиента или шаблона не уникально."
+        cln = cutBadSymbols(Cells(i, 1).text)
+        tem = cutBadSymbols(Cells(i, 2).text)
+        'Проверим, уникальные ли имена
+        uname = cln + "!" + tem
+        If namelist(uname) = "" Then
+            namelist(uname) = 0
+            'need = False
+            If Not isCode(Cells(i, 3)) Then
+                cod = last + 1
+                last = cod
+                Cells(i, 3) = cod
+            End If
+            'Создаём папку и файл
+            folder fold + "\" + cln
+            folder fold + "\" + cln + "\" + tem
+            name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
+            res = NewTemplate(cln, tem, name, Cells(i, 3).text)
+            If res = 0 Then
+                Cells(i, 4) = "Произошла ошибка при создании файла"
+                Cells(i, 5) = "Ошибка"
+            End If
+            If res = 1 Then
+                Cells(i, 4) = name
+                Cells(i, 5) = "Успешно!"
+            End If
+            If res = 2 Then
+                Cells(i, 4) = name
+                Cells(i, 5) = "Файл уже существует, пропущено"
             End If
         Else
-            Cells(i, 5) = "Имя клиента или шаблона не указано или указано некорректно."
+            Cells(i, 5) = "Имя клиента или шаблона не уникально."
         End If
     Next
     NUM.Cells(2, 1) = last
     
     ActiveWorkbook.Save
-    
     Message "Готово! Файл сохранён."
     
 End Sub
@@ -70,21 +65,6 @@ Function isCode(n As Variant)
     If IsNumeric(n) Then
         If n > 0 Then isCode = True
     End If
-End Function
-
-'Проверка на правильность имени файда/папки
-Function validName(ByVal name As String) As Boolean
-    validName = True
-    If name = "" Then validName = False
-    If InStr(name, """") Then validName = False
-    If InStr(name, "*") Then validName = False
-    If InStr(name, "\") Then validName = False
-    If InStr(name, "|") Then validName = False
-    If InStr(name, "/") Then validName = False
-    If InStr(name, "?") Then validName = False
-    If InStr(name, ":") Then validName = False
-    If InStr(name, "<") Then validName = False
-    If InStr(name, ">") Then validName = False
 End Function
 
 'Создание нового файла
@@ -237,8 +217,8 @@ er2:
     
     'Защита и сохранение книги
     SetProtect temp
-    'ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
-    'ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
+    ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
+    ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
     NewTemplate = 1
     Exit Function
 er:

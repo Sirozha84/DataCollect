@@ -76,14 +76,14 @@ End Sub
 
 'Кнопка "Экспорт в 1С"
 Sub ButtonExport()
+    Init
     FormExport.Show
 End Sub
 
 'Кнопка "Удаление данных"
 Sub ButtonClear()
-    
+    Init
     If isRelease Then
-        On Error GoTo er
         e = Chr(10)
         If InputBox("Внимание! " + e + e + _
             "Данная процедура очистит все собранные данные и нумераторы. " + _
@@ -97,19 +97,21 @@ Sub ButtonClear()
     Range(ERR.Cells(firstErr, 1), ERR.Cells(maxRow, maxCol)).Clear
     Range(NUM.Cells(firstNum, 1), NUM.Cells(maxRow, maxCol)).Clear
     Message "Готово!"
-   
-    Exit Sub
-er:
-    MsgBox ("Ошибка целостности документа!")
 End Sub
 
-'Сбор данных
+'Кнопка "Сбор данных"
 Sub ButtonDataCollect()
+    Init
     If isRelease Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Message "Подготовка..."
-    Init
     SetProtect DAT
     Collect.Run
+End Sub
+
+'Кнопка "Генерировать шаблоны"
+Sub ButtonCreateTemplates()
+    Init
+    Template.Generate
 End Sub
 
 'Инициализация таблиц, цветов
@@ -130,6 +132,7 @@ Sub Init()
     Exit Sub
 er:
     MsgBox ("Ошибка целостности документа!")
+    End
 End Sub
 
 'Установка защиты
