@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-Public Const isRelease = False   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
+Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
 Public Const saveSource = True  'True - сохранение данных в формах, False - данные не записываются (отладка)
 
 Public Const Secret = "123"     'Пароль для защиты
@@ -121,7 +121,7 @@ Sub Init()
     colGray = RGB(224, 224, 224)
     
     If isRelease Then On Error GoTo er
-    Set DAT = ActiveSheet
+    Set DAT = Sheets("Данные")
     Set DIC = Sheets("Справочник")
     Set ERR = Sheets("Ошибки")
     Set NUM = Sheets("Словарь нумератора")
