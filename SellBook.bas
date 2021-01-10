@@ -6,7 +6,9 @@ Dim Where As Collection
 Dim Quartals As Object
 
 Public Sub ExportBook(ByVal file As String)
-
+    
+    'file = "c:\Users\SG\OneDrive\Работа\Сбор данных\Данные\Клиент1\КНЬ001.xlsx"
+    
     Main.Init
     Set FSO = CreateObject("Scripting.FileSystemObject")
     Patch = FSO.GetParentFolderName(file) + "\"
@@ -249,7 +251,9 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
         Cells(i, 2) = "01"
         Cells(i, 3) = DAT.Cells(j, 1).text + " от" + e + DAT.Cells(j, cDates).text
         Cells(i, 9) = DAT.Cells(j, cBuyer)
+        Cells(i, 9).WrapText = True
         Cells(i, 10) = DAT.Cells(j, cBuyINN)
+        Cells(i, 10).WrapText = True
         Cells(i, 16) = DAT.Cells(j, cPrice)
         Cells(i, 17) = DAT.Cells(j, 9): If Cells(i, 17) <> "" Then s1 = s1 + Cells(i, 17)
         Cells(i, 18) = DAT.Cells(j, 10): If Cells(i, 18) <> "" Then s2 = s2 + Cells(i, 18)
@@ -257,6 +261,8 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
         Cells(i, 21) = DAT.Cells(j, 12): If Cells(i, 21) <> "" Then s4 = s4 + Cells(i, 21)
         Cells(i, 22) = DAT.Cells(j, 13): If Cells(i, 22) <> "" Then s5 = s5 + Cells(i, 22)
         Cells(i, 23) = DAT.Cells(j, 14): If Cells(i, 23) <> "" Then s6 = s6 + Cells(i, 23)
+        Range(Cells(i, 9), Cells(i, 10)).WrapText = True
+        Range(Cells(i, 15), Cells(i, 23)).NumberFormat = "### ### ##0.00"
         i = i + 1
         n = n + 1
     Next
@@ -273,7 +279,10 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     If s4 > 0 Then Cells(i, 21) = s4
     If s5 > 0 Then Cells(i, 22) = s5
     If s6 > 0 Then Cells(i, 23) = s6
+    Range(Cells(i, 15), Cells(i, 23)).NumberFormat = "### ### ##0.00"
     Range(Cells(7, 1), Cells(i, 24)).Borders.Weight = 2
+    
+    'End
     
     'Сохранение и закрытие документа
     On Error GoTo er
