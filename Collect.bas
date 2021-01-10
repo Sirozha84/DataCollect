@@ -48,15 +48,24 @@ End Sub
 '4 - версия файла не поддерживается
 '5 не использовать, это код дубликата (провеяется в Source)
 '6 - файл уже открыт
+'7 - проблема с записью
 'Сообщения об ошибках по этим кодам пишется в Log
 Function AddFile(ByVal file As String) As Byte
     
+    'Подготовки
+    Application.DisplayAlerts = False
     If IsBookOpen(file) Then AddFile = 6: Exit Function
     errors = False
-    If isRelease Then On Error GoTo er
     Application.ScreenUpdating = False
+    If isRelease Then On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
+    If Not TrySave(impBook) Then
+        AddFile = 7
+        impBook.Close
+        Exit Function
+    End If
+    
     If Not impBook Is Nothing Then
         Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
         SetProtect SRC

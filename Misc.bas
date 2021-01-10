@@ -38,3 +38,13 @@ Function IsBookOpen(fileName As String) As Boolean
     Set wbBook = Workbooks(name)
     IsBookOpen = Not wbBook Is Nothing
 End Function
+
+'Проверка на возможность созранениф
+Function TrySave(file As Variant)
+    On Error GoTo er
+    file.Save
+    TrySave = True
+    Exit Function
+er:
+    TrySave = False
+End Function
