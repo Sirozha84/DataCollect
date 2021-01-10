@@ -88,7 +88,7 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, By
     
     '2 - Дата
     DAT.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
-    If Not IsDate(DAT.Cells(iC, 2)) Then
+    If Not isDateMy(DAT.Cells(iC, 2).text) Then
         DAT.Cells(iC, 2).Interior.Color = colRed
         SRC.Cells(iI, 2).Interior.Color = colRed
         AddCom "Дата введена не корректно"
@@ -207,6 +207,21 @@ Sub AddCom(str As String)
     Comment = Comment + str
     errors = True
 End Sub
+
+'Проверка на корректность даты
+Function isDateMy(ByVal var As String)
+    isDateMy = True
+    On Error GoTo er
+    s = Split(var, ".")
+    If UBound(s) <> 2 Then GoTo er
+    If CInt(s(0)) < 1 Or CInt(s(0)) > 31 Then GoTo er
+    If CInt(s(1)) < 1 Or CInt(s(1)) > 12 Then GoTo er
+    If CInt(s(2)) < 1900 Or CInt(s(2)) > 2100 Then GoTo er
+    If Not IsDate(var) Then GoTo er
+    Exit Function
+er:
+    isDateMy = False
+End Function
 
 'Проверка на корректность цены
 Function isPrice(ByVal var As Variant)
