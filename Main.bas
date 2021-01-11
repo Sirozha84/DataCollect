@@ -5,7 +5,6 @@ Public Const saveSource = True  'True - сохранение данных в формах, False - данн
 Public Const Secret = "123"     'Пароль для защиты
 
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
-Public Const maxCol = 50        'Последняя колонка везде (для очистки)
 Public Const tmpVersion = "20210108"    'Версия шаблона
 
 'Колонки "Данные"
@@ -87,16 +86,16 @@ Sub ButtonClear()
     If isRelease Then
         e = Chr(10)
         If InputBox("Внимание! " + e + e + _
-            "Данная процедура очистит все собранные данные и нумераторы. " + _
+            "Данная процедура очистит все собранные данные. " + _
             "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код. " + _
-            "Справочник удаляться не будет." + e + e + _
+            "Справочник и словари нумератора удаляться не будут." + e + e + _
             "Для продолжения введите пароль.", "Удаление данных") <> Secret Then Exit Sub
     End If
     SetProtect DAT
-    Range(Cells(firstDat, 1), Cells(maxRow, maxCol)).Clear
+    Range(Cells(firstDat, 1), Cells(maxRow, cAccept)).Clear
     Range(Cells(firstDat, cStatus), Cells(maxRow, cStatus)).Interior.Color = colYellow
-    Range(ERR.Cells(firstErr, 1), ERR.Cells(maxRow, maxCol)).Clear
-    Range(NUM.Cells(firstNum, 1), NUM.Cells(maxRow, maxCol)).Clear
+    Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Interior.Color = colGray
+    Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
     Message "Готово!"
 End Sub
 
@@ -121,7 +120,7 @@ Sub Init()
     colRed = RGB(255, 192, 192)
     colGreen = RGB(192, 255, 192)
     colYellow = RGB(255, 255, 192)
-    colGray = RGB(224, 224, 224)
+    colGray = RGB(217, 217, 217)
     
     If isRelease Then On Error GoTo er
     Set DAT = Sheets("Данные")
