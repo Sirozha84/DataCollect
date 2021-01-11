@@ -79,9 +79,9 @@ Function AddFile(ByVal file As String) As Byte
         curCode = SRC.Cells(1, 1)
         If curCode <> "" Then
             
-            'Очищаем предыдущие строки с ошибками
+            'Очищаем предыдущие строки без номеров
             i = firstDat
-            Do While DAT.Cells(i, 2) <> ""
+            Do While DAT.Cells(i, cAccept) <> ""
                 If DAT.Cells(i, 1) = "" And DAT.Cells(i, cCode) = curCode Then
                     DAT.Rows(i).Delete
                 Else
@@ -92,7 +92,7 @@ Function AddFile(ByVal file As String) As Byte
             'Индексируем существующие записи
             Set Indexes = CreateObject("Scripting.Dictionary")
             i = firstDat
-            Do While DAT.Cells(i, 2) <> ""
+            Do While DAT.Cells(i, cAccept) <> ""
                 UID = DAT.Cells(i, 1)
                 If UID <> "" Then Indexes.Add UID, i
                 i = i + 1
