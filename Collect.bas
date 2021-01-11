@@ -206,7 +206,6 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
-    Range(DAT.Cells(di, cFile), DAT.Cells(di, cCode)).Font.Color = RGB(192, 192, 192)
     errors = Verify.Verify(DAT, SRC, di, si, changed)
     
     '≈сли нужно, присваиваем записи новый номер
@@ -223,8 +222,10 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
             DAT.Cells(di, 1) = n
             SRC.Cells(si, 1) = n
         End If
+        DAT.Cells(di, cAccept) = "OK"
     Else
         copyRecord = True
+        DAT.Cells(di, cAccept) = "fail"
     End If
     
     If Not refresh Then LartRec = LartRec + 1
