@@ -19,6 +19,7 @@ Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
 Public Const cFile = 17         'Имя файла
 Public Const cCode = 18         'Код формы
+Public Const cAccept = 19       'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца

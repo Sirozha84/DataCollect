@@ -2,9 +2,9 @@ VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FormExport 
    Caption         =   "Выгрузка данных"
    ClientHeight    =   3241
-   ClientLeft      =   119
-   ClientTop       =   462
-   ClientWidth     =   4564
+   ClientLeft      =   120
+   ClientTop       =   465
+   ClientWidth     =   4560
    OleObjectBlob   =   "FormExport.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -19,14 +19,13 @@ Dim Sellers As Variant
 Private Sub UserForm_Initialize()
     
     Message "Подготовка к выгрузке..."
-    Main.Init
     Set Sellers = CreateObject("Scripting.Dictionary")
     Set Quartals = CreateObject("Scripting.Dictionary")
     Set Months = CreateObject("Scripting.Dictionary")
     
     i = firstDat
-    Do While Cells(i, 2) <> "" Or Cells(i, 15) <> ""
-        If Cells(i, 1).text <> "" Then
+    Do While Cells(i, cAccept) <> ""
+        If Cells(i, cAccept).text = "OK" Then
             Sellers(Cells(i, cSeller).text) = 1
             Months(YearAndMonth(Cells(i, cDates).text)) = 1
             Quartals(YearAndQuartal(Cells(i, cDates).text)) = 1
@@ -182,8 +181,8 @@ Private Sub ExportFile(ByVal seller As String, NUM As String)
     'Заполняем книгу
     i = firstDat
     j = firstEx
-    Do While DAT.Cells(i, 2) <> "" Or DAT.Cells(i, 15) <> ""
-        If DAT.Cells(i, 1) <> "" Then
+    Do While DAT.Cells(i, cAccept) <> ""
+        If DAT.Cells(i, cAccept) = "OK" Then
             cp = True
             If DAT.Cells(i, cSeller) <> seller Then cp = False
             d = DAT.Cells(i, cDates)
