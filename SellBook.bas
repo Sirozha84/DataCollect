@@ -63,9 +63,8 @@ Sub GetQuartalsAndIndexes()
     Set Quartals = CreateObject("Scripting.Dictionary")
     On Error Resume Next
     i = firstDat
-    Do While Cells(i, 4) <> "" Or Cells(i, cSeller) <> ""
-        If Cells(i, 1) <> "" And Cells(i, cDates) <> "" And _
-                Cells(i, cBuyer) <> "" And Cells(i, cSeller) <> "" Then
+    Do While Cells(i, cAccept) <> ""
+        If Cells(i, cAccept) = "OK" Then
             b = ""
             b = BuyersList(Cells(i, cBuyer))
             s = ""
