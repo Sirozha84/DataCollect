@@ -111,7 +111,7 @@ Function AddFile(ByVal file As String) As Byte
                     If ind <> Empty Then
                         
                         'И строка действительно есть, обновляем данные
-                        If copyRecord(ind, i, True) Then errors = True
+                        If Not copyRecord(ind, i, True) Then errors = True
                         
                         'Данные не обновлены
                         stat = DAT.Cells(ind, cStatus).text
@@ -134,7 +134,7 @@ Function AddFile(ByVal file As String) As Byte
                     End If
                 End If
                 'Новая строка
-                If UID = "" Then If copyRecord(LartRec, i, False) Then errors = True
+                If UID = "" Then If Not copyRecord(LartRec, i, False) Then errors = True
                 rUID = SRC.Cells(i, 1).text
                 If rUID <> "" Then resUIDs.Add rUID, 1 'Если в сорсе будет два одинаковых номера, то тут будет ошибка!
                 i = i + 1
@@ -178,35 +178,36 @@ Function NotEmpty(ByVal i As Long) As Boolean
     Next
 End Function
 
-'Копирование записи. Возвращает True, если в данных есть ошибка
+'Копирование записи. Возвращает True, если запись принялась без ошибок
 'di - строка в данных
 'si - строка в исходниках
 'refresh - true, если обновление данных (проверять что поменялось)
 Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
     
     stat = DAT.Cells(di, cStatus).text
-    If stat = "0" Or stat = "2" Then Exit Function
+    If stat = "0" Then
+        Exit Function
+    End If
+    
+    SetFormates di
+    
+    'Запись зафиксирована, возвращаем изменение из собранных данных в реестр
+    If stat = "2" Then
+        For j = 2 To 14
+            CheckChanges di, si, j
+            SRC.Cells(si, j) = DAT.Cells(di, j)
+        Next
+        Exit Function
+    End If
     
     'Копирование записей с проверкой на изменение
-    Dim changed As Boolean
     For j = 2 To 14
-        ravno = DAT.Cells(di, j).text = SRC.Cells(si, j).text
+        CheckChanges di, si, j
         DAT.Cells(di, j) = SRC.Cells(si, j)
-        DAT.Cells(di, j).ClearFormats
-        If j = 2 Or j = 4 Or j = 6 Or j = 7 Or j = 8 Then
-            SRC.Cells(si, j).Interior.Color = colYellow
-        Else
-            SRC.Cells(si, j).Interior.Color = colWhite
-        End If
-        If refresh And Not ravno Then
-            DAT.Cells(di, j).Interior.Color = colYellow
-            SRC.Cells(si, j).Interior.Color = colYellow
-            changed = True
-        End If
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
-    errors = Verify.Verify(DAT, SRC, di, si, changed)
+    errors = Verify.Verify(DAT, SRC, di, si)
     
     'Если нужно, присваиваем записи новый номер
     If Not errors Then
@@ -223,12 +224,43 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
             SRC.Cells(si, 1) = n
         End If
         DAT.Cells(di, cAccept) = "OK"
-    Else
         copyRecord = True
+    Else
         DAT.Cells(di, cAccept) = "fail"
+        copyRecord = False
     End If
     
     If Not refresh Then LartRec = LartRec + 1
     If DAT.Cells(di, cStatus).text = "" Then DAT.Cells(di, cStatus) = 1
     
 End Function
+
+Sub SetFormates(ByVal i As Long)
+    DAT.Cells(i, 2).NumberFormat = "dd.MM.yyyy"
+    DAT.Cells(i, 7).NumberFormat = "### ### ##0.00"
+    For j = 9 To 11
+        DAT.Cells(i, j).NumberFormat = "### ### ##0.00"
+    Next
+    For j = 12 To 14
+        DAT.Cells(i, j).NumberFormat = "### ### ##0.00"
+    Next
+End Sub
+
+'Отслеживание изменений и пометка их цветом
+Sub CheckChanges(ByVal di As Long, ByVal si As Long, ByVal j As Long)
+    
+    'Сброс формата
+    DAT.Cells(di, j).Interior.Color = colWhite
+    If j = 2 Or j = 4 Or j = 6 Or j = 7 Or j = 8 Then
+        SRC.Cells(si, j).Interior.Color = colYellow
+    Else
+        SRC.Cells(si, j).Interior.Color = colWhite
+    End If
+    
+    'Подсветка, если есть разница
+    If DAT.Cells(di, j).text <> SRC.Cells(si, j).text Then
+        DAT.Cells(di, j).Interior.Color = colBlue
+        SRC.Cells(si, j).Interior.Color = colBlue
+    End If
+
+End Sub

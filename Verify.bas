@@ -78,16 +78,14 @@ End Sub
 'src - таблица с исходниками
 'iC - строка в данных
 'iI - строка в исходниках
-'changed - true если данные уже были зарегистрированы и запись проверяется на изменения
-Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, ByVal iI As Long, _
-    changed As Boolean) As Boolean
+Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, _
+                                                            ByVal iI As Long) As Boolean
     
     Comment = ""
     errors = False
     Verify = True
     
     '2 - Дата
-    DAT.Cells(iC, 2).NumberFormat = "dd.MM.yyyy"
     If Not isDateMy(DAT.Cells(iC, 2).text) Then
         DAT.Cells(iC, 2).Interior.Color = colRed
         SRC.Cells(iI, 2).Interior.Color = colRed
@@ -111,7 +109,6 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, By
     End If
     
     '7 - Стоимость
-    DAT.Cells(iC, 7).NumberFormat = "### ### ##0.00"
     If Not isPrice(DAT.Cells(iC, 7)) Then
         DAT.Cells(iC, 7).Interior.Color = colRed
         SRC.Cells(iI, 7).Interior.Color = colRed
@@ -127,7 +124,6 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, By
     
     '9-11 - Стоимость продаж облагаемых налогом
     For i = 9 To 11
-        DAT.Cells(iC, i).NumberFormat = "### ### ##0.00"
         If Not isPriceNDS(DAT.Cells(iC, i)) Then
             DAT.Cells(iC, i).Interior.Color = colRed
             SRC.Cells(iI, i).Interior.Color = colRed
@@ -138,7 +134,6 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, By
     '12-14 - Сумма НДС
     e = False
     For i = 12 To 14
-        DAT.Cells(iC, i).NumberFormat = "### ### ##0.00"
         If Not isPriceNDS(DAT.Cells(iC, i)) Then e = True
     Next
     If e Then

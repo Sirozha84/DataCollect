@@ -5,7 +5,7 @@ Public Const saveSource = True  'True - сохранение данных в формах, False - данн
 Public Const Secret = "123"     'Пароль для защиты
 
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
-Public Const tmpVersion = "20210108"    'Версия шаблона
+Public Const tmpVersion = "20210108"    'Версия реестра
 
 'Колонки "Данные"
 Public Const cDates = 2         'Дата
@@ -32,7 +32,7 @@ Public Const cPCode = 7         'Префикс - код
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных
 Public Const firstSrc = 5       'Первая строка в исходных файлах
-Public Const firstTempl = 7     'Первая строка в списке шаблонов
+Public Const firstTempl = 7     'Первая строка в списке реестра
 Public Const firstDic = 4       'Первая строка в справочнике
 Public Const firstErr = 2       'Первая строка в списке ошибок
 Public Const firstNum = 4       'Первая строка в словаре нумератора
@@ -43,6 +43,7 @@ Public colRed As Long
 Public colGreen As Long
 Public colYellow As Long
 Public colGray As Long
+Public colBlue As Long
 
 'Ссылки на таблицы
 Public DAT As Variant   'Данные
@@ -121,6 +122,7 @@ Sub Init()
     colGreen = RGB(192, 255, 192)
     colYellow = RGB(255, 255, 192)
     colGray = RGB(217, 217, 217)
+    colBlue = RGB(192, 217, 255)
     
     If isRelease Then On Error GoTo er
     Set DAT = Sheets("Данные")
