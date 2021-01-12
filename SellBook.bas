@@ -29,7 +29,7 @@ End Sub
 
 'Чтение справочников покупателей и продавцов из шаблона
 Sub GetLists(ByVal file As String)
-    Message "Чтение данных из шаблона"
+    Message "Чтение данных из реестра"
     Set BuyersList = New Collection
     Set SellersList = New Collection
     On Error GoTo er
@@ -52,7 +52,7 @@ Sub GetLists(ByVal file As String)
     End If
     Exit Sub
 er:
-    MsgBox "Произошла ошибка при открытии файла шаблона"
+    MsgBox "Произошла ошибка при открытии файла реестра"
     End
 End Sub
 

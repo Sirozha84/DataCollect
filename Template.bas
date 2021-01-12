@@ -95,7 +95,7 @@ er2:
     Cells(2, 1) = tmpVersion
     Range(Cells(1, 1), Cells(2, 1)).Font.Color = vbWhite
     Cells(1, 2) = "Клиент: " + cln
-    Cells(2, 2) = "Шаблон: " + tem
+    Cells(2, 2) = "Реестр: " + tem
     
     'Вкладки со справочниками
     listb.Columns(1).ColumnWidth = 30

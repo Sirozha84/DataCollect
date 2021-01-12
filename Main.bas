@@ -69,7 +69,7 @@ End Sub
 'Кнопка "Книги продаж"
 Sub ButtonSellBook()
     file = Application.GetOpenFilename("Файлы Excel(*.xls*),*.xls*", 1, _
-        "Выберите файл шаблона", , False)
+        "Выберите файл реестра", , False)
     If VarType(file) = vbBoolean Then Exit Sub
     ExportBook ByVal CStr(file)
 End Sub
