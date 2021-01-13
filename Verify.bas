@@ -74,12 +74,9 @@ Sub DrawTable(tabl As Variant, name As String, i As Long)
 End Sub
 
 'Проверка корректности данных, возвращает true если есть ошибки
-'dat - таблица с данными
-'src - таблица с исходниками
 'iC - строка в данных
 'iI - строка в исходниках
-Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, _
-                                                            ByVal iI As Long) As Boolean
+Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
     
     Comment = ""
     errors = False
@@ -91,7 +88,7 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, _
         SRC.Cells(iI, 2).Interior.Color = colRed
         AddCom "Дата введена не корректно"
     Else
-        Call DateTest(DAT, iC)
+        DateTest iC
     End If
     
     '3 - ИНН
@@ -141,7 +138,7 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, _
         SRC.Cells(iI, i).Interior.Color = colRed
         AddCom "Сумма НДС введена не корректно"
     Else
-        LimitsTest DAT, iC
+        LimitsTest iC, iI
     End If
     
     'Пишем комментарий и расскрашиваем его
@@ -157,23 +154,23 @@ Function Verify(ByRef DAT As Variant, ByRef SRC As Variant, ByVal iC As Long, _
 End Function
 
 'Проверка правильности даты
-Sub DateTest(ByRef DAT As Variant, ByVal i As Long)
+Sub DateTest(ByVal i As Long)
     sel = DAT.Cells(i, 6)
     dtt = DAT.Cells(i, 2)
     If dtt < dateS(sel) Then AddCom "Дата операции не может быть ранее регистрации компании"
 End Sub
 
 'Вычисляет из даты Год+Квартал
-Function Kvartal(DAT As Variant) As String
+Function Kvartal(sdata As Variant) As String
     On Error GoTo er
-    Kvartal = CStr(Year(DAT)) + CStr((Month(DAT) - 1) \ 3 + 1)
+    Kvartal = CStr(Year(sdata)) + CStr((Month(sdata) - 1) \ 3 + 1)
     Exit Function
 er:
     Kvartal = ""
 End Function
 
 'Проверка лимитов
-Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
+Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     kv = "!" + Kvartal(DAT.Cells(i, 2)) + "!"
     sel = DAT.Cells(i, cSellINN).text
     selCur = sel + kv
@@ -186,9 +183,14 @@ Sub LimitsTest(ByRef DAT As Variant, ByVal i As Long)
     Next
     summOne(selCur + buy) = summOne(selCur + buy) + Sum
     summAll(selCur) = summAll(selCur) + Sum
-    If summOne(selCur + buy) > limitOne Then AddCom "Превышен общий лимит продаж одному покупателю"
-    If summAll(selCur) > limitPrs(sel) Then AddCom "Превышен лимит отгрузок" 'Персональный
-    If summAll(selCur) > limitAll Then AddCom "Превышен общий лимит продаж"
+    e = False
+    If summOne(selCur + buy) > limitOne Then AddCom "Превышен общий лимит продаж одному покупателю": e = True
+    If summAll(selCur) > limitPrs(sel) Then AddCom "Превышен лимит отгрузок": e = True
+    If summAll(selCur) > limitAll Then AddCom "Превышен общий лимит продаж": e = True
+    If e Then
+        DAT.Cells(i, cPrice).Interior.Color = colRed
+        SRC.Cells(si, cPrice).Interior.Color = colRed
+    End If
     If buyers(buyCur + grp) = "" Then
         buyers(buyCur + grp) = sel
     Else

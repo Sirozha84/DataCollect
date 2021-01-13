@@ -207,7 +207,7 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
-    errors = Verify.Verify(DAT, SRC, di, si)
+    errors = Verify.Verify(di, si)
     
     '≈сли нужно, присваиваем записи новый номер
     If Not errors Then
