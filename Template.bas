@@ -15,38 +15,41 @@ Public Sub Generate()
     'Генерируем шаблоны
     Set namelist = CreateObject("Scripting.Dictionary")
     max = i - 1
-    fold = Cells(1, 3).text
+    fold = DAT.Cells(1, 3).text
     For i = firstTempl To max
-        Message "Создение шаблона " + CStr(i - firstTempl + 1) + " из " + _
-            CStr(max - FirstClient + 1)
+        Message "Создение шаблона " + CStr(i - firstTempl + 1) + " из " + CStr(max - FirstClient + 1)
         cln = cutBadSymbols(Cells(i, 1).text)
         tem = cutBadSymbols(Cells(i, 2).text)
         'Проверим, уникальные ли имена
         uname = cln + "!" + tem
         If namelist(uname) = "" Then
             namelist(uname) = 0
-            'need = False
             If Not isCode(Cells(i, 3)) Then
                 cod = last + 1
                 last = cod
                 Cells(i, 3) = cod
             End If
-            'Создаём папку и файл
-            folder fold + "\" + cln
-            folder fold + "\" + cln + "\" + tem
-            name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
-            res = NewTemplate(cln, tem, name, Cells(i, 3).text)
-            If res = 0 Then
-                Cells(i, 4) = "Произошла ошибка при создании файла"
-                Cells(i, 5) = "Ошибка"
-            End If
-            If res = 1 Then
-                Cells(i, 4) = name
-                Cells(i, 5) = "Успешно!"
-            End If
-            If res = 2 Then
-                Cells(i, 4) = name
-                Cells(i, 5) = "Файл уже существует, пропущено"
+            If Cells(i, cTStat).text <> "OK" Then
+                'Создаём папку и файл
+                folder fold + "\" + cln
+                folder fold + "\" + cln + "\" + tem
+                name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
+                res = NewTemplate(cln, tem, name, Cells(i, 3).text)
+                If res = 0 Then
+                    Cells(i, 4) = "Произошла ошибка при создании файла"
+                    Cells(i, 5) = "Ошибка"
+                End If
+                If res = 1 Then
+                    Cells(i, 4) = name
+                    Cells(i, 5) = "Успешно!"
+                    Cells(i, cTStat) = "OK"
+                End If
+                If res = 2 Then
+                    Cells(i, 4) = name
+                    Cells(i, 5) = "Файл уже существует, пропущено"
+                End If
+            Else
+                Cells(i, 5) = "Шаблон уже был создан ранее"
             End If
         Else
             Cells(i, 5) = "Имя клиента или шаблона не уникально."

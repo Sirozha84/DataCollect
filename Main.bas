@@ -28,11 +28,12 @@ Public Const cGroup = 4         'Группы
 Public Const cLimits = 5        'Лимиты
 Public Const cPLiter = 6        'Префикс - литер
 Public Const cPCode = 7         'Префикс - код
+Public Const cTStat = 6         'Шаблоны - статус
 
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных
 Public Const firstSrc = 5       'Первая строка в исходных файлах
-Public Const firstTempl = 7     'Первая строка в списке реестра
+Public Const firstTempl = 6     'Первая строка в списке реестра
 Public Const firstDic = 4       'Первая строка в справочнике
 Public Const firstErr = 2       'Первая строка в списке ошибок
 Public Const firstNum = 4       'Первая строка в словаре нумератора
@@ -54,7 +55,7 @@ Public NUM As Variant   'Словарь нумератора
 Public VAL As Variant   'Значения объёмов
 
 'Выбор директории с данными
-Sub ButtonDirSelect()
+Sub ButtonDirSelectImport()
     Set diag = Application.FileDialog(msoFileDialogFolderPicker)
     If diag.Show = 0 Then Exit Sub
     Cells(1, 3) = diag.SelectedItems(1)
