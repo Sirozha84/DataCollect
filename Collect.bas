@@ -54,17 +54,12 @@ Function AddFile(ByVal file As String) As Byte
     
     'Подготовки
     Application.DisplayAlerts = False
-    If IsBookOpen(file) Then AddFile = 6: Exit Function
+    If Not TrySave(file) Then AddFile = 6: Exit Function
     errors = False
     Application.ScreenUpdating = False
     If isRelease Then On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
-    If Not TrySave(impBook) Then
-        AddFile = 7
-        impBook.Close
-        Exit Function
-    End If
     
     If Not impBook Is Nothing Then
         Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа

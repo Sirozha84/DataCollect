@@ -20,8 +20,7 @@ Sub Rec(ByVal file As String, ByVal code As Integer)
     If code = 3 Then msg = "Отсутствует код"
     If code = 4 Then msg = "Версия формы не поддерживается"
     If code = 5 Then msg = "Дубликат! Обработка пропущена"
-    If code = 6 Then msg = "Файл открыт пользователем"
-    If code = 7 Then msg = "Не доступна запись в файл"
+    If code = 6 Then msg = "Файл заблокирован"
     ERR.Cells(recN, 1) = file
     ERR.Cells(recN, 2) = msg
     recN = recN + 1

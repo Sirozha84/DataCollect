@@ -28,21 +28,12 @@ Function cutBadSymbols(ByVal name As String) As String
     cutBadSymbols = name
 End Function
 
-'Проверка файла на то что он уже открыт
-Function IsBookOpen(fileName As String) As Boolean
-    Dim FSO As Object, strFileName$, strFilePath$
-    Set FSO = CreateObject("Scripting.FileSystemObject")
-    name = FSO.getfilename(fileName)
-    Dim wbBook As Workbook
-    On Error Resume Next
-    Set wbBook = Workbooks(name)
-    IsBookOpen = Not wbBook Is Nothing
-End Function
-
 'Проверка на возможность созранениф
 Function TrySave(file As Variant)
     On Error GoTo er
-    file.Save
+    newname = file + "_"
+    Name file As newname
+    Name newname As file
     TrySave = True
     Exit Function
 er:
