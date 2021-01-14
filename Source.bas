@@ -61,13 +61,13 @@ End Sub
 
 'Извлечение кода из файла
 Function GetCode(ByVal file As String) As String
+    If Not TrySave(file) Then Exit Function
     On Error GoTo er
-    If IsBookOpen(file) Then Exit Function
     Application.ScreenUpdating = False
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     If Not impBook Is Nothing Then
-        Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
+        Set SRC = impBook.Worksheets(1)
         SetProtect SRC
         GetCode = SRC.Cells(1, 1)
         impBook.Close False

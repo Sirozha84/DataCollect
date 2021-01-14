@@ -95,28 +95,28 @@ Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
     If Not isINNKPP(DAT.Cells(iC, 3).text) Then
         DAT.Cells(iC, 3).Interior.Color = colRed
         SRC.Cells(iI, 3).Interior.Color = colRed
-        AddCom "ИНН/КПП введены не корректно"
+        AddCom "Неверные ИНН/КПП покупателя"
     End If
     
     '5 - ИНН
     If Not isINNKPP(DAT.Cells(iC, 5).text) Then
         DAT.Cells(iC, 5).Interior.Color = colRed
         SRC.Cells(iI, 5).Interior.Color = colRed
-        AddCom "ИНН введён не корректно"
+        AddCom "Неверный ИНН продавца"
     End If
     
     '7 - Стоимость
     If Not isPrice(DAT.Cells(iC, 7)) Then
         DAT.Cells(iC, 7).Interior.Color = colRed
         SRC.Cells(iI, 7).Interior.Color = colRed
-        AddCom "Стоимость введена не корректно"
+        AddCom "Сумма с НДС введена не корректно"
     End If
     
     '8 - Ставка НДС
     If Not isNDS(DAT.Cells(iC, 8).text) Then
         DAT.Cells(iC, 8).Interior.Color = colRed
         SRC.Cells(iI, 8).Interior.Color = colRed
-        AddCom "НДС введён не корректно"
+        AddCom "Неверная ставка НДС"
     End If
     
     '9-11 - Стоимость продаж облагаемых налогом
@@ -124,7 +124,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
         If Not isPriceNDS(DAT.Cells(iC, i)) Then
             DAT.Cells(iC, i).Interior.Color = colRed
             SRC.Cells(iI, i).Interior.Color = colRed
-            AddCom "Стоимость продаж облагаемых налогом введена не корректно"
+            'AddCom "Стоимость продаж облагаемых налогом введена не корректно"
         End If
     Next
     
@@ -136,7 +136,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
     If e Then
         DAT.Cells(iC, i).Interior.Color = colRed
         SRC.Cells(iI, i).Interior.Color = colRed
-        AddCom "Сумма НДС введена не корректно"
+        'AddCom "Сумма НДС введена не корректно"
     Else
         LimitsTest iC, iI
     End If
@@ -157,7 +157,7 @@ End Function
 Sub DateTest(ByVal i As Long)
     sel = DAT.Cells(i, 6)
     dtt = DAT.Cells(i, 2)
-    If dtt < dateS(sel) Then AddCom "Дата операции не может быть ранее регистрации компании"
+    If dtt < dateS(sel) Then AddCom "Дата СФ не может быть ранее регистрации продавца"
 End Sub
 
 'Вычисляет из даты Год+Квартал
@@ -184,9 +184,11 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     summOne(selCur + buy) = summOne(selCur + buy) + Sum
     summAll(selCur) = summAll(selCur) + Sum
     e = False
-    If summOne(selCur + buy) > limitOne Then AddCom "Превышен общий лимит продаж одному покупателю": e = True
-    If summAll(selCur) > limitPrs(sel) Then AddCom "Превышен лимит отгрузок": e = True
-    If summAll(selCur) > limitAll Then AddCom "Превышен общий лимит продаж": e = True
+    If summOne(selCur + buy) > limitOne Then _
+            AddCom "Превышен лимит продаж данного продавца данному покупателю": e = True
+    If summAll(selCur) > limitPrs(sel) Then _
+            AddCom "Сумма превышает свободный остаток у данного продавца": e = True
+    If summAll(selCur) > limitAll Then AddCom "Превышен общий лимит продаж данного продавца": e = True
     If e Then
         DAT.Cells(i, cPrice).Interior.Color = colRed
         SRC.Cells(si, cPrice).Interior.Color = colRed
@@ -194,7 +196,7 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     If buyers(buyCur + grp) = "" Then
         buyers(buyCur + grp) = sel
     Else
-        If buyers(buyCur + grp) <> sel Then AddCom "Покупка у другого продавца группы"
+        If buyers(buyCur + grp) <> sel Then AddCom "Указаны связанные продавцы для данного покупателя"
     End If
 End Sub
 

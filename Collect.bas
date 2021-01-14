@@ -34,6 +34,7 @@ Sub Run()
     Verify.SaveValues
     ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
+    Application.DisplayAlerts = True
     
     If isRelease Then MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + _
                                                 CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
