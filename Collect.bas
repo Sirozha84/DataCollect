@@ -1,5 +1,5 @@
 Attribute VB_Name = "Collect"
-Dim LartRec As Long
+Dim LastRec As Long
 Dim curFile As String
 Dim curCode As String
 
@@ -93,7 +93,7 @@ Function AddFile(ByVal file As String) As Byte
                 If UID <> "" Then Indexes.Add UID, i
                 i = i + 1
             Loop
-            LartRec = i
+            LastRec = i
         
             'Обрабатываем строки исходника
             Set resUIDs = CreateObject("Scripting.Dictionary")
@@ -130,16 +130,20 @@ Function AddFile(ByVal file As String) As Byte
                     End If
                 End If
                 'Новая строка
-                If UID = "" Then If Not copyRecord(LartRec, i, False) Then errors = True
+                If UID = "" Then If Not copyRecord(LastRec, i, False) Then errors = True
                 rUID = SRC.Cells(i, 1).text
-                If rUID <> "" Then resUIDs.Add rUID, 1 'Если в сорсе будет два одинаковых номера, то тут будет ошибка!
+                If rUID <> "" Then resUIDs.Add rUID, 1
+                'Составляем словарь resUIDs - все номера, которые есть в реестре
+                'Далее в сборе ищем все записи по коду из этого реестра, которые отсутствуют в этом
+                'словаре, их считаем удалёнными.
+                'Если в реестре будет два одинаковых номера, то тут будет ошибка!
                 i = i + 1
             Loop
             
             'Проверяем исходник на удалённые записи
             i = firstDat
-            Do While DAT.Cells(i, 2) <> ""
-                UID = DAT.Cells(i, 1)
+            Do While DAT.Cells(i, cAccept) <> ""
+                UID = DAT.Cells(i, 1).text
                 If UID <> "" And DAT.Cells(i, cCode) = curCode Then
                     If resUIDs(UID) = Empty Then
                         DAT.Cells(i, cCom) = "Данные удалены!"
@@ -226,7 +230,7 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         copyRecord = False
     End If
     
-    If Not refresh Then LartRec = LartRec + 1
+    If Not refresh Then LastRec = LastRec + 1
     If DAT.Cells(di, cStatus).text = "" Then DAT.Cells(di, cStatus) = 1
     
 End Function
