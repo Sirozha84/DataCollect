@@ -214,12 +214,12 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         Dim needNum As Boolean
         If refresh Then
             needNum = Not Numerator.CheckPrefix(DAT.Cells(di, 1).text, _
-                DAT.Cells(di, 2), DAT.Cells(di, cSeller).text)
+                DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
         Else
             needNum = True
         End If
         If needNum Then
-            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSeller).text)
+            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
             DAT.Cells(di, 1) = n
             SRC.Cells(si, 1) = n
         End If

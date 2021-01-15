@@ -10,8 +10,8 @@ Sub Init()
     Range(NUM.Cells(1, 1), NUM.Cells(3, 100)).Interior.Color = RGB(214, 214, 214)
     Set Prefixes = CreateObject("Scripting.Dictionary")
     i = firstNum
-    Do While NUM.Cells(i, 1) <> ""
-        pref = NUM.Cells(i, 1)
+    Do While NUM.Cells(i, 1).text <> ""
+        pref = NUM.Cells(i, 1).text
         Prefixes.Add pref, NUM.Cells(i, 2)
         i = i + 1
     Loop
@@ -20,8 +20,8 @@ Sub Init()
     Set Liters = CreateObject("Scripting.Dictionary")
     Set Codes = CreateObject("Scripting.Dictionary")
     i = firstDic
-    Do While DIC.Cells(i, cSellerName) <> ""
-        seller = DIC.Cells(i, cSellerName)
+    Do While DIC.Cells(i, cINN) <> ""
+        seller = DIC.Cells(i, cINN).text
         Liters.Add seller, GetLiter(seller, DIC.Cells(i, cPLiter).text)
         Codes.Add seller, DIC.Cells(i, cPCode).text
         i = i + 1
@@ -33,10 +33,13 @@ End Sub
 Sub Save()
     i = firstNum
     For Each Key In Prefixes.keys
-        NUM.Cells(i, 1) = Key
+        NUM.Cells(i, 1) = "'" + Key
         NUM.Cells(i, 2) = Prefixes(Key)
         i = i + 1
     Next
+    'На всякий случай делаем следующую строку пустой
+    NUM.Cells(i, 1) = ""
+    NUM.Cells(i, 2) = ""
 End Sub
 
 'Генерация уникального номера
