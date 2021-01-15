@@ -20,7 +20,10 @@ Private Sub readDir(ByVal pat As String)
     If InStr(1, pat, ".sync") > 0 Then Exit Sub
     Set curfold = FSO.GetFolder(pat)
     For Each file In curfold.files
-        If file.name Like "*.xls*" And InStr(1, file.name, "~$") = 0 Then files.Add file.Path
+        If file.name Like "*.xls*" And _
+                InStr(1, file.name, "~$") = 0 And _
+                InStr(1, file.name, " нѕрод ") = 0 _
+            Then files.Add file.Path
     Next
     For Each subfolder In curfold.subFolders
          readDir subfolder
