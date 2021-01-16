@@ -220,7 +220,9 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         End If
         If needNum Then
             n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
+            DAT.Cells(di, 1).NumberFormat = "@"
             DAT.Cells(di, 1) = n
+            SRC.Cells(si, 1).NumberFormat = "@"
             SRC.Cells(si, 1) = n
         End If
         DAT.Cells(di, cAccept) = "OK"

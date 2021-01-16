@@ -33,7 +33,8 @@ End Sub
 Sub Save()
     i = firstNum
     For Each Key In Prefixes.keys
-        NUM.Cells(i, 1) = "'" + Key
+        NUM.Cells(i, 1).NumberFormat = "@"
+        NUM.Cells(i, 1) = Key
         NUM.Cells(i, 2) = Prefixes(Key)
         i = i + 1
     Next
