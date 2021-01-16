@@ -28,7 +28,10 @@ Public Const cGroup = 4         'Группы
 Public Const cLimits = 5        'Лимиты
 Public Const cPLiter = 6        'Префикс - литер
 Public Const cPCode = 7         'Префикс - код
-Public Const cTStat = 6         'Шаблоны - статус
+Public Const cPStat = 8         'Статус
+
+'Колонки "Шаблоны"
+Public Const cTStat = 6         'Статус
 
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных

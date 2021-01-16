@@ -6,7 +6,6 @@ Dim dateS As Variant    'Словарь дат регистраций
 Dim limitPrs As Variant 'Словарь лимитов на отгрузку
 Dim limitOne As Variant 'Общий лимит на отгрузку одному покупателю
 Dim limitAll As Variant 'Общий лимит на отгрузку
-Dim summOne As Variant  'Счётчики сумм продажи одному покупателю
 Dim summAll As Variant  'Счётчики сумм продажи всем
 Dim buyers As Variant   'Словарь покупателей "у кого покупаем"
 
@@ -36,41 +35,7 @@ Sub Init()
         groups(cmp) = grp
         i = i + 1
     Loop
-   
-End Sub
-
-'Сохранение текущих значений отгрузок
-Sub SaveValues()
-    Dim i As Long
-    i = 1
-    VAL.Cells.Clear
-    VAL.Columns(1).ColumnWidth = 7
-    VAL.Columns(2).ColumnWidth = 20
-    VAL.Columns(3).ColumnWidth = 20
-    VAL.Columns(4).ColumnWidth = 10
-    DrawTable summAll, "Полный объём отгрузки продавца", i
-    DrawTable summOne, "Объём отгрузки по покупателям", i
-End Sub
-
-'Шапка в
-Sub DrawTable(tabl As Variant, name As String, i As Long)
-    VAL.Cells(i, 1) = name
-    i = i + 1
-    VAL.Cells(i, 1) = "Квартал"
-    VAL.Cells(i, 2) = "Продавец"
-    VAL.Cells(i, 3) = "Покупатель"
-    VAL.Cells(i, 4) = "Объём"
-    Range(VAL.Cells(i, 1), VAL.Cells(i, 100)).Interior.Color = colGray
-    i = i + 1
-    For Each sel In tabl
-        s = Split(sel, "!")
-        VAL.Cells(i, 1) = s(1)
-        VAL.Cells(i, 2) = s(0)
-        VAL.Cells(i, 3) = s(2)
-        VAL.Cells(i, 4) = tabl(sel)
-        i = i + 1
-    Next
-    i = i + 1
+    
 End Sub
 
 'Проверка корректности данных, возвращает true если есть ошибки

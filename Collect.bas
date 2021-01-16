@@ -31,7 +31,7 @@ Sub Run()
         n = n + 1
     Next
     
-    Verify.SaveValues
+    Values.CreateReport
     ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True
