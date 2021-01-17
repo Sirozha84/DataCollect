@@ -132,11 +132,14 @@ Function AddFile(ByVal file As String) As Byte
                 'Новая строка
                 If UID = "" Then If Not copyRecord(LastRec, i, False) Then errors = True
                 rUID = SRC.Cells(i, 1).text
-                If rUID <> "" Then resUIDs.Add rUID, 1
+                
                 'Составляем словарь resUIDs - все номера, которые есть в реестре
                 'Далее в сборе ищем все записи по коду из этого реестра, которые отсутствуют в этом
                 'словаре, их считаем удалёнными.
                 'Если в реестре будет два одинаковых номера, то тут будет ошибка!
+                On Error Resume Next
+                If rUID <> "" Then resUIDs.Add rUID, 1
+                
                 i = i + 1
             Loop
             
@@ -207,6 +210,18 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
+    
+    'Проверка на удалённую запись (если это обновление и строка с датой пустая)
+    If refresh And DAT.Cells(di, cDates).text = "" Then
+        DAT.Cells(di, cCom) = "Данные удалены заказчиком"
+        DAT.Cells(di, cCom).Interior.Color = colRed
+        SRC.Cells(si, 1).Font.Color = colWhite
+        SRC.Cells(si, cCom) = "Данные удалены заказчиком"
+        SRC.Cells(si, cCom).Interior.Color = colRed
+        Exit Function
+        'Дальнейшие действия в этом случае не требуются
+    End If
+    
     errors = Verify.Verify(di, si)
     
     'Если нужно, присваиваем записи новый номер
