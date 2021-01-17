@@ -13,8 +13,8 @@ Public Sub ButtonGenerate()
         Cells(i, 1) = file
         er = ExportBook(file)
         If er = 0 Then Cells(i, 2) = "Ошибка при работе с файлом"
-        If er = 1 Then Cells(i, 2) = "Книги сформированы"
-        If er = 2 Then Cells(i, 2) = "В реестре ошибки"
+        If er = 1 Then Cells(i, 2) = "Созданы книги продаж"
+        If er = 2 Then Cells(i, 2) = "Реестр имеет некорректные записи"
         i = i + 1
     Next
     MsgBox "Формирование книг продаж завершено!"
