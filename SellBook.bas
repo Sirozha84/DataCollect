@@ -35,6 +35,7 @@ Sub GetLists(ByVal file As String)
     On Error GoTo er
     Application.ScreenUpdating = False
     Set templ = Workbooks.Open(file, False, False)
+    On Error Resume Next
     If Not templ Is Nothing Then
         Set SRC = templ.Worksheets("Покупатели")
         i = 2

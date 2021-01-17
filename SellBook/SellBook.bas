@@ -1,4 +1,9 @@
-Attribute VB_Name = "SellBookGen"
+Attribute VB_Name = "SellBook"
+'Положительные комментарии
+Const OK1 = "Принято"
+Const OK2 = "Данные зафиксированы!"
+Const nOK = "Данные удалены заказчиком" 'С ним файл принимаем, но в книги не экспортируем
+
 Const firstDat = 5  'Первая строка данных
 
 'Колонки реестра
@@ -10,10 +15,6 @@ Const cSeller = 6   'Продавец Наименование
 Const cPrice = 7    'Стоимость
 Const cCom = 15     'Комментарий
 
-'Положительные комментарии
-Const OK1 = "Принято"
-Const OK2 = "Данные зафиксированы!"
-
 Dim DAT As Object
 Dim BUY As Object
 Dim SEL As Object
@@ -21,29 +22,23 @@ Dim BuyersList As Variant
 Dim SellersList As Variant
 Dim Quartals As Variant
 Dim Where As Collection
-Dim Patch As String
 'Здесь коллекция Where не нужна, так как, теоретически, любая строка должна соответствовать требованию,
 'но оставлю её для совместимости, чтоб код формирования как можно меньше отличался от того что в сборе.
 
-Sub ButtonGenerate()
-    file = Application.GetOpenFilename("Файлы Excel(*.xls*),*.xls*", 1, _
-        "Выберите файл реестра", , False)
-    If VarType(file) = vbBoolean Then Exit Sub
-    ExportBook ByVal CStr(file)
-    'ExportBook "c:\DataCollect\BookTest\Crn001 Дубликат! Код формы 9.xlsx"
-End Sub
-
-Public Sub ExportBook(ByVal file As String)
-    Message "Подготовка..."
+'Формирование книги продаж
+'Возвращает 0 - при ошибке открытия, 1 - когда всё успешно, 2 - имеются ошибочные записи
+Function ExportBook(ByVal file As String) As Byte
+    Message "Чтение файла " + file
     Set FSO = CreateObject("Scripting.FileSystemObject")
     Patch = FSO.GetParentFolderName(file) + "\"
     Application.ScreenUpdating = False
-    On Error GoTo er
+    'On Error GoTo er
     Set templ = Workbooks.Open(file, False, False)
     Set DAT = templ.Worksheets(1)
     Set BUY = templ.Worksheets("Покупатели")
     Set SEL = templ.Worksheets("Продавцы")
     
+    If Not VerifyRecords Then templ.Close: ExportBook = 2: Exit Function
     GetLists
     GetQuartalsAndIndexes
     ClearOldBooks
@@ -58,13 +53,26 @@ Public Sub ExportBook(ByVal file As String)
     
     templ.Close
     Message "Готово!"
-    Exit Sub
+    ExportBook = 1
+    Exit Function
 er:
-    MsgBox "Произошла ошибка при открытии файла реестра"
-End Sub
+    ExportBook = 0
+End Function
+
+Function VerifyRecords() As Boolean
+    VerifyRecords = True
+    i = firstDat
+    Do While DAT.Cells(i, cCom) <> ""
+        If DAT.Cells(i, cCom) <> OK1 And DAT.Cells(i, cCom) <> OK2 And _
+                DAT.Cells(i, cCom) <> nOK Then VerifyRecords = False: Exit Function
+        i = i + 1
+    Loop
+End Function
 
 'Чтение справочников покупателей и продавцов из реестра
 Sub GetLists()
+    
+    On Error Resume Next
     
     Set BuyersList = New Collection
     Set SellersList = New Collection
@@ -90,7 +98,7 @@ Sub GetQuartalsAndIndexes()
     On Error Resume Next
     i = firstDat
     Do While DAT.Cells(i, cCom) <> ""
-        If DAT.Cells(i, cCom) = OK1 Or DAT.Cells(i.cCom) = OK2 Then
+        If DAT.Cells(i, cCom) = OK1 Or DAT.Cells(i, cCom) = OK2 Then
             b = ""
             b = BuyersList(DAT.Cells(i, cBuyer))
             s = ""
@@ -124,7 +132,7 @@ Sub ClearOldBooks()
     
     Set FSO = CreateObject("Scripting.FileSystemObject")
     Set curfold = FSO.GetFolder(Patch)
-    For Each file In curfold.Files
+    For Each file In curfold.files
         If file.name Like "КнПрод*.xls*" Then
             Kill Patch + file.name
         End If
