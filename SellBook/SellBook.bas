@@ -51,6 +51,7 @@ Function ExportBook(ByVal file As String) As Byte
     GetQuartalsAndIndexes
     ClearOldBooks
 
+    BookCount = 0
     For Each q In Quartals
         For Each b In BuyersList
             For Each s In SellersList
@@ -60,7 +61,6 @@ Function ExportBook(ByVal file As String) As Byte
     Next
     
     templ.Close
-    Message "Готово!"
     ExportBook = 1
     Exit Function
 er:
@@ -349,6 +349,7 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     Application.DisplayAlerts = False
     ActiveWorkbook.SaveAs Filename:=Filename
     ActiveWorkbook.Close
+    BookCount = BookCount + 1
     Exit Sub
 er:
     ActiveWorkbook.Close
