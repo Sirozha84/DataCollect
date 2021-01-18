@@ -175,7 +175,7 @@ End Function
 'Возвращает True, если строка в исходнике не пустая
 Function NotEmpty(ByVal i As Long) As Boolean
     NotEmpty = False
-    For j = 1 To 14
+    For j = 1 To 15
         txt = SRC.Cells(i, j).text
         If txt <> "" And txt <> "#Н/Д" Then NotEmpty = True: Exit For
     Next
@@ -210,16 +210,19 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
+    DAT.Cells(di, cAccept) = "fail" 'По умолчанию будем считать строку не верной
     
     'Проверка на удалённую запись (если это обновление и строка с датой пустая)
-    If refresh And DAT.Cells(di, cDates).text = "" Then
-        DAT.Cells(di, cCom) = "Данные удалены заказчиком"
-        DAT.Cells(di, cCom).Interior.Color = colRed
+    If SRC.Cells(si, cDates).text = "" Then
         SRC.Cells(si, 1).Font.Color = colWhite
         SRC.Cells(si, cCom) = "Данные удалены заказчиком"
         SRC.Cells(si, cCom).Interior.Color = colRed
+        If refresh Then
+            DAT.Cells(di, cCom) = "Данные удалены заказчиком"
+            DAT.Cells(di, cCom).Interior.Color = colRed
+        End If
         Exit Function
-        'Дальнейшие действия в этом случае не требуются
+        'Дальнейшие действия в этом случае не требуются, выходим...
     End If
     
     errors = Verify.Verify(di, si)
@@ -244,7 +247,6 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         DAT.Cells(di, cAccept) = "OK"
         copyRecord = True
     Else
-        DAT.Cells(di, cAccept) = "fail"
         copyRecord = False
     End If
     
