@@ -35,6 +35,14 @@ Function ExportBook(ByVal file As String) As Byte
     'On Error GoTo er
     Set templ = Workbooks.Open(file, False, False)
     Set DAT = templ.Worksheets(1)
+    
+    'Проверка на "правильность" шаблона реестра
+    If DAT.Cells(2, 1).text <> PatVersion Then
+        ExportBook = 0
+        templ.Close
+        Exit Function
+    End If
+    
     Set BUY = templ.Worksheets("Покупатели")
     Set SEL = templ.Worksheets("Продавцы")
     
@@ -78,16 +86,16 @@ Sub GetLists()
     Set SellersList = New Collection
     
     i = 2
-    Do While BUY.Cells(i, 1) <> ""
-        BuyersList.Add BUY.Cells(i, 1).text, BUY.Cells(i, 1).text
-        i = i + 1
-    Loop
+    For i = 2 To 1000
+        If BUY.Cells(i, 1).text <> "" Then _
+            BuyersList.Add BUY.Cells(i, 1).text, BUY.Cells(i, 1).text
+    Next
     
     i = 2
-    Do While SEL.Cells(i, 1) <> ""
-        SellersList.Add SEL.Cells(i, 1).text, SEL.Cells(i, 1).text
-        i = i + 1
-    Loop
+    For i = 2 To 1000
+        If SEL.Cells(i, 1).text <> "" Then _
+            SellersList.Add SEL.Cells(i, 1).text, SEL.Cells(i, 1).text
+    Next
 
 End Sub
 
