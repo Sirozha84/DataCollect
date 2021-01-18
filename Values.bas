@@ -1,7 +1,6 @@
 Attribute VB_Name = "Values"
-Option Explicit
-
 Public summOne As Variant  'Счётчики сумм продажи одному покупателю
+Public summAll As Variant  'Счётчики сумм продажи всем
 
 'Сохранение текущих значений отгрузок
 Sub CreateReport()
@@ -57,6 +56,22 @@ Sub CreateReport()
         VAL.Cells(i, 5) = summOne(sel)
         i = i + 1
     Next
-    
     Range(VAL.Cells(1, 1), VAL.Cells(1, 5)).Rows.AutoFilter
+    
+    'Выводим данные в справочник
+    Message "Расчёт остатков..."
+    i = firstDic
+    Do While DIC.Cells(i, 1) <> ""
+        Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).Clear
+        Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).NumberFormat = "### ### ##0.00"
+        For j = 0 To quartCount - 1
+            ind = DIC.Cells(i, 2).text + "!" + CStr(firstYear + Int((firstQuartal + j - 1) / 4)) + _
+                    CStr(j Mod 4 + 1) + "!"
+            s = summAll(ind)
+            If s <> Empty Then DIC.Cells(i, cPFact + j) = summAll(ind)
+            'DIC.Cells(i, cPFact + j) = ind
+        Next
+        i = i + 1
+    Loop
+    
 End Sub

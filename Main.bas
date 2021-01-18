@@ -29,6 +29,11 @@ Public Const cLimits = 5        'Лимиты
 Public Const cPLiter = 6        'Префикс - литер
 Public Const cPCode = 7         'Префикс - код
 Public Const cPStat = 8         'Статус
+Public Const cPFact = 10        'Первая колонка с фактическими объёмами
+Public Const cPBalance = 23     'Первая колонка с остатками
+Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
+Public Const firstYear = 2018   'Первый расчётный год (потом это будет переменной, но пока статика)
+Public Const firstQuartal = 1   'Первыё расчётный квартал (аналогично)
 
 'Колонки "Шаблоны"
 Public Const cTStat = 6         'Статус

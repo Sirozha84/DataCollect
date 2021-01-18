@@ -6,7 +6,6 @@ Dim dateS As Variant    'Словарь дат регистраций
 Dim limitPrs As Variant 'Словарь лимитов на отгрузку
 Dim limitOne As Variant 'Общий лимит на отгрузку одному покупателю
 Dim limitAll As Variant 'Общий лимит на отгрузку
-Dim summAll As Variant  'Счётчики сумм продажи всем
 Dim buyers As Variant   'Словарь покупателей "у кого покупаем"
 
 'Инициализация словарей лимитов
