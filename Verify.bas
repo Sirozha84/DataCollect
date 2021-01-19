@@ -55,7 +55,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
         DateTest iC
     End If
     
-    '3 - ИНН
+    '3 - ИНН/КПП
     If Not isINNKPP(DAT.Cells(iC, 3).text) Then
         DAT.Cells(iC, 3).Interior.Color = colRed
         SRC.Cells(iI, 3).Interior.Color = colRed
@@ -63,7 +63,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
     End If
     
     '5 - ИНН
-    If Not isINNKPP(DAT.Cells(iC, 5).text) Then
+    If Not isINN(DAT.Cells(iC, 5).text) Then
         DAT.Cells(iC, 5).Interior.Color = colRed
         SRC.Cells(iI, 5).Interior.Color = colRed
         AddCom "Неверный ИНН продавца"
@@ -206,18 +206,24 @@ Function isPriceNDS(ByVal var As Variant)
     End If
 End Function
 
+'Проверка на корректность ИНН
+Function isINN(ByVal str As String) As Boolean
+    isINN = False
+    If str = "" Then Exit Function
+    If IsNumeric(str) And Len(str) = 10 Then isINN = True
+End Function
+
 'Проверка на корректность ИНН/КПП
 Function isINNKPP(ByVal str As String) As Boolean
+    isINNKPP = False
     If str = "" Then isINNKPP = False: Exit Function
-    Dim s() As String
     s = Split(str, "/")
-    isINNKPP = True
-    If Not IsNumeric(s(0)) Then isINNKPP = False
-    If Len(s(0)) <> 10 And Len(s(0)) <> 12 Then isINNKPP = False
-    If UBound(s) > 0 Then
-        If Not IsNumeric(s(1)) Then isINNKPP = False
-        If Len(s(1)) <> 9 Then isINNKPP = False
+    'Юридическое лицо
+    If IsNumeric(s(0)) And Len(s(0)) = 10 And UBound(s) > 0 Then
+        If IsNumeric(s(1)) And Len(s(1)) = 9 Then isINNKPP = True
     End If
+    'ИП
+    If IsNumeric(s(0)) And Len(s(0)) = 12 And UBound(s) = 0 Then isINNKPP = True
 End Function
 
 'Проверка на корректность НДС
