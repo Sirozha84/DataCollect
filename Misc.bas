@@ -39,3 +39,8 @@ Function TrySave(file As Variant)
 er:
     TrySave = False
 End Function
+
+'Расчёт квартала по номеру индекса
+Function IndexToQuartal(ByVal i As Integer) As String
+    IndexToQuartal = CStr(lastYear - Int((lastQuartal + i) / 4) + 1) + CStr(4 - i Mod 4)
+End Function

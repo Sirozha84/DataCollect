@@ -3,10 +3,13 @@ Dim Comment As String   'Строка с комментариями
 Dim errors As Boolean   'Флаг наличия ошибок
 Dim groups As Variant   'Словарь групп
 Dim dateS As Variant    'Словарь дат регистраций
-Dim limitPrs As Variant 'Словарь лимитов на отгрузку
+'Dim limitPrs As Variant 'Словарь лимитов на отгрузку
 Dim limitOne As Variant 'Общий лимит на отгрузку одному покупателю
 Dim limitAll As Variant 'Общий лимит на отгрузку
 Dim buyers As Variant   'Словарь покупателей "у кого покупаем"
+
+Dim buyIndexes As Variant   'Индексы строк покупателей
+Dim qrtIndexes As Variant   'Индексы колонок квартала
 
 'Инициализация словарей лимитов
 Sub Init()
@@ -17,10 +20,12 @@ Sub Init()
     Set summAll = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")
     Set buyers = CreateObject("Scripting.Dictionary")
+    Set buyIndexes = CreateObject("Scripting.Dictionary")
+    Set qrtIndexes = CreateObject("Scripting.Dictionary")
     
     'Чтение общих лимитов
-    limitOne = DIC.Cells(1, cLimits)
-    limitAll = DIC.Cells(2, cLimits)
+    limitOne = DIC.Cells(1, 5)
+    limitAll = DIC.Cells(2, 5)
     
     'Чтение словарей дат регистрации, лимитов отгрузок и групп
     i = firstDic
@@ -28,13 +33,22 @@ Sub Init()
         cmp = DIC.Cells(i, cINN).text
         dtt = DIC.Cells(i, cSDate)
         dateS(cmp) = dtt
-        lim = DIC.Cells(i, cLimits)
-        limitPrs(cmp) = lim
         grp = DIC.Cells(i, cGroup).text
         groups(cmp) = grp
+        buyIndexes(cmp) = i
+        
+        'Очистка фактической отгрузки
+        Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).Clear
+        Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).NumberFormat = "### ### ##0.00"
+        
         i = i + 1
     Loop
     
+    'Индексирование кварталов
+    For i = 0 To quartCount - 1
+        qrtIndexes(IndexToQuartal(i)) = i
+    Next
+
 End Sub
 
 'Проверка корректности данных, возвращает true если есть ошибки
@@ -135,11 +149,11 @@ End Function
 
 'Проверка лимитов
 Sub LimitsTest(ByVal i As Long, ByVal si As Long)
-    kv = "!" + Kvartal(DAT.Cells(i, 2)) + "!"
+    kv = Kvartal(DAT.Cells(i, 2))
     sel = DAT.Cells(i, cSellINN).text
-    selCur = sel + kv
+    selCur = sel + "!" + kv + "!"
     buy = DAT.Cells(i, cBuyINN).text
-    buyCur = buy + kv
+    buyCur = buy + "!" + kv + "!"
     grp = groups(sel)
     Sum = 0
     For j = 12 To 14
@@ -148,11 +162,22 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     summOne(selCur + buy) = summOne(selCur + buy) + Sum
     summAll(selCur) = summAll(selCur) + Sum
     e = False
+    
+    'Проверка на лимит одному покупателю
     If summOne(selCur + buy) > limitOne Then _
             AddCom "Превышен лимит продаж данного продавца данному покупателю": e = True
-    If summAll(selCur) > limitPrs(sel) Then _
-            AddCom "Сумма превышает свободный остаток у данного продавца": e = True
+    
+    'Проверка на остатки
+    lim = DIC.Cells(buyIndexes(sel), cLimits + qrtIndexes(kv))
+    If summAll(selCur) > lim Then
+        AddCom "Сумма превышает свободный остаток у данного продавца": e = True
+    Else
+        DIC.Cells(buyIndexes(sel), cPFact + qrtIndexes(kv)) = summOne(selCur + buy)
+    End If
+    
+    'Проверка на общий лимит продавца
     If summAll(selCur) > limitAll Then AddCom "Превышен общий лимит продаж данного продавца": e = True
+    
     If e Then
         DAT.Cells(i, cPrice).Interior.Color = colRed
         SRC.Cells(si, cPrice).Interior.Color = colRed
