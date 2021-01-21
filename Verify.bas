@@ -150,6 +150,7 @@ End Function
 'Проверка лимитов
 Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     kv = Kvartal(DAT.Cells(i, 2))
+    kvin = qrtIndexes(kv)
     sel = DAT.Cells(i, cSellINN).text
     selCur = sel + "!" + kv + "!"
     buy = DAT.Cells(i, cBuyINN).text
@@ -168,11 +169,12 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long)
             AddCom "Превышен лимит продаж данного продавца данному покупателю": e = True
     
     'Проверка на остатки
-    lim = DIC.Cells(buyIndexes(sel), cLimits + qrtIndexes(kv))
-    If summAll(selCur) > lim Then
+    ind = buyIndexes(sel)
+    lim = DIC.Cells(ind, cLimits + kvin)
+    If Sum > lim Then
         AddCom "Сумма превышает свободный остаток у данного продавца": e = True
     Else
-        DIC.Cells(buyIndexes(sel), cPFact + qrtIndexes(kv)) = summOne(selCur + buy)
+        DIC.Cells(buyIndexes(sel), cPFact + kvin) = DIC.Cells(buyIndexes(sel), cPFact + kvin) + Sum
     End If
     
     'Проверка на общий лимит продавца

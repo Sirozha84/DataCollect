@@ -1,5 +1,5 @@
 Attribute VB_Name = "Template"
-Const lastRec = 10000           'Последняя строка записей (Первая всегда 5, вбита гвоздями)
+Const LastRec = 10000           'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxBuyers = 100           'Максимальное количество покупателей
 Const maxSellers = 100          'Максимальное количество продавцов
 
@@ -105,10 +105,12 @@ er2:
     listb.Columns(2).ColumnWidth = 20
     listb.Cells(1, 1) = "Наименование"
     listb.Cells(1, 2) = "ИНН/КПП"
+    Range(listb.Cells(2, 2), listb.Cells(maxBuyers, 2)).NumberFormat = "@"
     lists.Columns(1).ColumnWidth = 30
     lists.Columns(2).ColumnWidth = 20
     lists.Cells(1, 1) = "Наименование"
     lists.Cells(1, 2) = "ИНН"
+    Range(lists.Cells(2, 2), lists.Cells(maxSellers, 2)).NumberFormat = "@"
     
     'Основная вкладка. Рисуем шапку формы
     Columns(1).ColumnWidth = 20
@@ -185,7 +187,7 @@ er2:
     setFormat 7, "money"
     allowEdit temp, 7, "Стоимость"
     Cells(1, 7).Borders.Weight = 3
-    Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(lastRec) + ")"
+    Cells(1, 7).FormulaLocal = "=СУММ(G5:G" + CStr(LastRec) + ")"
     
     'Поле 8 - Ставка НДС
     setValidation 8, "nds"
@@ -201,17 +203,17 @@ er2:
     setRange(9).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=20);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
     setRange(10).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=18);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
     setRange(11).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=10);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
-    Cells(1, 9).FormulaLocal = "=СУММ(I5:I" + CStr(lastRec) + ")"
-    Cells(1, 10).FormulaLocal = "=СУММ(J5:J" + CStr(lastRec) + ")"
-    Cells(1, 11).FormulaLocal = "=СУММ(K5:K" + CStr(lastRec) + ")"
+    Cells(1, 9).FormulaLocal = "=СУММ(I5:I" + CStr(LastRec) + ")"
+    Cells(1, 10).FormulaLocal = "=СУММ(J5:J" + CStr(LastRec) + ")"
+    Cells(1, 11).FormulaLocal = "=СУММ(K5:K" + CStr(LastRec) + ")"
     
     'Поле 12-14 - Сумма без НДС 20,18,10%   Формула G/(100+H)*H
     setRange(12).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=20);ОКРУГЛ(G5/(100+H5)*H5;2);"""")"
     setRange(13).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=18);ОКРУГЛ(G5/(100+H5)*H5;2);"""")"
     setRange(14).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=10);ОКРУГЛ(G5/(100+H5)*H5;2);"""")"
-    Cells(1, 12).FormulaLocal = "=СУММ(L5:L" + CStr(lastRec) + ")"
-    Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(lastRec) + ")"
-    Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(lastRec) + ")"
+    Cells(1, 12).FormulaLocal = "=СУММ(L5:L" + CStr(LastRec) + ")"
+    Cells(1, 13).FormulaLocal = "=СУММ(M5:M" + CStr(LastRec) + ")"
+    Cells(1, 14).FormulaLocal = "=СУММ(N5:N" + CStr(LastRec) + ")"
     
     Range(Cells(4, 1), Cells(4, 14)).Rows.AutoFilter
     Range("A5").Select
@@ -230,19 +232,19 @@ er:
 End Function
 
 Function setRange(ByVal c As Integer) As Range
-    Set setRange = Range(Cells(5, c), Cells(lastRec, c))
+    Set setRange = Range(Cells(5, c), Cells(LastRec, c))
 End Function
 
 'Установка формата для колонки
 Sub setFormat(ByVal c As Integer, format As String)
-    Set rang = Range(Cells(5, c), Cells(lastRec, c))
+    Set rang = Range(Cells(5, c), Cells(LastRec, c))
     If format = "date" Then rang.NumberFormat = "dd.MM.yyyy"
     If format = "money" Then rang.NumberFormat = "### ### ##0.00"
 End Sub
 
 'Установка условного форматирования для колонки
 Sub setFormatConditions(c As Integer)
-    Set rang = Range(Cells(5, c), Cells(lastRec, c))
+    Set rang = Range(Cells(5, c), Cells(LastRec, c))
     With rang.FormatConditions
         .Add Type:=xlErrorsCondition
         .Item(.Count).Font.Color = vbWhite
@@ -251,7 +253,7 @@ End Sub
 
 'Установка проверки значений
 Sub setValidation(c As Integer, typ As String)
-    Set rang = Range(Cells(5, c), Cells(lastRec, c))
+    Set rang = Range(Cells(5, c), Cells(LastRec, c))
     If typ = "buy" Then
         formul = "=Покупатели!$A$2:$A$" + CStr(maxBuyers)
         With rang.Validation
@@ -295,7 +297,7 @@ End Sub
 
 'Установка разрешения редактирования для колонки
 Sub allowEdit(sh As Variant, c As Integer, name As String)
-    Set rang = Range(Cells(5, c), Cells(lastRec, c))
+    Set rang = Range(Cells(5, c), Cells(LastRec, c))
     sh.Protection.AllowEditRanges.Add Title:=name, Range:=rang, Password:=""
     rang.Interior.Color = RGB(255, 255, 192)
 End Sub
