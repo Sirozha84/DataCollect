@@ -170,11 +170,15 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     
     'Проверка на остатки
     ind = buyIndexes(sel)
-    lim = DIC.Cells(ind, cLimits + kvin)
-    If Sum > lim Then
-        AddCom "Сумма превышает свободный остаток у данного продавца": e = True
+    If ind = Empty Then
+        AddCom "ИНН " + sel + " не найден в справочнике"
     Else
-        DIC.Cells(buyIndexes(sel), cPFact + kvin) = DIC.Cells(buyIndexes(sel), cPFact + kvin) + Sum
+        lim = DIC.Cells(ind, cLimits + kvin)
+        If Sum > lim Then
+            AddCom "Сумма превышает свободный остаток у данного продавца": e = True
+        Else
+            DIC.Cells(buyIndexes(sel), cPFact + kvin) = DIC.Cells(buyIndexes(sel), cPFact + kvin) + Sum
+        End If
     End If
     
     'Проверка на общий лимит продавца
