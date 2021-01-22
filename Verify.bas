@@ -3,7 +3,6 @@ Dim Comment As String   'Строка с комментариями
 Dim errors As Boolean   'Флаг наличия ошибок
 Dim groups As Variant   'Словарь групп
 Dim dateS As Variant    'Словарь дат регистраций
-'Dim limitPrs As Variant 'Словарь лимитов на отгрузку
 Dim limitOne As Variant 'Общий лимит на отгрузку одному покупателю
 Dim limitAll As Variant 'Общий лимит на отгрузку
 Dim buyers As Variant   'Словарь покупателей "у кого покупаем"
@@ -38,7 +37,7 @@ Sub Init()
         buyIndexes(cmp) = i
         
         'Очистка фактической отгрузки
-        Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).Clear
+        'Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).Clear
         Range(DIC.Cells(i, cPFact), DIC.Cells(i, cPFact + quartCount - 1)).NumberFormat = "### ### ##0.00"
         
         i = i + 1
@@ -54,7 +53,7 @@ End Sub
 'Проверка корректности данных, возвращает true если есть ошибки
 'iC - строка в данных
 'iI - строка в исходниках
-Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
+Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) As Boolean
     
     Comment = ""
     errors = False
@@ -116,7 +115,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long) As Boolean
         SRC.Cells(iI, i).Interior.Color = colRed
         'AddCom "Сумма НДС введена не корректно"
     Else
-        LimitsTest iC, iI
+        LimitsTest iC, iI, oldINN, oldSum
     End If
     
     'Пишем комментарий и расскрашиваем его
@@ -148,7 +147,7 @@ er:
 End Function
 
 'Проверка лимитов
-Sub LimitsTest(ByVal i As Long, ByVal si As Long)
+Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
     kv = Kvartal(DAT.Cells(i, 2))
     kvin = qrtIndexes(kv)
     sel = DAT.Cells(i, cSellINN).text
@@ -173,6 +172,11 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long)
     If ind = Empty Then
         AddCom "ИНН " + sel + " не найден в справочнике"
     Else
+        'Если это обновление (oldsum>=0, то отнимаем его из текущего реестра
+        If oldSum >= 0 Then
+            DIC.Cells(buyIndexes(oldINN), cPFact + kvin) = DIC.Cells(buyIndexes(oldINN), cPFact + kvin) - oldSum
+        End If
+        
         lim = DIC.Cells(ind, cLimits + kvin)
         If Sum > lim Then
             AddCom "Сумма превышает свободный остаток у данного продавца": e = True

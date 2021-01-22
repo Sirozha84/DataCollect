@@ -203,6 +203,19 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         Exit Function
     End If
     
+    'Запоминаем старое значение ИНН продавца
+    oldINN = DAT.Cells(di, cSellINN).text
+    
+    'Запоминаем старое значение суммы НДС
+    If refresh And DAT.Cells(di, cAccept) = "OK" Then
+        oldSum = 0
+        For i = 12 To 14
+            If DAT.Cells(di, i) <> "" Then oldSum = oldSum + DAT.Cells(di, i)
+        Next
+    Else
+        oldSum = -1 'если число отрицательное - изменение остатка не делается
+    End If
+    
     'Копирование записей с проверкой на изменение
     For j = 2 To 14
         CheckChanges di, si, j
@@ -225,7 +238,7 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         'Дальнейшие действия в этом случае не требуются, выходим...
     End If
     
-    errors = Verify.Verify(di, si)
+    errors = Verify.Verify(di, si, oldINN, oldSum)
     
     'Если нужно, присваиваем записи новый номер
     If Not errors Then
