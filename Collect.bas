@@ -143,13 +143,13 @@ Function AddFile(ByVal file As String) As Byte
                 i = i + 1
             Loop
             
-            'Проверяем исходник на удалённые записи
+            'Проверяем исходник на удалённые записи (на предмет пропавших УИНов)
             i = firstDat
             Do While DAT.Cells(i, cAccept) <> ""
                 UID = DAT.Cells(i, 1).text
                 If UID <> "" And DAT.Cells(i, cCode) = curCode Then
                     If resUIDs(UID) = Empty Then
-                        DAT.Cells(i, cCom) = "Данные удалены!"
+                        DAT.Cells(i, cCom) = "Данные удалены не корректно!"
                         DAT.Cells(i, cCom).Interior.Color = colRed
                         AddFile = 2
                     End If
@@ -189,10 +189,12 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     
     stat = DAT.Cells(di, cStatus).text
     If stat = "0" Then
+        copyRecord = False
         Exit Function
     End If
     
     SetFormates di
+    SRC.Cells(si, 1).ClearFormats
     
     'Запись зафиксирована, возвращаем изменение из собранных данных в реестр
     If stat = "2" Then
@@ -200,48 +202,44 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
             CheckChanges di, si, j
             SRC.Cells(si, j) = DAT.Cells(di, j)
         Next
+        copyRecord = True
         Exit Function
     End If
     
-    'Запоминаем старое значение ИНН продавца
-    oldINN = DAT.Cells(di, cSellINN).text
-    
-    'Запоминаем старое значение суммы НДС
     If refresh And DAT.Cells(di, cAccept) = "OK" Then
         oldSum = 0
         For i = 12 To 14
             If DAT.Cells(di, i) <> "" Then oldSum = oldSum + DAT.Cells(di, i)
         Next
-    Else
-        oldSum = -1 'если число отрицательное - изменение остатка не делается
+        RestoreBalance DAT.Cells(di, cDates), DAT.Cells(di, cSellINN).text, oldSum
     End If
     
     'Копирование записей с проверкой на изменение
     For j = 2 To 14
         CheckChanges di, si, j
-        DAT.Cells(di, j) = SRC.Cells(si, j)
+        If Not IsError(SRC.Cells(si, j)) Then DAT.Cells(di, j) = SRC.Cells(si, j)
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
     DAT.Cells(di, cAccept) = "fail" 'По умолчанию будем считать строку не верной
     
     'Проверка на удалённую запись (если это обновление и строка с датой пустая)
-    If SRC.Cells(si, cDates).text = "" Then
+    If refresh And SRC.Cells(si, cDates).text = "" Then
         SRC.Cells(si, 1).Font.Color = colWhite
         SRC.Cells(si, cCom) = "Данные удалены заказчиком"
-        SRC.Cells(si, cCom).Interior.Color = colRed
-        If refresh Then
-            DAT.Cells(di, cCom) = "Данные удалены заказчиком"
-            DAT.Cells(di, cCom).Interior.Color = colRed
-        End If
+        SRC.Cells(si, cCom).Interior.Color = colYellow
+        DAT.Cells(di, cCom) = "Данные удалены заказчиком"
+        DAT.Cells(di, cCom).Interior.Color = colYellow
+        DAT.Cells(di, cAccept) = "lost"
+        copyRecord = True
         Exit Function
         'Дальнейшие действия в этом случае не требуются, выходим...
     End If
     
-    errors = Verify.Verify(di, si, oldINN, oldSum)
+    copyRecord = Verify.Verify(di, si, oldINN, oldSum)
     
     'Если нужно, присваиваем записи новый номер
-    If Not errors Then
+    If copyRecord Then
         Dim needNum As Boolean
         If refresh Then
             needNum = Not Numerator.CheckPrefix(DAT.Cells(di, 1).text, _
@@ -253,14 +251,10 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
             n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
             DAT.Cells(di, 1).NumberFormat = "@"
             DAT.Cells(di, 1) = n
-            SRC.Cells(si, 1).ClearFormats
             SRC.Cells(si, 1).NumberFormat = "@"
             SRC.Cells(si, 1) = n
         End If
         DAT.Cells(di, cAccept) = "OK"
-        copyRecord = True
-    Else
-        copyRecord = False
     End If
     
     If Not refresh Then LastRec = LastRec + 1

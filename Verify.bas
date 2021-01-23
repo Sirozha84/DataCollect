@@ -45,7 +45,7 @@ Sub Init()
 
 End Sub
 
-'Проверка корректности данных, возвращает true если есть ошибки
+'Проверка корректности данных, возвращает true если нет ошибок
 'iC - строка в данных
 'iI - строка в исходниках
 Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) As Boolean
@@ -126,7 +126,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) 
     SRC.Cells(iI, cCom) = Comment
     SRC.Cells(iI, cCom).Interior.Color = col
     
-    Verify = errors
+    Verify = Not errors
     
 End Function
 
@@ -170,13 +170,7 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
             AddCom "Превышен лимит продаж данного продавца данному покупателю": e = True
     
     'Проверка на остатки
-    'Если это обновление то отнимаем его из текущего реестра
-    If oldSum > 0 Then
-        ind = selIndexes(oldINN)
-        If ind <> Empty Then _
-                DIC.Cells(ind, cPFact + kvin) = DIC.Cells(ind, cPFact + kvin) - oldSum
-    End If
-    'Отнимаем остаток, если это не влияет на "будущее"
+    'RestoreBalance DAT.Cells(i, 2), oldINN, oldSum
     ind = selIndexes(sel)
     over = False
     For j = 0 To kvin
@@ -202,6 +196,16 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
         buyers(buyCur + grp) = sel
     Else
         If buyers(buyCur + grp) <> sel Then AddCom "Указаны связанные продавцы для данного покупателя"
+    End If
+End Sub
+
+'Восстановление остатка
+Sub RestoreBalance(dt, oldINN, oldSum)
+    kvin = qrtIndexes(Kvartal(dt))
+    If oldSum > 0 Then
+        ind = selIndexes(oldINN)
+        If ind <> Empty Then _
+                DIC.Cells(ind, cPFact + kvin) = DIC.Cells(ind, cPFact + kvin) - oldSum
     End If
 End Sub
 
