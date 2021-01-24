@@ -1,4 +1,4 @@
-Attribute VB_Name = "RestoreBalance"
+Attribute VB_Name = "StartBalance"
 'Восстановление остатков
 Public Sub Run()
     Main.Init

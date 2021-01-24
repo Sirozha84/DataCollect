@@ -149,8 +149,9 @@ Function AddFile(ByVal file As String) As Byte
                 UID = DAT.Cells(i, 1).text
                 If UID <> "" And DAT.Cells(i, cCode) = curCode Then
                     If resUIDs(UID) = Empty Then
-                        DAT.Cells(i, cCom) = "Данные удалены не корректно!"
-                        DAT.Cells(i, cCom).Interior.Color = colRed
+                        DAT.Cells(i, cCom) = "Данные удалены заказчиком (вместе с УИН)"
+                        DAT.Cells(i, cCom).Interior.Color = colYellow
+                        DAT.Cells(i, cAccept) = "lost"
                         AddFile = 2
                     End If
                 End If
