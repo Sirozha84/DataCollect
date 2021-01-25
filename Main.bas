@@ -62,6 +62,9 @@ Public ERR As Variant   'Список ошибок
 Public NUM As Variant   'Словарь нумератора
 Public VAL As Variant   'Значения объёмов
 
+'Словари
+Public selIndexes As Variant    'Индексы строк продавцов
+
 'Выбор директории с данными
 Sub ButtonDirSelectImport()
     Set diag = Application.FileDialog(msoFileDialogFolderPicker)
@@ -106,6 +109,7 @@ Sub ButtonClear()
     Range(Cells(firstDat, cStatus), Cells(maxRow, cStatus)).Interior.Color = colYellow
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Interior.Color = colGray
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
+    Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
     Message "Готово!"
 End Sub
 

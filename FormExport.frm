@@ -13,6 +13,8 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+
+
 Dim Sellers As Variant
 
 'Инициализация выпадающих списков
@@ -23,10 +25,11 @@ Private Sub UserForm_Initialize()
     Set Quartals = CreateObject("Scripting.Dictionary")
     Set Months = CreateObject("Scripting.Dictionary")
     
+    Verify.Init
     i = firstDat
     Do While Cells(i, cAccept) <> ""
         If Cells(i, cAccept).text = "OK" Then
-            Sellers(Cells(i, cSeller).text) = 1
+            Sellers(SellFileName(Cells(i, cSellINN).text)) = 1
             Months(YearAndMonth(Cells(i, cDates).text)) = 1
             Quartals(YearAndQuartal(Cells(i, cDates).text)) = 1
         End If
@@ -57,6 +60,12 @@ Private Sub UserForm_Initialize()
     Message "Готово!"
     
 End Sub
+
+'Имя файла по ИНН продавца
+Function SellFileName(inn) As String
+    ind = selIndexes(inn)
+    If ind <> Empty Then SellFileName = inn + "-" + DIC.Cells(ind, 1)
+End Function
 
 Function YearAndMonth(ByVal d As String) As String
     On Error GoTo er:
@@ -184,7 +193,7 @@ Private Sub ExportFile(ByVal seller As String, NUM As String)
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cAccept) = "OK" Then
             cp = True
-            If DAT.Cells(i, cSeller) <> seller Then cp = False
+            If SellFileName(DAT.Cells(i, cSellINN).text) <> seller Then cp = False
             d = DAT.Cells(i, cDates)
             If mnC Then If YearAndMonth(d) <> mn Then cp = False
             If qrC Then If YearAndQuartal(d) <> qr Then cp = False
@@ -195,7 +204,9 @@ Private Sub ExportFile(ByVal seller As String, NUM As String)
                 Cells(j, 3).NumberFormat = "dd.MM.yyyy"
                 Cells(j, 3) = DAT.Cells(i, 2)
                 innkpp = Split(DAT.Cells(i, 3), "/")
+                Cells(j, 4).NumberFormat = "@"
                 Cells(j, 4) = innkpp(0)
+                Cells(j, 5).NumberFormat = "@"
                 If UBound(innkpp) > 0 Then Cells(j, 5) = innkpp(1)
                 Cells(j, 6) = DAT.Cells(i, 4)
                 Cells(j, 7).NumberFormat = "### ### ##0.00"

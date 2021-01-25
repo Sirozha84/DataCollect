@@ -217,8 +217,17 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
     
     'Копирование записей с проверкой на изменение
     For j = 2 To 14
-        CheckChanges di, si, j
-        If Not IsError(SRC.Cells(si, j)) Then DAT.Cells(di, j) = SRC.Cells(si, j)
+        If j <> 6 Then
+            CheckChanges di, si, j
+            If Not IsError(SRC.Cells(si, j)) Then DAT.Cells(di, j) = SRC.Cells(si, j)
+        Else
+            s = selIndexes(DAT.Cells(di, 5).text)
+            If s <> Empty Then
+                DAT.Cells(di, 6) = DIC.Cells(s, 1)
+            Else
+                AddCom ("ИНН не найден")
+            End If
+        End If
     Next
     DAT.Cells(di, cFile) = curFile
     DAT.Cells(di, cCode) = curCode
