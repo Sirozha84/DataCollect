@@ -61,6 +61,7 @@ Public DIC As Variant   'Справочники
 Public ERR As Variant   'Список ошибок
 Public NUM As Variant   'Словарь нумератора
 Public VAL As Variant   'Значения объёмов
+Public TMP As Variant   'Шаблоны
 
 'Словари
 Public selIndexes As Variant    'Индексы строк продавцов
@@ -143,6 +144,7 @@ Sub Init()
     Set ERR = Sheets("Ошибки")
     Set NUM = Sheets("Словарь нумератора")
     Set VAL = Sheets("Объёмы")
+    Set TMP = Sheets("Шаблоны")
     
     Exit Sub
 er:

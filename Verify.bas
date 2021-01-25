@@ -13,6 +13,7 @@ Sub Init()
     
     Set dateS = CreateObject("Scripting.Dictionary")
     Set limitPrs = CreateObject("Scripting.Dictionary")
+    Set summS = CreateObject("Scripting.Dictionary")
     Set summOne = CreateObject("Scripting.Dictionary")
     Set summAll = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")
@@ -149,6 +150,7 @@ End Function
 'i, si - номера строк данных и реестра
 'oldINN, oldSum - прежние инн продавца и прежн€€ сумма (если это перепроверка)
 Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
+    cod = DAT.Cells(i, cCode).text + "!"
     kv = Kvartal(DAT.Cells(i, 2))
     kvin = qrtIndexes(kv)
     sel = DAT.Cells(i, cSellINN).text
@@ -160,6 +162,7 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
     For j = 12 To 14
         If IsNumeric(DAT.Cells(i, j)) Then Sum = Sum + DAT.Cells(i, j)
     Next
+    summS(cod + selCur + buy) = summS(cod + selCur + buy) + Sum
     summOne(selCur + buy) = summOne(selCur + buy) + Sum
     summAll(selCur) = summAll(selCur) + Sum
     e = False
