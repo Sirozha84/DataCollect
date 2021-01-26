@@ -7,13 +7,14 @@ Dim limitOne As Variant     'Общий лимит на отгрузку одному покупателю
 Dim limitAll As Variant     'Общий лимит на отгрузку
 Dim buyers As Variant       'Словарь покупателей "у кого покупаем"
 Dim qrtIndexes As Variant   'Индексы колонок квартала
+Dim summOne As Variant      'Счётчики сумм продажи одному покупателю
+Dim summAll As Variant      'Счётчики сумм продажи всем
 
 'Инициализация словарей лимитов
 Sub Init()
     
     Set dateS = CreateObject("Scripting.Dictionary")
     Set limitPrs = CreateObject("Scripting.Dictionary")
-    Set summS = CreateObject("Scripting.Dictionary")
     Set summOne = CreateObject("Scripting.Dictionary")
     Set summAll = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")
@@ -137,15 +138,6 @@ Sub DateTest(ByVal i As Long)
     If dtt < dateS(sel) Then AddCom "Дата СФ не может быть ранее регистрации продавца"
 End Sub
 
-'Вычисляет из даты Год+Квартал
-Function Kvartal(sdata As Variant) As String
-    On Error GoTo er
-    Kvartal = CStr(Year(sdata)) + CStr((Month(sdata) - 1) \ 3 + 1)
-    Exit Function
-er:
-    Kvartal = ""
-End Function
-
 'Проверка лимитов
 'i, si - номера строк данных и реестра
 'oldINN, oldSum - прежние инн продавца и прежняя сумма (если это перепроверка)
@@ -162,7 +154,6 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
     For j = 12 To 14
         If IsNumeric(DAT.Cells(i, j)) Then Sum = Sum + DAT.Cells(i, j)
     Next
-    summS(cod + selCur + buy) = summS(cod + selCur + buy) + Sum
     summOne(selCur + buy) = summOne(selCur + buy) + Sum
     summAll(selCur) = summAll(selCur) + Sum
     e = False

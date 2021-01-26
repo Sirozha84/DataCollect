@@ -123,6 +123,12 @@ Sub ButtonDataCollect()
     Collect.Run
 End Sub
 
+Sub ButtonReportVolumes()
+    Init
+    Values.CreateReport
+End Sub
+
+
 'Кнопка "Генерировать шаблоны"
 Sub ButtonCreateTemplates()
     Init

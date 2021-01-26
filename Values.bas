@@ -1,21 +1,30 @@
 Attribute VB_Name = "Values"
-Public summS As Variant  'Счётчики сумм продажи одному покупателю в разрезе кода
-Public summOne As Variant  'Счётчики сумм продажи одному покупателю
-Public summAll As Variant  'Счётчики сумм продажи всем
-
-'Сохранение текущих значений отгрузок
+'Формирование отчёта "Объёмы продаж"
 Sub CreateReport()
-    
-    Message "Формирование отчёта по объёмам продаж"
+
+    Message "Формирование отчёта по объёмам продаж..."
     Dim i As Long
     
     'Собираем словари наименований и ИНН компаний
+    Set summS = CreateObject("Scripting.Dictionary")
     Set buyList = CreateObject("Scripting.Dictionary")
     Set sellList = CreateObject("Scripting.Dictionary")
     i = firstDat
     Do While DAT.Cells(i, cAccept) <> ""
-        buyList(Cells(i, cBuyINN).text) = Cells(i, cBuyer).text
-        sellList(Cells(i, cSellINN).text) = Cells(i, cSeller).text
+        If DAT.Cells(i, cAccept) = "OK" Then
+            cod = DAT.Cells(i, cCode).text
+            kv = Kvartal(DAT.Cells(i, cDates))
+            buy = DAT.Cells(i, cBuyINN).text
+            sell = DAT.Cells(i, cSellINN).text
+            Sum = 0
+            For j = 12 To 14
+                If DAT.Cells(i, j) <> "" Then Sum = Sum + DAT.Cells(i, j)
+            Next
+            ID = cod + "!" + kv + "!" + sell + "!" + buy
+            summS(ID) = summS(ID) + Sum
+            buyList(DAT.Cells(i, cBuyINN).text) = DAT.Cells(i, cBuyer).text
+            'sellList(DAT.Cells(i, cSellINN).text) = DAT.Cells(i, cSeller).text
+        End If
         i = i + 1
     Loop
     
@@ -24,6 +33,7 @@ Sub CreateReport()
     Set statList = CreateObject("Scripting.Dictionary")
     i = firstDic
     Do While DIC.Cells(i, cINN) <> ""
+        sellList(DIC.Cells(i, cINN).text) = DIC.Cells(i, cSellerName).text
         statList(DIC.Cells(i, cINN).text) = DIC.Cells(i, cPStat).text
         i = i + 1
     Loop
@@ -38,43 +48,36 @@ Sub CreateReport()
         i = i + 1
     Loop
     
-    'Формируем отчёт
-    i = 1
-    VAL.Cells.Clear
-    VAL.Columns(1).ColumnWidth = 20
-    VAL.Columns(2).ColumnWidth = 20
-    VAL.Columns(3).ColumnWidth = 10
-    VAL.Columns(4).ColumnWidth = 20
-    VAL.Columns(5).ColumnWidth = 20
-    VAL.Columns(6).ColumnWidth = 30
-    VAL.Columns(7).ColumnWidth = 15
-    VAL.Cells(1, 1) = "Клиент"
-    VAL.Cells(1, 2) = "Форма"
-    VAL.Cells(1, 3) = "Компания"
-    VAL.Cells(1, 4) = "Форма"
-    VAL.Cells(1, 3) = "Квартал"
-    VAL.Cells(1, 4) = "Продавец"
-    VAL.Cells(1, 5) = "Статус"
-    VAL.Cells(1, 6) = "Покупателя"
-    VAL.Cells(1, 7) = "Объём"
-    Range(VAL.Cells(1, 1), VAL.Cells(1, 100)).Interior.Color = colGray
-    i = i + 1
+    'Подготовка листа
+    Range(VAL.Cells(4, 1), VAL.Cells(maxRow, 7)).Clear
+    VAL.Cells(4, 1) = "Клиент"
+    VAL.Cells(4, 2) = "Форма"
+    VAL.Cells(4, 3) = "Компания"
+    VAL.Cells(4, 4) = "Форма"
+    VAL.Cells(4, 3) = "Квартал"
+    VAL.Cells(4, 4) = "Продавец"
+    VAL.Cells(4, 5) = "Статус"
+    VAL.Cells(4, 6) = "Покупателя"
+    VAL.Cells(4, 7) = "Объём"
+    Range(VAL.Cells(4, 1), VAL.Cells(4, 7)).Interior.Color = colGray
+    
+    'Формирование отчёта
+    i = 5
     Dim s As Variant
     Dim sel As Variant
     For Each sel In summS
         s = Split(sel, "!")
-        cl = clients(s(0))
-        If cl <> Empty Then VAL.Cells(i, 1) = cl Else VAL.Cells(i, 1) = "Код: " + s(0)
-        frm = templates(s(0))
-        If frm <> Empty Then VAL.Cells(i, 2) = frm
-        VAL.Cells(i, 3) = s(2)
-        VAL.Cells(i, 4) = sellList(s(1))
-        VAL.Cells(i, 5) = statList(s(1))
+        VAL.Cells(i, 1) = clients(s(0))
+        VAL.Cells(i, 2) = templates(s(0))
+        VAL.Cells(i, 3) = s(1)
+        VAL.Cells(i, 4) = sellList(s(2))
+        VAL.Cells(i, 5) = statList(s(2))
         VAL.Cells(i, 6) = buyList(s(3)) + " (" + s(3) + ")"
         VAL.Cells(i, 7).NumberFormat = "### ### ##0.00"
         VAL.Cells(i, 7) = summS(sel)
         i = i + 1
     Next
-    Range(VAL.Cells(1, 1), VAL.Cells(1, 7)).Rows.AutoFilter
+    Range(VAL.Cells(4, 1), VAL.Cells(i - 1, 7)).Rows.AutoFilter
+    Message "Готово!"
     
 End Sub

@@ -44,3 +44,12 @@ End Function
 Function IndexToQuartal(ByVal i As Integer) As String
     IndexToQuartal = CStr(lastYear - Int((lastQuartal + i) / 4) + 1) + CStr(4 - i Mod 4)
 End Function
+
+'Вычисляет из даты Год+Квартал
+Function Kvartal(sdata As Variant) As String
+    On Error GoTo er
+    Kvartal = CStr(Year(sdata)) + CStr((Month(sdata) - 1) \ 3 + 1)
+    Exit Function
+er:
+    Kvartal = ""
+End Function
