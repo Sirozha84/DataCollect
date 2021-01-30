@@ -1,10 +1,13 @@
-Attribute VB_Name = "StartBalance"
-'Восстановление остатков
+Attribute VB_Name = "Revision"
+'Ревизия остатков
 Public Sub Run()
-    Main.Init
+    
+    Message "Ревизия остатков..."
+    
+    'Формирование
     Set selIndexes = CreateObject("Scripting.Dictionary")
     Set qrtIndexes = CreateObject("Scripting.Dictionary")
-    Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
+    Range(DIC.Cells(firstDic, cPRev), DIC.Cells(maxRow, cPRev + quartCount - 1)).Clear
     i = firstDic
     Do While DIC.Cells(i, 1) <> ""
         cmp = DIC.Cells(i, cINN).text
@@ -25,9 +28,25 @@ Public Sub Run()
             Next
             sl = selIndexes(DAT.Cells(i, 5).text)
             kv = Kvartal(DAT.Cells(i, 2))
-            kvin = cPFact + qrtIndexes(kv)
+            kvin = cPRev + qrtIndexes(kv)
             DIC.Cells(sl, kvin) = DIC.Cells(sl, kvin) + s
         End If
         i = i + 1
     Loop
+    
+    'Проверка с текущими значениями
+    i = firstDic
+    Do While DIC.Cells(i, 1) <> ""
+        For j = 0 To quartCount - 1
+            If DIC.Cells(i, cPFact + j) = DIC.Cells(i, cPRev + j) Then
+                DIC.Cells(i, cPRev + j).Interior.Color = colGreen
+            Else
+                DIC.Cells(i, cPRev + j).Interior.Color = colRed
+            End If
+        Next
+        i = i + 1
+    Loop
+    
+    Message "Готово"
+    
 End Sub

@@ -225,7 +225,7 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
             If s <> Empty Then
                 DAT.Cells(di, 6) = DIC.Cells(s, 1)
             Else
-                AddCom ("ИНН не найден")
+                AddCom ("ИНН не найден в справочнике")
             End If
         End If
     Next

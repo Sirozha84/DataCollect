@@ -77,8 +77,7 @@ Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) 
         SRC.Cells(iI, 5).Interior.Color = colRed
         AddCom "Неверный ИНН продавца"
     Else
-        If selIndexes(DAT.Cells(iC, 5).text) = Empty Then _
-                AddCom "ИНН " + sel + " не найден в справочнике"
+        If selIndexes(DAT.Cells(iC, 5).text) = Empty Then AddCom "ИНН не найден в справочнике"
     End If
     
     

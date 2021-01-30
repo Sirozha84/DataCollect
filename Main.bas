@@ -31,6 +31,7 @@ Public Const cPStat = 8         'Статус
 Public Const cLimits = 9        'Первая колонка с остатками
 Public Const cPFact = 21        'Первая колонка с фактическими объёмами
 Public Const cPBalance = 33     'Первая колонка с остатками
+Public Const cPRev = 45
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
 Public Const lastYear = 2020    'Первый расчётный год (потом это будет переменной, но пока статика)
 Public Const lastQuartal = 4    'Первыё расчётный квартал (аналогично)
@@ -123,6 +124,13 @@ Sub ButtonDataCollect()
     Collect.Run
 End Sub
 
+'Кнопка ревизии остатков
+Sub ButtonRevisionVolumes()
+    Init
+    Revision.Run
+End Sub
+
+'Кнопка "Сформировать отчёт" по объёмам
 Sub ButtonReportVolumes()
     Init
     Values.CreateReport
