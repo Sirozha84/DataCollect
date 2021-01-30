@@ -13,58 +13,39 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-
-
-Dim Sellers As Variant
-
 'Инициализация выпадающих списков
 Private Sub UserForm_Initialize()
     
-    Message "Подготовка к выгрузке..."
-    Set Sellers = CreateObject("Scripting.Dictionary")
-    Set Quartals = CreateObject("Scripting.Dictionary")
-    Set Months = CreateObject("Scripting.Dictionary")
-    
     Verify.Init
-    i = firstDat
-    Do While Cells(i, cAccept) <> ""
-        If Cells(i, cAccept).text = "OK" Then
-            Sellers(SellFileName(Cells(i, cSellINN).text)) = 1
-            Months(YearAndMonth(Cells(i, cDates).text)) = 1
-            Quartals(YearAndQuartal(Cells(i, cDates).text)) = 1
-        End If
-        i = i + 1
-    Loop
-    
-    If Months.Count = 0 Or Quartals.Count = 0 Then
-        MsgBox "Нет данных для выгрузки"
-        End
-    End If
     
     ComboBoxBuyers.AddItem "Все"
-    For Each seller In Sellers
-        ComboBoxBuyers.AddItem seller
+    For Each seller In selIndexes
+        ComboBoxBuyers.AddItem SellFileName(seller)
     Next
     ComboBoxBuyers.ListIndex = 0
     
-    For Each m In Months
-        ComboBoxMonths.AddItem m
+    For y = lastYear To lastYear - Int(quartCount / 4) + 1 Step -1
+        For m = 12 To 1 Step -1
+            ComboBoxMonths.AddItem _
+                YearAndMonth("01." + Right(CStr(m + 100), 2) + "." + CStr(y))
+        Next
     Next
     ComboBoxMonths.ListIndex = 0
     
-    For Each q In Quartals
-        ComboBoxQuartals.AddItem q
+    For y = lastYear To lastYear - Int(quartCount / 4) + 1 Step -1
+        For m = 10 To 1 Step -3
+            ComboBoxQuartals.AddItem _
+                YearAndQuartal("01." + Right(CStr(m + 100), 2) + "." + CStr(y))
+        Next
     Next
     ComboBoxQuartals.ListIndex = 0
-    
-    Message "Готово!"
     
 End Sub
 
 'Имя файла по ИНН продавца
-Function SellFileName(inn) As String
-    ind = selIndexes(inn)
-    If ind <> Empty Then SellFileName = inn + "-" + DIC.Cells(ind, 1)
+Function SellFileName(INN) As String
+    ind = selIndexes(INN)
+    If ind <> Empty Then SellFileName = INN + "-" + DIC.Cells(ind, 1)
 End Function
 
 Function YearAndMonth(ByVal d As String) As String
@@ -82,7 +63,7 @@ Function YearAndMonth(ByVal d As String) As String
     If dy = 9 Then YearAndMonth = YearAndMonth + "Сентябрь"
     If dy = 10 Then YearAndMonth = YearAndMonth + "Октябрь"
     If dy = 11 Then YearAndMonth = YearAndMonth + "Ноябрь"
-    If dy = 12 Then YearAndMonth = YearAndMonth + "Декадрь"
+    If dy = 12 Then YearAndMonth = YearAndMonth + "Декабрь"
     Exit Function
 er:
     YearAndMonth = ""
@@ -115,24 +96,26 @@ Private Sub CommandExit_Click()
     End
 End Sub
 
+'Кнопка "Экспорт"
 Private Sub CommandExport_Click()
     If ComboBoxBuyers.ListIndex = 0 Then
         n = 1
-        a = Sellers.Count
-        For Each seller In Sellers
+        a = selIndexes.Count
+        For Each seller In selIndexes
             ExportFile seller, CStr(n) + " из " + CStr(a) + ": "
             n = n + 1
         Next
     Else
-        ExportFile ComboBoxBuyers.Value, ""
+        ExportFile Left(ComboBoxBuyers.Value, 10), "" ' ComboBoxBuyers.Value, ""
     End If
     Message "Готово!"
     End
 End Sub
 
 'Экспорт файла
-Private Sub ExportFile(ByVal seller As String, NUM As String)
+Private Sub ExportFile(ByVal INN As String, NUM As String)
     
+    seller = SellFileName(INN)
     Message "Экспорт файла " + NUM + seller
     
     'Определяемся с путём и именем файла
@@ -193,7 +176,7 @@ Private Sub ExportFile(ByVal seller As String, NUM As String)
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cAccept) = "OK" Then
             cp = True
-            If SellFileName(DAT.Cells(i, cSellINN).text) <> seller Then cp = False
+            If DAT.Cells(i, cSellINN).text <> INN Then cp = False
             d = DAT.Cells(i, cDates)
             If mnC Then If YearAndMonth(d) <> mn Then cp = False
             If qrC Then If YearAndQuartal(d) <> qr Then cp = False
