@@ -53,3 +53,14 @@ Function Kvartal(sdata As Variant) As String
 er:
     Kvartal = ""
 End Function
+
+'Установка защиты
+'Возвращает True, если удалось, если возвращается False - значит пароль не подошёл
+Function SetProtect(table As Variant) As Boolean
+    On Error GoTo er
+    table.Protect Secret, AllowFormattingColumns:=True, UserInterfaceOnly:=True, AllowFiltering:=True
+    SetProtect = True
+    Exit Function
+er:
+    SetProtect = False
+End Function

@@ -56,16 +56,44 @@ Public colGray As Long
 Public colBlue As Long
 
 'Ссылки на таблицы
-Public DAT As Variant   'Данные
-Public SRC As Variant   'Исходные данные
-Public DIC As Variant   'Справочники
-Public ERR As Variant   'Список ошибок
-Public NUM As Variant   'Словарь нумератора
-Public VAL As Variant   'Значения объёмов
-Public TMP As Variant   'Шаблоны
+Public DAT As Variant           'Данные
+Public SRC As Variant           'Исходные данные
+Public DIC As Variant           'Справочники
+Public ERR As Variant           'Список ошибок
+Public NUM As Variant           'Словарь нумератора
+Public VAL As Variant           'Значения объёмов
+Public TMP As Variant           'Шаблоны
+Public SBK As Variant           'Книги продаж
 
-'Словари
-Public selIndexes As Variant    'Индексы строк продавцов
+'Общие переменные
+Public selIndexes As Variant    'Словарь индексов продавцов (номера строк в справочнике по ИНН)
+Public BookCount As Long        'Счётчик сгенерированных книг
+
+'Инициализация таблиц, цветов
+Sub Init()
+    colWhite = RGB(255, 255, 255)
+    colRed = RGB(255, 192, 192)
+    colGreen = RGB(192, 255, 192)
+    colYellow = RGB(255, 255, 192)
+    colGray = RGB(217, 217, 217)
+    colBlue = RGB(192, 217, 255)
+    
+    If isRelease Then On Error GoTo er
+    Set DAT = Sheets("Данные")
+    Set DIC = Sheets("Справочник")
+    Set ERR = Sheets("Ошибки")
+    Set NUM = Sheets("Словарь нумератора")
+    Set VAL = Sheets("Объёмы")
+    Set TMP = Sheets("Шаблоны")
+    Set SBK = Sheets("Книги продаж")
+    
+    Exit Sub
+er:
+    MsgBox ("Ошибка целостности документа! Необходимые вкладки были удалены или переименовены.")
+    End
+End Sub
+
+'******************** Вкладка "Данные" ********************
 
 'Выбор директории с данными
 Sub ButtonDirSelectImport()
@@ -81,12 +109,13 @@ Sub ButtonDirSelectExport()
     Cells(2, 3) = diag.SelectedItems(1)
 End Sub
 
-'Кнопка "Книги продаж"
-Sub ButtonSellBook()
-    file = Application.GetOpenFilename("Файлы Excel(*.xls*),*.xls*", 1, _
-        "Выберите файл реестра", , False)
-    If VarType(file) = vbBoolean Then Exit Sub
-    ExportBook ByVal CStr(file)
+'Кнопка "Сбор данных"
+Sub ButtonDataCollect()
+    Init
+    If isRelease Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    Message "Подготовка..."
+    SetProtect DAT
+    Collect.Run
 End Sub
 
 'Кнопка "Экспорт в 1С"
@@ -115,14 +144,7 @@ Sub ButtonClear()
     Message "Готово!"
 End Sub
 
-'Кнопка "Сбор данных"
-Sub ButtonDataCollect()
-    Init
-    If isRelease Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Message "Подготовка..."
-    SetProtect DAT
-    Collect.Run
-End Sub
+'******************** Вкладка "Объёмы" ********************
 
 'Кнопка ревизии остатков
 Sub ButtonRevisionVolumes()
@@ -136,6 +158,7 @@ Sub ButtonReportVolumes()
     Values.CreateReport
 End Sub
 
+'******************** Вкладка "Шаблоны" ********************
 
 'Кнопка "Генерировать шаблоны"
 Sub ButtonCreateTemplates()
@@ -143,30 +166,32 @@ Sub ButtonCreateTemplates()
     Template.Generate
 End Sub
 
-'Инициализация таблиц, цветов
-Sub Init()
-    colWhite = RGB(255, 255, 255)
-    colRed = RGB(255, 192, 192)
-    colGreen = RGB(192, 255, 192)
-    colYellow = RGB(255, 255, 192)
-    colGray = RGB(217, 217, 217)
-    colBlue = RGB(192, 217, 255)
-    
-    If isRelease Then On Error GoTo er
-    Set DAT = Sheets("Данные")
-    Set DIC = Sheets("Справочник")
-    Set ERR = Sheets("Ошибки")
-    Set NUM = Sheets("Словарь нумератора")
-    Set VAL = Sheets("Объёмы")
-    Set TMP = Sheets("Шаблоны")
-    
-    Exit Sub
-er:
-    MsgBox ("Ошибка целостности документа!")
-    End
-End Sub
+'******************** Вкладка "Книги продаж" ********************
 
-'Установка защиты
-Sub SetProtect(table As Variant)
-    table.Protect Secret, AllowFormattingColumns:=True, UserInterfaceOnly:=True, AllowFiltering:=True
+'Кнопка "Сформировать"
+Public Sub ButtonSellBook()
+    Init
+    Set diag = Application.FileDialog(msoFileDialogFolderPicker)
+    If diag.Show = 0 Then Exit Sub
+    Patch = diag.SelectedItems(1)
+    
+    Set files = getFiles(Patch, False)
+    Range(SBK.Cells(7, 1), SBK.Cells(maxRow, 2)).Clear
+    i = 7
+    For Each file In files
+        SBK.Cells(i, 1) = file
+        er = ExportBook(file)
+        If er = 0 Then SBK.Cells(i, 2) = "Ошибка при работе с файлом"
+        If er = 1 Then
+            If BookCount > 0 Then
+                SBK.Cells(i, 2) = "Созданы книги продаж (" + CStr(BookCount) + ")"
+            Else
+                SBK.Cells(i, 2) = "Реестр пустой"
+            End If
+        End If
+        If er = 2 Then SBK.Cells(i, 2) = "Реестр имеет некорректные записи"
+        i = i + 1
+    Next
+    Message "Готово!"
+    MsgBox "Формирование книг продаж завершено!"
 End Sub

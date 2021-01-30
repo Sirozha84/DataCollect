@@ -4,18 +4,43 @@ Dim BuyersList As Collection
 Dim SellersList As Collection
 Dim Where As Collection
 Dim Quartals As Object
+Dim BUY As Object
+Dim SEL As Object
 
-Public Sub ExportBook(ByVal file As String)
+'Формирование книги продаж
+'Возвращает 0 - при ошибке открытия, 1 - когда всё успешно, 2 - имеются ошибочные записи
+Function ExportBook(ByVal file As String) As Byte
     
-    'file = "c:\Users\SG\OneDrive\Работа\Сбор данных\Данные\Клиент1\КНЬ001.xlsx"
+    Message "Чтение файла " + file
     
-    Main.Init
+    'Инициализация реестра
     Set FSO = CreateObject("Scripting.FileSystemObject")
-    Patch = FSO.GetParentFolderName(file) + "\"
+    Patch = FSO.getparentfoldername(file) + "\"
+    On Error GoTo er
+    Set templ = Workbooks.Open(file, False, False)
+    Set TMP = templ.Worksheets(1)
+    Set BUY = templ.Worksheets("Покупатели")
+    Set SEL = templ.Worksheets("Продавцы")
     
-    GetLists file
-    GetQuartalsAndIndexes
-
+    'Проверка на "правильность" шаблона реестра
+    cod = TMP.Cells(1, 1).text
+    If cod = "" Or TMP.Cells(2, 1).text <> tmpVersion Then
+        ExportBook = 0
+        templ.Close
+        Exit Function
+    End If
+    GetLists
+    templ.Close
+    
+    'Подготовка и проверка данных
+    If Not Prepare(cod) Then
+        templ.Close
+        ExportBook = 2
+        Exit Function
+    End If
+    
+    'Генерация книг
+    BookCount = 0
     For Each q In Quartals
         For Each b In BuyersList
             For Each s In SellersList
@@ -24,59 +49,54 @@ Public Sub ExportBook(ByVal file As String)
         Next
     Next
     
-    Message "Готово!"
-End Sub
-
-'Чтение справочников покупателей и продавцов из шаблона
-Sub GetLists(ByVal file As String)
-    Message "Чтение данных из реестра"
-    Set BuyersList = New Collection
-    Set SellersList = New Collection
-    On Error GoTo er
-    Application.ScreenUpdating = False
-    Set templ = Workbooks.Open(file, False, False)
-    On Error Resume Next
-    If Not templ Is Nothing Then
-        Set SRC = templ.Worksheets("Покупатели")
-        i = 2
-        Do While SRC.Cells(i, 1) <> ""
-            BuyersList.Add SRC.Cells(i, 1).text, SRC.Cells(i, 1).text
-            i = i + 1
-        Loop
-        Set SRC = templ.Worksheets("Продавцы")
-        i = 2
-        Do While SRC.Cells(i, 1) <> ""
-            SellersList.Add SRC.Cells(i, 1).text, SRC.Cells(i, 1).text
-            i = i + 1
-        Loop
-        templ.Close False
-    End If
-    Exit Sub
+    ExportBook = 1
+    Exit Function
 er:
-    MsgBox "Произошла ошибка при открытии файла реестра"
-    End
-End Sub
+    ExportBook = 0
+End Function
 
-'Чтение базы, подготовка списка кварталов и индексов строк, в которых есть совпадения
-Sub GetQuartalsAndIndexes()
-    Message "Подготовка списка кварталов"
+'Подготовка:
+'проверка записей на отсутствие ошибочных
+'индексирование
+'подготовка списков кварталов
+Function Prepare(ByVal cod As String) As Boolean
     Set Where = New Collection
     Set Quartals = CreateObject("Scripting.Dictionary")
-    On Error Resume Next
+    Prepare = True
     i = firstDat
-    Do While Cells(i, cAccept) <> ""
-        If Cells(i, cAccept) = "OK" Then
-            b = ""
-            b = BuyersList(Cells(i, cBuyer))
-            s = ""
-            s = SellersList(Cells(i, cSeller))
-            If b <> "" And s <> "" Then
+    Do While DAT.Cells(i, cAccept) <> ""
+        If DAT.Cells(i, cCode).text = cod Then
+            If DAT.Cells(i, cAccept) = "OK" Then
                 Where.Add i
-                Quartals(GetQuartal(Cells(i, cDates))) = 1
+                Quartals(GetQuartal(DAT.Cells(i, cDates))) = 1
+            Else
+                Prepare = False: Exit Function
             End If
         End If
         i = i + 1
     Loop
+End Function
+
+'Чтение справочников покупателей и продавцов из шаблона
+Sub GetLists()
+    
+    On Error Resume Next
+    
+    Set BuyersList = New Collection
+    Set SellersList = New Collection
+    
+    i = 2
+    For i = 2 To 1000
+        If BUY.Cells(i, 1).text <> "" Then _
+            BuyersList.Add BUY.Cells(i, 2).text, BUY.Cells(i, 2).text
+    Next
+    
+    i = 2
+    For i = 2 To 1000
+        If SEL.Cells(i, 1).text <> "" Then _
+            SellersList.Add SEL.Cells(i, 2).text, SEL.Cells(i, 2).text
+    Next
+
 End Sub
 
 'Вычисление номера квартала в формате "1-20"
@@ -99,8 +119,8 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     Dim Finded As Collection
     Set Finded = New Collection
     For Each j In Where
-        If q = GetQuartal(DAT.Cells(j, 2)) And b = DAT.Cells(j, cBuyer).text And _
-            s = DAT.Cells(j, cSeller).text Then Finded.Add j
+        If q = GetQuartal(DAT.Cells(j, 2)) And b = DAT.Cells(j, cBuyINN).text And _
+            s = DAT.Cells(j, cSellINN).text Then Finded.Add j
     Next
     If Finded.Count = 0 Then Exit Sub
     
@@ -282,13 +302,12 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     Range(Cells(i, 15), Cells(i, 23)).NumberFormat = "### ### ##0.00"
     Range(Cells(7, 1), Cells(i, 24)).Borders.Weight = 2
     
-    'End
-    
     'Сохранение и закрытие документа
     On Error GoTo er
     Application.DisplayAlerts = False
     ActiveWorkbook.SaveAs fileName:=fileName
     ActiveWorkbook.Close
+    BookCount = BookCount + 1
     Exit Sub
 er:
     ActiveWorkbook.Close
