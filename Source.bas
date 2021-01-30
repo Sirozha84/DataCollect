@@ -5,12 +5,12 @@ Public FSO As Object
 Private curfold As Variant
 
 'Получение списка файлов в заданной директории
-Function getFiles(ByVal pat As String) As Collection
+Function getFiles(ByVal pat As String, FindDuplicate As Boolean) As Collection
     Path = pat
     Set files = New Collection
     Set FSO = CreateObject("Scripting.FileSystemObject")
     readDir pat
-    DuplicateFinder
+    If FindDuplicate Then DuplicateFinder
     Set getFiles = files
 End Function
 

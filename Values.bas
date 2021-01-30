@@ -14,13 +14,13 @@ Sub CreateReport()
         If DAT.Cells(i, cAccept) = "OK" Then
             cod = DAT.Cells(i, cCode).text
             kv = Kvartal(DAT.Cells(i, cDates))
-            buy = DAT.Cells(i, cBuyINN).text
+            BUY = DAT.Cells(i, cBuyINN).text
             sell = DAT.Cells(i, cSellINN).text
             Sum = 0
             For j = 12 To 14
                 If DAT.Cells(i, j) <> "" Then Sum = Sum + DAT.Cells(i, j)
             Next
-            ID = cod + "!" + kv + "!" + sell + "!" + buy
+            ID = cod + "!" + kv + "!" + sell + "!" + BUY
             summS(ID) = summS(ID) + Sum
             buyList(DAT.Cells(i, cBuyINN).text) = DAT.Cells(i, cBuyer).text
             'sellList(DAT.Cells(i, cSellINN).text) = DAT.Cells(i, cSeller).text
@@ -60,13 +60,14 @@ Sub CreateReport()
     VAL.Cells(4, 6) = "Покупателя"
     VAL.Cells(4, 7) = "Объём"
     Range(VAL.Cells(4, 1), VAL.Cells(4, 7)).Interior.Color = colGray
+    Range(VAL.Cells(4, 1), VAL.Cells(4, 7)).Borders.Weight = 2
     
     'Формирование отчёта
     i = 5
     Dim s As Variant
-    Dim sel As Variant
-    For Each sel In summS
-        s = Split(sel, "!")
+    Dim SEL As Variant
+    For Each SEL In summS
+        s = Split(SEL, "!")
         VAL.Cells(i, 1) = clients(s(0))
         VAL.Cells(i, 2) = templates(s(0))
         VAL.Cells(i, 3) = s(1)
@@ -74,7 +75,7 @@ Sub CreateReport()
         VAL.Cells(i, 5) = statList(s(2))
         VAL.Cells(i, 6) = buyList(s(3)) + " (" + s(3) + ")"
         VAL.Cells(i, 7).NumberFormat = "### ### ##0.00"
-        VAL.Cells(i, 7) = summS(sel)
+        VAL.Cells(i, 7) = summS(SEL)
         i = i + 1
     Next
     Range(VAL.Cells(4, 1), VAL.Cells(i - 1, 7)).Rows.AutoFilter

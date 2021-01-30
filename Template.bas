@@ -3,7 +3,7 @@ Const LastRec = 10000           'Последняя строка записей (Первая всегда 5, вбит
 Const maxBuyers = 100           'Максимальное количество покупателей
 Const maxSellers = 100          'Максимальное количество продавцов
 
-Public Sub Generate()
+Sub Generate()
     
     Main.Init
     If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)

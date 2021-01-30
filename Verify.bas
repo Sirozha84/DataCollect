@@ -132,9 +132,9 @@ End Function
 
 'Проверка правильности даты
 Sub DateTest(ByVal i As Long)
-    sel = DAT.Cells(i, 6)
+    SEL = DAT.Cells(i, 6)
     dtt = DAT.Cells(i, 2)
-    If dtt < dateS(sel) Then AddCom "Дата СФ не может быть ранее регистрации продавца"
+    If dtt < dateS(SEL) Then AddCom "Дата СФ не может быть ранее регистрации продавца"
 End Sub
 
 'Проверка лимитов
@@ -144,26 +144,26 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
     cod = DAT.Cells(i, cCode).text + "!"
     kv = Kvartal(DAT.Cells(i, 2))
     kvin = qrtIndexes(kv)
-    sel = DAT.Cells(i, cSellINN).text
-    selCur = sel + "!" + kv + "!"
-    buy = DAT.Cells(i, cBuyINN).text
-    buyCur = buy + "!" + kv + "!"
-    grp = groups(sel)
+    SEL = DAT.Cells(i, cSellINN).text
+    selCur = SEL + "!" + kv + "!"
+    BUY = DAT.Cells(i, cBuyINN).text
+    buyCur = BUY + "!" + kv + "!"
+    grp = groups(SEL)
     Sum = 0
     For j = 12 To 14
         If IsNumeric(DAT.Cells(i, j)) Then Sum = Sum + DAT.Cells(i, j)
     Next
-    summOne(selCur + buy) = summOne(selCur + buy) + Sum
+    summOne(selCur + BUY) = summOne(selCur + BUY) + Sum
     summAll(selCur) = summAll(selCur) + Sum
     e = False
     
     'Проверка на лимит одному покупателю
-    If summOne(selCur + buy) > limitOne Then _
+    If summOne(selCur + BUY) > limitOne Then _
             AddCom "Превышен лимит продаж данного продавца данному покупателю": e = True
     
     'Проверка на остатки
     'RestoreBalance DAT.Cells(i, 2), oldINN, oldSum
-    ind = selIndexes(sel)
+    ind = selIndexes(SEL)
     over = False
     For j = 0 To kvin
         If Sum > DIC.Cells(ind, cLimits + j) Then over = True
@@ -185,9 +185,9 @@ Sub LimitsTest(ByVal i As Long, ByVal si As Long, ByVal oldINN, ByVal oldSum)
     
     'Проверка на связанных продавцов для одного покупателя
     If buyers(buyCur + grp) = "" Then
-        buyers(buyCur + grp) = sel
+        buyers(buyCur + grp) = SEL
     Else
-        If buyers(buyCur + grp) <> sel Then AddCom "Указаны связанные продавцы для данного покупателя"
+        If buyers(buyCur + grp) <> SEL Then AddCom "Указаны связанные продавцы для данного покупателя"
     End If
 End Sub
 
