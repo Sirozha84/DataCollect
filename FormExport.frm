@@ -198,11 +198,24 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
                     Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
                     Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
                 Next
+                Cells(j, 15) = YearAndQuartal(DAT.Cells(i, 2))
                 j = j + 1
             End If
         End If
         i = i + 1
     Loop
+    
+    'Сортировка и удаление временного столбца
+    Cells(1, 15) = "Квартал"
+    With ActiveSheet.Sort
+        .SortFields.Clear
+        .SortFields.Add Key:=Range("O2")
+        .SortFields.Add Key:=Range("F2")
+        .setRange Range("A2:O" + CStr(j - 1))
+        .Apply
+    End With
+    Columns(15).Delete
+    End
     
     'Сохранение и закрытие документа
     On Error GoTo er
