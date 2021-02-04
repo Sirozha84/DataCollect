@@ -9,7 +9,7 @@ Sub Generate()
     If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)
     Dim max As Long
     i = firstTempl
-    Do While Cells(i, 1) <> "" Or Cells(i, 2) <> ""
+    Do While Cells(i, cTClient) <> "" Or Cells(i, cTForm) <> ""
         i = i + 1
     Loop
     'Генерируем шаблоны
@@ -18,41 +18,45 @@ Sub Generate()
     fold = DAT.Cells(1, 3).text
     For i = firstTempl To max
         Message "Создение шаблона " + CStr(i - firstTempl + 1) + " из " + CStr(max - FirstClient + 1)
-        cln = cutBadSymbols(Cells(i, 1).text)
-        tem = cutBadSymbols(Cells(i, 2).text)
+        cln = cutBadSymbols(Cells(i, cTClient).text)
+        brk = cutBadSymbols(Cells(i, cTBroker).text)
+        tem = cutBadSymbols(Cells(i, cTForm).text)
         'Проверим, уникальные ли имена
         uname = cln + "!" + tem
         If namelist(uname) = "" Then
             namelist(uname) = 0
-            If Not isCode(Cells(i, 3)) Then
+            If Not isCode(Cells(i, cTCode)) Then
                 cod = last + 1
                 last = cod
-                Cells(i, 3) = cod
+                Cells(i, cTCode) = cod
             End If
             If Cells(i, cTStat).text <> "OK" Then
                 'Создаём папку и файл
+                If brk <> "" Then brk = "\" + brk
                 folder fold + "\" + cln
-                folder fold + "\" + cln + "\" + tem
-                name = fold + "\" + cln + "\" + tem + "\" + tem + ".xlsx"
-                res = NewTemplate(cln, tem, name, Cells(i, 3).text)
+                folder fold + "\" + cln + brk
+                folder fold + "\" + cln + brk + "\" + tem
+                name = fold + "\" + cln + brk + "\" + tem + "\" + tem + ".xlsx"
+                res = NewTemplate(cln, tem, name, Cells(i, cTCode).text)
                 If res = 0 Then
-                    Cells(i, 4) = "Произошла ошибка при создании файла"
-                    Cells(i, 5) = "Ошибка"
+                    Cells(i, cTFile) = "Произошла ошибка при создании файла"
+                    Cells(i, cTResult) = "Ошибка"
                 End If
                 If res = 1 Then
-                    Cells(i, 4) = name
-                    Cells(i, 5) = "Успешно!"
+                    Cells(i, cTFile) = name
+                    Cells(i, cTResult) = "Успешно!"
                     Cells(i, cTStat) = "OK"
                 End If
                 If res = 2 Then
-                    Cells(i, 4) = name
-                    Cells(i, 5) = "Файл уже существует, пропущено"
+                    Cells(i, cTFile) = name
+                    Cells(i, cTResult) = "Файл уже существует, пропущено"
+                    Cells(i, cTStat) = "OK"
                 End If
             Else
-                Cells(i, 5) = "Шаблон уже был создан ранее"
+                Cells(i, cTResult) = "Шаблон был создан ранее"
             End If
         Else
-            Cells(i, 5) = "Имя клиента или шаблона не уникально."
+            Cells(i, cTResult) = "Имя клиента или шаблона не уникально."
         End If
     Next
     NUM.Cells(2, 1) = last

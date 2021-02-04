@@ -41,52 +41,59 @@ Sub CreateReport()
     
     'Собираем словари Клиента и Формы
     Set clients = CreateObject("Scripting.Dictionary")
+    Set brokers = CreateObject("Scripting.Dictionary")
     Set templates = CreateObject("Scripting.Dictionary")
     i = firstTempl
-    Do While TMP.Cells(i, 3).text <> ""
-        clients(TMP.Cells(i, 3).text) = TMP.Cells(i, 1).text
-        templates(TMP.Cells(i, 3).text) = TMP.Cells(i, 2).text
+    Do While TMP.Cells(i, cTCode).text <> ""
+        clients(TMP.Cells(i, cTCode).text) = TMP.Cells(i, cTClient).text
+        brokers(TMP.Cells(i, cTCode).text) = TMP.Cells(i, cTBroker).text
+        templates(TMP.Cells(i, cTCode).text) = TMP.Cells(i, cTForm).text
         i = i + 1
     Loop
     
     'Подготовка листа
-    Range(VAL.Cells(4, 1), VAL.Cells(maxRow, 7)).Clear
-    VAL.Cells(4, 1) = "Клиент"
-    VAL.Cells(4, 2) = "Форма"
-    VAL.Cells(4, 3) = "Компания"
-    VAL.Cells(4, 4) = "Форма"
-    VAL.Cells(4, 3) = "Квартал"
-    VAL.Cells(4, 4) = "Продавец"
-    VAL.Cells(4, 5) = "Статус"
-    VAL.Cells(4, 6) = "Покупателя"
-    VAL.Cells(4, 7) = "Стоимость с НДС"
-    VAL.Cells(4, 8) = "НДС"
-    Range(VAL.Cells(4, 1), VAL.Cells(4, 8)).Interior.Color = colGray
-    Range(VAL.Cells(4, 1), VAL.Cells(4, 8)).Borders.Weight = 2
+    cols = 9
+    hat = firstValues - 1
+    Range(VAL.Cells(firstValues, 1), VAL.Cells(maxRow, cols)).Clear
+    VAL.Cells(hat, 1) = "Клиент"
+    VAL.Cells(hat, 2) = "Посредник"
+    VAL.Cells(hat, 3) = "Форма"
+    VAL.Cells(hat, 4) = "Компания"
+    VAL.Cells(hat, 5) = "Форма"
+    VAL.Cells(hat, 6) = "Статус"
+    VAL.Cells(hat, 7) = "Покупатель"
+    VAL.Cells(hat, 8) = "Стоимость с НДС"
+    VAL.Cells(hat, 9) = "НДС"
+    Range(VAL.Cells(hat, 1), VAL.Cells(hat, cols)).Interior.Color = colGray
+    Range(VAL.Cells(hat, 1), VAL.Cells(hat, cols)).Borders.Weight = 2
     
     'Формирование отчёта
-    i = 5
+    i = firstValues
     Dim s As Variant
     Dim SEL As Variant
     For Each SEL In summPrice
         s = Split(SEL, "!")
         VAL.Cells(i, 1) = clients(s(0))
-        VAL.Cells(i, 2) = templates(s(0))
-        VAL.Cells(i, 3) = s(1)
-        VAL.Cells(i, 4) = sellList(s(2)) + " (" + s(2) + ")"
-        VAL.Cells(i, 5) = statList(s(2))
-        VAL.Cells(i, 6) = buyList(s(3)) + " (" + s(3) + ")"
-        VAL.Cells(i, 7).NumberFormat = "### ### ##0.00"
-        VAL.Cells(i, 7) = summPrice(SEL)
+        VAL.Cells(i, 2) = brokers(s(0))
+        VAL.Cells(i, 3) = templates(s(0))
+        VAL.Cells(i, 4) = s(1)
+        VAL.Cells(i, 5) = sellList(s(2)) + " (" + s(2) + ")"
+        VAL.Cells(i, 6) = statList(s(2))
+        VAL.Cells(i, 7) = buyList(s(3)) + " (" + s(3) + ")"
         VAL.Cells(i, 8).NumberFormat = "### ### ##0.00"
-        VAL.Cells(i, 8) = summNDS(SEL)
+        VAL.Cells(i, 8) = summPrice(SEL)
+        VAL.Cells(i, 9).NumberFormat = "### ### ##0.00"
+        VAL.Cells(i, 9) = summNDS(SEL)
         i = i + 1
     Next
     On Error Resume Next
-    ActiveSheet.AutoFilter.Range.AutoFilter
-    Range(VAL.Cells(4, 1), VAL.Cells(i - 1, 8)).Rows.AutoFilter
+    Range(VAL.Cells(hat, 1), VAL.Cells(hat, cols)).Rows.AutoFilter
     
+    'Сводная таблица
     VLS.Cells.Clear
+    VLS.PivotTableWizard SourceType:=xlDatabase, _
+        SourceData:=Range(VAL.Cells(hat, 1), VAL.Cells(i - 1, cols)), _
+        TableDestination:=VLS.Cells(3, 1)
     
     Message "Готово!"
     

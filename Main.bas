@@ -37,7 +37,13 @@ Public Const lastYear = 2020    'Первый расчётный год (потом это будет переменно
 Public Const lastQuartal = 4    'Первыё расчётный квартал (аналогично)
 
 'Колонки "Шаблоны"
-Public Const cTStat = 6         'Статус
+Public Const cTClient = 1       'Клиент
+Public Const cTBroker = 2       'Посредник
+Public Const cTForm = 3         'Форма
+Public Const cTCode = 4         'Код
+Public Const cTFile = 5         'Файл
+Public Const cTResult = 6       'Результат
+Public Const cTStat = 7         'Статус
 
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных
@@ -46,6 +52,7 @@ Public Const firstTempl = 6     'Первая строка в списке реестра
 Public Const firstDic = 4       'Первая строка в справочнике
 Public Const firstErr = 2       'Первая строка в списке ошибок
 Public Const firstNum = 4       'Первая строка в словаре нумератора
+Public Const firstValues = 6    'Первая строка в отчёте "Объёмы"
 
 'Цвета
 Public colWhite As Long
@@ -118,6 +125,7 @@ Sub ButtonDataCollect()
     Message "Подготовка..."
     SetProtect DAT
     Collect.Run
+    DAT.Activate
 End Sub
 
 'Кнопка "Экспорт в 1С"
@@ -176,7 +184,6 @@ Public Sub ButtonSellBook()
     Set diag = Application.FileDialog(msoFileDialogFolderPicker)
     If diag.Show = 0 Then Exit Sub
     Patch = diag.SelectedItems(1)
-    
     Set files = getFiles(Patch, False)
     Range(SBK.Cells(7, 1), SBK.Cells(maxRow, 2)).Clear
     i = 7
@@ -194,6 +201,7 @@ Public Sub ButtonSellBook()
         If er = 2 Then SBK.Cells(i, 2) = "Реестр имеет некорректные записи"
         i = i + 1
     Next
+    VAL.Activate
     Message "Готово!"
     MsgBox "Формирование книг продаж завершено!"
 End Sub
