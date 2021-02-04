@@ -93,7 +93,7 @@ Sub CreateReport()
     VLS.Cells.Clear
     VLS.PivotTableWizard SourceType:=xlDatabase, _
         SourceData:=Range(VAL.Cells(hat, 1), VAL.Cells(i - 1, cols)), _
-        TableDestination:=VLS.Cells(3, 1)
+        TableDestination:=VLS.Cells(1, 1)
     
     Message "Готово!"
     
