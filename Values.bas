@@ -60,7 +60,7 @@ Sub CreateReport()
     VAL.Cells(4, 5) = "Статус"
     VAL.Cells(4, 6) = "Покупателя"
     VAL.Cells(4, 7) = "Стоимость с НДС"
-    VAL.Cells(4, 8) = "Объём"
+    VAL.Cells(4, 8) = "НДС"
     Range(VAL.Cells(4, 1), VAL.Cells(4, 8)).Interior.Color = colGray
     Range(VAL.Cells(4, 1), VAL.Cells(4, 8)).Borders.Weight = 2
     
@@ -85,6 +85,9 @@ Sub CreateReport()
     On Error Resume Next
     ActiveSheet.AutoFilter.Range.AutoFilter
     Range(VAL.Cells(4, 1), VAL.Cells(i - 1, 8)).Rows.AutoFilter
+    
+    VLS.Cells.Clear
+    
     Message "Готово!"
     
 End Sub
