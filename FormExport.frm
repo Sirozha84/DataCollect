@@ -1,7 +1,7 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FormExport 
    Caption         =   "Выгрузка данных"
-   ClientHeight    =   3241
+   ClientHeight    =   4088
    ClientLeft      =   119
    ClientTop       =   462
    ClientWidth     =   4564
@@ -13,6 +13,9 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
+Dim FirstDate As Date
+Dim LastDate As Date
+
 'Инициализация выпадающих списков
 Private Sub UserForm_Initialize()
     
@@ -39,6 +42,10 @@ Private Sub UserForm_Initialize()
         Next
     Next
     ComboBoxQuartals.ListIndex = 0
+        
+    'Период сбора
+    TextBoxFirstCollect = NUM.Cells(2, 3)
+    TextBoxLastCollect = NUM.Cells(4, 3)
     
 End Sub
 
@@ -98,6 +105,11 @@ End Sub
 
 'Кнопка "Экспорт"
 Private Sub CommandExport_Click()
+    
+    On Error GoTo er
+    FirstDate = CDate(TextBoxFirstCollect)
+    LastDate = CDate(TextBoxLastCollect)
+
     If ComboBoxBuyers.ListIndex = 0 Then
         n = 1
         a = selIndexes.Count
@@ -106,10 +118,17 @@ Private Sub CommandExport_Click()
             n = n + 1
         Next
     Else
-        ExportFile Left(ComboBoxBuyers.Value, 10), "" ' ComboBoxBuyers.Value, ""
+        ExportFile Left(ComboBoxBuyers.Value, 10), ""
     End If
+    
+    'Сохранение дат периода сбора
+    NUM.Cells(2, 3) = TextBoxFirstCollect
+    NUM.Cells(4, 3) = TextBoxLastCollect
+    
     Message "Готово!"
     End
+er:
+    MsgBox "Даты не введены или введены не корректно"
 End Sub
 
 'Экспорт файла
@@ -169,37 +188,39 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     hat.Borders.Weight = 3
     firstEx = i + 1
     
-    
     'Заполняем книгу
     i = firstDat
     j = firstEx
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cAccept) = "OK" Then
-            cp = True
-            If DAT.Cells(i, cSellINN).text <> INN Then cp = False
-            d = DAT.Cells(i, cDates)
-            If mnC Then If YearAndMonth(d) <> mn Then cp = False
-            If qrC Then If YearAndQuartal(d) <> qr Then cp = False
-            If cp Then
-                Cells(j, 1).NumberFormat = "@"
-                Cells(j, 1) = "01"
-                Cells(j, 2) = DAT.Cells(i, 1)
-                Cells(j, 3).NumberFormat = "dd.MM.yyyy"
-                Cells(j, 3) = DAT.Cells(i, 2)
-                innkpp = Split(DAT.Cells(i, 3), "/")
-                Cells(j, 4).NumberFormat = "@"
-                Cells(j, 4) = innkpp(0)
-                Cells(j, 5).NumberFormat = "@"
-                If UBound(innkpp) > 0 Then Cells(j, 5) = innkpp(1)
-                Cells(j, 6) = DAT.Cells(i, 4)
-                Cells(j, 7).NumberFormat = "### ### ##0.00"
-                Cells(j, 7) = DAT.Cells(i, 7)
-                For c = 0 To 5
-                    Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
-                    Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
-                Next
-                Cells(j, 15) = YearAndQuartal(DAT.Cells(i, 2))
-                j = j + 1
+            dc = DAT.Cells(i, cDateCol)
+            If dc >= FirstDate And dc < LastDate + 1 Then
+                cp = True
+                If DAT.Cells(i, cSellINN).text <> INN Then cp = False
+                d = DAT.Cells(i, cDates)
+                If mnC Then If YearAndMonth(d) <> mn Then cp = False
+                If qrC Then If YearAndQuartal(d) <> qr Then cp = False
+                If cp Then
+                    Cells(j, 1).NumberFormat = "@"
+                    Cells(j, 1) = "01"
+                    Cells(j, 2) = DAT.Cells(i, 1)
+                    Cells(j, 3).NumberFormat = "dd.MM.yyyy"
+                    Cells(j, 3) = DAT.Cells(i, 2)
+                    innkpp = Split(DAT.Cells(i, 3), "/")
+                    Cells(j, 4).NumberFormat = "@"
+                    Cells(j, 4) = innkpp(0)
+                    Cells(j, 5).NumberFormat = "@"
+                    If UBound(innkpp) > 0 Then Cells(j, 5) = innkpp(1)
+                    Cells(j, 6) = DAT.Cells(i, 4)
+                    Cells(j, 7).NumberFormat = "### ### ##0.00"
+                    Cells(j, 7) = DAT.Cells(i, 7)
+                    For c = 0 To 5
+                        Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
+                        Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
+                    Next
+                    Cells(j, 15) = YearAndQuartal(DAT.Cells(i, 2))
+                    j = j + 1
+                End If
             End If
         End If
         i = i + 1
@@ -215,7 +236,7 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
         .Apply
     End With
     Columns(15).Delete
-    End
+    'End
     
     'Сохранение и закрытие документа
     On Error GoTo er

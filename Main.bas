@@ -8,17 +8,19 @@ Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const tmpVersion = "20210108"    'Версия реестра
 
 'Колонки "Данные"
+Public Const cUIN = 1           'УИН
 Public Const cDates = 2         'Дата
 Public Const cBuyINN = 3        'ИНН покупателя
-Public Const cBuyer = 4
+Public Const cBuyer = 4         'Наименование покупателя
 Public Const cSellINN = 5       'ИНН продавца
-Public Const cSeller = 6        'Продавец
+Public Const cSeller = 6        'Наименование продавец
 Public Const cPrice = 7         'Стоимость с НДС
 Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
-Public Const cFile = 17         'Имя файла
-Public Const cCode = 18         'Код формы
-Public Const cAccept = 19       'Принято/не принято
+Public Const cDateCol = 17      'Дата сбора
+Public Const cFile = 18         'Имя файла
+Public Const cCode = 19         'Код формы
+Public Const cAccept = 20       'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
@@ -37,7 +39,13 @@ Public Const lastYear = 2020    'Первый расчётный год (потом это будет переменно
 Public Const lastQuartal = 4    'Первыё расчётный квартал (аналогично)
 
 'Колонки "Шаблоны"
-Public Const cTStat = 6         'Статус
+Public Const cTClient = 1       'Клиент
+Public Const cTBroker = 2       'Посредник
+Public Const cTForm = 3         'Форма
+Public Const cTCode = 4         'Код
+Public Const cTFile = 5         'Файл
+Public Const cTResult = 6       'Результат
+Public Const cTStat = 7         'Статус
 
 'Первые строки
 Public Const firstDat = 8       'Первая строка в коллекции данных
@@ -46,6 +54,7 @@ Public Const firstTempl = 6     'Первая строка в списке реестра
 Public Const firstDic = 4       'Первая строка в справочнике
 Public Const firstErr = 2       'Первая строка в списке ошибок
 Public Const firstNum = 4       'Первая строка в словаре нумератора
+Public Const firstValues = 6    'Первая строка в отчёте "Объёмы"
 
 'Цвета
 Public colWhite As Long
@@ -62,6 +71,7 @@ Public DIC As Variant           'Справочники
 Public ERR As Variant           'Список ошибок
 Public NUM As Variant           'Словарь нумератора
 Public VAL As Variant           'Значения объёмов
+Public VLS As Variant           'Сводная таблица
 Public TMP As Variant           'Шаблоны
 Public SBK As Variant           'Книги продаж
 
@@ -84,6 +94,7 @@ Sub Init()
     Set ERR = Sheets("Ошибки")
     Set NUM = Sheets("Словарь нумератора")
     Set VAL = Sheets("Объёмы")
+    Set VLS = Sheets("Сводная таблица")
     Set TMP = Sheets("Шаблоны")
     Set SBK = Sheets("Книги продаж")
     
@@ -116,6 +127,7 @@ Sub ButtonDataCollect()
     Message "Подготовка..."
     SetProtect DAT
     Collect.Run
+    DAT.Activate
 End Sub
 
 'Кнопка "Экспорт в 1С"
@@ -137,7 +149,7 @@ Sub ButtonClear()
     End If
     SetProtect DAT
     Range(Cells(firstDat, 1), Cells(maxRow, cAccept)).Clear
-    Range(Cells(firstDat, cStatus), Cells(maxRow, cStatus)).Interior.Color = colYellow
+    Range(Cells(firstDat, cStatus), Cells(maxRow, cDateCol)).Interior.Color = colYellow
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Interior.Color = colGray
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
     Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
@@ -156,6 +168,7 @@ End Sub
 Sub ButtonReportVolumes()
     Init
     Values.CreateReport
+    VAL.Activate
 End Sub
 
 '******************** Вкладка "Шаблоны" ********************
@@ -174,7 +187,6 @@ Public Sub ButtonSellBook()
     Set diag = Application.FileDialog(msoFileDialogFolderPicker)
     If diag.Show = 0 Then Exit Sub
     Patch = diag.SelectedItems(1)
-    
     Set files = getFiles(Patch, False)
     Range(SBK.Cells(7, 1), SBK.Cells(maxRow, 2)).Clear
     i = 7

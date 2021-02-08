@@ -78,7 +78,7 @@ Function AddFile(ByVal file As String) As Byte
             'Очищаем предыдущие строки без номеров
             i = firstDat
             Do While DAT.Cells(i, cAccept) <> ""
-                If DAT.Cells(i, 1) = "" And DAT.Cells(i, cCode) = curCode Then
+                If DAT.Cells(i, cUIN) = "" And DAT.Cells(i, cCode) = curCode Then
                     DAT.Rows(i).Delete
                 Else
                     i = i + 1
@@ -89,7 +89,7 @@ Function AddFile(ByVal file As String) As Byte
             Set Indexes = CreateObject("Scripting.Dictionary")
             i = firstDat
             Do While DAT.Cells(i, cAccept) <> ""
-                UID = DAT.Cells(i, 1)
+                UID = DAT.Cells(i, cUIN)
                 If UID <> "" Then Indexes.Add UID, i
                 i = i + 1
             Loop
@@ -146,7 +146,7 @@ Function AddFile(ByVal file As String) As Byte
             'Проверяем исходник на удалённые записи (на предмет пропавших УИНов)
             i = firstDat
             Do While DAT.Cells(i, cAccept) <> ""
-                UID = DAT.Cells(i, 1).text
+                UID = DAT.Cells(i, cUIN).text
                 If UID <> "" And DAT.Cells(i, cCode) = curCode Then
                     If resUIDs(UID) = Empty Then
                         DAT.Cells(i, cCom) = "Данные удалены заказчиком (вместе с УИН)"
@@ -259,8 +259,9 @@ Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As B
         End If
         If needNum Then
             n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
-            DAT.Cells(di, 1).NumberFormat = "@"
-            DAT.Cells(di, 1) = n
+            DAT.Cells(di, cUIN).NumberFormat = "@"
+            DAT.Cells(di, cUIN) = n
+            DAT.Cells(di, cDateCol) = DateTime.Now
             SRC.Cells(si, 1).NumberFormat = "@"
             SRC.Cells(si, 1) = n
         End If
