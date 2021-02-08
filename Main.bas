@@ -204,6 +204,7 @@ Public Sub ButtonSellBook()
         If er = 2 Then SBK.Cells(i, 2) = "Реестр имеет некорректные записи"
         i = i + 1
     Next
+    VAL.Activate
     Message "Готово!"
     MsgBox "Формирование книг продаж завершено!"
 End Sub
