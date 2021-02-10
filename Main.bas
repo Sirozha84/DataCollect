@@ -8,17 +8,19 @@ Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const tmpVersion = "20210108"    'Версия реестра
 
 'Колонки "Данные"
+Public Const cUIN = 1           'УИН
 Public Const cDates = 2         'Дата
 Public Const cBuyINN = 3        'ИНН покупателя
-Public Const cBuyer = 4
+Public Const cBuyer = 4         'Наименование покупателя
 Public Const cSellINN = 5       'ИНН продавца
-Public Const cSeller = 6        'Продавец
+Public Const cSeller = 6        'Наименование продавец
 Public Const cPrice = 7         'Стоимость с НДС
 Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
-Public Const cFile = 17         'Имя файла
-Public Const cCode = 18         'Код формы
-Public Const cAccept = 19       'Принято/не принято
+Public Const cDateCol = 17      'Дата сбора
+Public Const cFile = 18         'Имя файла
+Public Const cCode = 19         'Код формы
+Public Const cAccept = 20       'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
@@ -147,7 +149,7 @@ Sub ButtonClear()
     End If
     SetProtect DAT
     Range(Cells(firstDat, 1), Cells(maxRow, cAccept)).Clear
-    Range(Cells(firstDat, cStatus), Cells(maxRow, cStatus)).Interior.Color = colYellow
+    Range(Cells(firstDat, cStatus), Cells(maxRow, cDateCol)).Interior.Color = colYellow
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Interior.Color = colGray
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
     Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
@@ -166,6 +168,7 @@ End Sub
 Sub ButtonReportVolumes()
     Init
     Values.CreateReport
+    VAL.Activate
 End Sub
 
 '******************** Вкладка "Шаблоны" ********************
