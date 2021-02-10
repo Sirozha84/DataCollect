@@ -34,7 +34,6 @@ Function ExportBook(ByVal file As String) As Byte
     
     'Подготовка и проверка данных
     If Not Prepare(cod) Then
-        templ.Close
         ExportBook = 2
         Exit Function
     End If
@@ -69,8 +68,10 @@ Function Prepare(ByVal cod As String) As Boolean
             If DAT.Cells(i, cAccept) = "OK" Then
                 Where.Add i
                 Quartals(GetQuartal(DAT.Cells(i, cDates))) = 1
-            Else
-                Prepare = False: Exit Function
+            End If
+            If DAT.Cells(i, cAccept) = "fail" Then
+                Prepare = False
+                Exit Function
             End If
         End If
         i = i + 1
