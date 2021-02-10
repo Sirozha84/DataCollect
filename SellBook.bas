@@ -1,7 +1,7 @@
 Attribute VB_Name = "SellBook"
 Dim Patch As String
-Dim BuyersList As Collection
-Dim SellersList As Collection
+Dim BuyersList As Variant
+Dim SellersList As Variant
 Dim Where As Collection
 Dim Quartals As Object
 Dim BUY As Object
@@ -39,6 +39,7 @@ Function ExportBook(ByVal file As String) As Byte
     End If
     
     'Генерация книг
+    ClearOldBooks
     BookCount = 0
     For Each q In Quartals
         For Each b In BuyersList
@@ -83,19 +84,21 @@ Sub GetLists()
     
     On Error Resume Next
     
-    Set BuyersList = New Collection
-    Set SellersList = New Collection
+    Set BuyersList = CreateObject("Scripting.Dictionary")
+    Set SellersList = CreateObject("Scripting.Dictionary")
     
     i = 2
     For i = 2 To 1000
         If BUY.Cells(i, 1).text <> "" Then _
-            BuyersList.Add BUY.Cells(i, 2).text, BUY.Cells(i, 2).text
+            BuyersList(BUY.Cells(i, 2).text) = BUY.Cells(i, 1).text
     Next
     
     i = 2
     For i = 2 To 1000
-        If SEL.Cells(i, 1).text <> "" Then _
-            SellersList.Add SEL.Cells(i, 2).text, SEL.Cells(i, 2).text
+        If SEL.Cells(i, 1).text <> "" Then
+            si = SEL.Cells(i, 2).text
+            SellersList(si) = DIC.Cells(selIndexes(si), 1).text
+        End If
     Next
 
 End Sub
@@ -113,6 +116,25 @@ Function Period(q As String)
     If Left(q, 1) = "3" Then Period = "с 01.07" + y + " по 30.09" + y
     If Left(q, 1) = "4" Then Period = "с 01.10" + y + " по 31.12" + y
 End Function
+
+'Чистка директории от предыдущих книг
+Sub ClearOldBooks()
+    On Error GoTo er
+    
+    Set FSO = CreateObject("Scripting.FileSystemObject")
+    Set curfold = FSO.GetFolder(Patch)
+    For Each file In curfold.files
+        If file.name Like "КнПрод*.xls*" Then
+            Kill Patch + file.name
+        End If
+    Next
+    
+    Exit Sub
+er:
+    MsgBox "Произошла ошибка при удалении старых книг продаж. Формирование книг отменено."
+    End
+End Sub
+
 'Формирование книги
 Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     
@@ -126,7 +148,8 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     If Finded.Count = 0 Then Exit Sub
     
     'Какие-то данные всёже нашли, создаём книгу
-    name = cutBadSymbols("КнПрод " + s + " - " + b + " " + q)
+    name = cutBadSymbols("КнПрод " + SellersList(s) + " (" + s + ") - " + _
+                                     BuyersList(b) + " (" + b + ") " + q)
     fileName = Patch + name + ".xlsx"
     Message "Формирование книги " + name
     Workbooks.Add
@@ -140,7 +163,7 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     Cells(1, 1).Font.Size = 14
     Rows(2).RowHeight = 10.9
     Rows(3).RowHeight = 12
-    Cells(3, 1) = "Продавец " + s
+    Cells(3, 1) = "Продавец " + SellersList(s)
     Rows(4).RowHeight = 12
     Cells(4, 1) = "Идентификационный номер и код причины постановки на учeт налогоплательщика-продавца " + _
         DAT.Cells(Finded(1), cSellINN).text
