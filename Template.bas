@@ -110,11 +110,13 @@ er2:
     listb.Cells(1, 1) = "Наименование"
     listb.Cells(1, 2) = "ИНН/КПП"
     Range(listb.Cells(2, 2), listb.Cells(maxBuyers, 2)).NumberFormat = "@"
+    listb.Rows(2).Hidden = True
     lists.Columns(1).ColumnWidth = 30
     lists.Columns(2).ColumnWidth = 20
     lists.Cells(1, 1) = "Наименование"
     lists.Cells(1, 2) = "ИНН"
     Range(lists.Cells(2, 2), lists.Cells(maxSellers, 2)).NumberFormat = "@"
+    lists.Rows(2).Hidden = True
     
     'Основная вкладка. Рисуем шапку формы
     Columns(1).ColumnWidth = 20
