@@ -162,14 +162,18 @@ Function AddFile(ByVal file As String) As Byte
             AddFile = 3
         End If
         impBook.Close saveSource
+        
     End If
+    
     Numerator.Save
     Application.ScreenUpdating = True
     DoEvents
     If errors Then AddFile = 2
     Exit Function
+
 er:
     AddFile = 1
+
 End Function
 
 'Проверка на пустую строку
