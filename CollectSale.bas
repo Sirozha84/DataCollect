@@ -1,4 +1,4 @@
-Attribute VB_Name = "Collect"
+Attribute VB_Name = "CollectSale"
 Dim LastRec As Long
 Dim curFile As String
 Dim curCode As String
@@ -11,7 +11,7 @@ Sub Run()
     Verify.Init
     
     'Получаем коллекцию файлов
-    Set files = Source.getFiles(DirImport, True)
+    Set files = Source.getFiles(DirImportSale, True)
     
     'Обрабатываем список файлов
     n = 1

@@ -51,12 +51,18 @@ Public Const cTStat = 7         'Статус
 
 'Первые строки
 Public Const firstDat = 6       'Отгрузки
+Public Const firstDtL = 6       'Поступления
 Public Const firstSrc = 5       'Реестры
 Public Const firstTempl = 6     'Список шаблонов
 Public Const firstDic = 4       'Справочник
 Public Const firstErr = 2       'Ошибки
 Public Const firstNum = 4       'Словарь нумератора
 Public Const firstValues = 6    'Отчёт "Объёмы"
+
+'Строки с параметрами
+Public Const pImportSale = 4    'Импорт отгрузок
+Public Const pImportLoad = 5    'Импорт поступлений
+Public Const pExport = 6        'Экспорт
 
 'Цвета
 Public colWhite As Long
@@ -68,7 +74,7 @@ Public colBlue As Long
 
 'Ссылки на таблицы
 Public DAT As Variant           'Данные о продажах
-Public DTB As Variant           'Данные о поступлениях
+Public DTL As Variant           'Данные о поступлениях
 Public SRC As Variant           'Исходные данные
 Public DIC As Variant           'Справочники
 Public ERR As Variant           'Список ошибок
@@ -80,7 +86,8 @@ Public SBK As Variant           'Книги продаж
 Public PRP As Variant           'Настройки
 
 'Настройки
-Public DirImport As String      'Каталог импорта
+Public DirImportSale As String  'Каталог импорта отгрузок
+Public DirImportLoad As String  'Каталог импорта поступлений
 Public DirExport As String      'Каталог экспорта
 
 'Общие переменные
@@ -98,7 +105,7 @@ Sub Init()
     
     If isRelease Then On Error GoTo er
     Set DAT = Sheets("Отгрузки")
-    Set DTB = Sheets("Поступления")
+    Set DTL = Sheets("Поступления")
     Set DIC = Sheets("Справочник")
     Set VAL = Sheets("Объёмы")
     Set VLS = Sheets("Сводная таблица")
@@ -108,8 +115,9 @@ Sub Init()
     Set NUM = Sheets("Нумератор")
     Set PRP = Sheets("Настройки")
     
-    DirImport = PRP.Cells(4, 2).text
-    DirExport = PRP.Cells(5, 2).text
+    DirImportSale = PRP.Cells(pImportSale, 2).text
+    DirImportLoad = PRP.Cells(pImportLoad, 2).text
+    DirExport = PRP.Cells(pExport, 2).text
     
     Exit Sub
 er:
@@ -122,15 +130,15 @@ Sub ButtonProperties()
     FormProperties.Show
 End Sub
 
-'******************** Вкладка "Данные" ********************
+'******************** Вкладка "Отгрузки" ********************
 
 'Кнопка "Сбор данных"
 Sub ButtonDataCollect()
     Init
-    If isRelease Then If MsgBox("Начинается сбор данных. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    If isRelease Then If MsgBox("Начинается сбор данных по отгрузкам. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Message "Подготовка..."
     SetProtect DAT
-    Collect.Run
+    CollectSale.Run
     DAT.Activate
 End Sub
 
@@ -158,6 +166,23 @@ Sub ButtonClear()
     Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
     Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
     Message "Готово!"
+End Sub
+
+'******************** Вкладка "Поступления" ********************
+
+'Кнопка "Сбор поступлений"
+Sub ButtonCollectLoad()
+    Init
+    If isRelease Then If MsgBox("Начинается сбор данных по поступлениям. " + _
+        "Начала этого процесса очистит уже собранные данные. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    Message "Подготовка..."
+    CollectLoad.Run
+    DTL.Activate
+End Sub
+
+'Кнопка "Экспорт поступлений в 1С"
+Sub ButtonExportLoad()
+
 End Sub
 
 '******************** Вкладка "Объёмы" ********************

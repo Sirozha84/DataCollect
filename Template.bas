@@ -15,7 +15,7 @@ Sub Generate()
     'Генерируем шаблоны
     Set namelist = CreateObject("Scripting.Dictionary")
     max = i - 1
-    fold = DirImport
+    fold = DirImportSale
     For i = firstTempl To max
         Message "Создение шаблона " + CStr(i - firstTempl + 1) + " из " + CStr(max - FirstClient + 1)
         cln = cutBadSymbols(Cells(i, cTClient).text)
