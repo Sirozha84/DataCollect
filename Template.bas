@@ -6,7 +6,7 @@ Const maxSellers = 100          'Максимальное количество продавцов
 Sub Generate()
     
     Main.Init
-    If IsNumeric(NUM.Cells(2, 1)) Then last = NUM.Cells(2, 1)
+    If IsNumeric(PRP.Cells(7, 2)) Then last = PRP.Cells(7, 2)
     Dim max As Long
     i = firstTempl
     Do While Cells(i, cTClient) <> "" Or Cells(i, cTForm) <> ""
@@ -59,7 +59,7 @@ Sub Generate()
             Cells(i, cTResult) = "Имя клиента или шаблона не уникально."
         End If
     Next
-    NUM.Cells(2, 1) = last
+    PRP.Cells(7, 2) = last
     
     ActiveWorkbook.Save
     Message "Готово! Файл сохранён."

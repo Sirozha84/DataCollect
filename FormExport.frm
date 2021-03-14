@@ -44,8 +44,8 @@ Private Sub UserForm_Initialize()
     ComboBoxQuartals.ListIndex = 0
         
     'Период сбора
-    TextBoxFirstCollect = NUM.Cells(2, 3)
-    TextBoxLastCollect = NUM.Cells(4, 3)
+    TextBoxFirstCollect = PRP.Cells(8, 2)
+    TextBoxLastCollect = PRP.Cells(9, 2)
     
 End Sub
 
@@ -122,8 +122,8 @@ Private Sub CommandExport_Click()
     End If
     
     'Сохранение дат периода сбора
-    NUM.Cells(2, 3) = TextBoxFirstCollect
-    NUM.Cells(4, 3) = TextBoxLastCollect
+    PRP.Cells(8, 2) = TextBoxFirstCollect
+    PRP.Cells(9, 2) = TextBoxLastCollect
     
     Message "Готово!"
     End
