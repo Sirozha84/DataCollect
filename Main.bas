@@ -50,13 +50,13 @@ Public Const cTResult = 6       'Результат
 Public Const cTStat = 7         'Статус
 
 'Первые строки
-Public Const firstDat = 6       'Первая строка в коллекции данных
-Public Const firstSrc = 5       'Первая строка в исходных файлах
-Public Const firstTempl = 6     'Первая строка в списке реестра
-Public Const firstDic = 4       'Первая строка в справочнике
-Public Const firstErr = 2       'Первая строка в списке ошибок
-Public Const firstNum = 4       'Первая строка в словаре нумератора
-Public Const firstValues = 6    'Первая строка в отчёте "Объёмы"
+Public Const firstDat = 6       'Отгрузки
+Public Const firstSrc = 5       'Реестры
+Public Const firstTempl = 6     'Список шаблонов
+Public Const firstDic = 4       'Справочник
+Public Const firstErr = 2       'Ошибки
+Public Const firstNum = 4       'Словарь нумератора
+Public Const firstValues = 6    'Отчёт "Объёмы"
 
 'Цвета
 Public colWhite As Long
@@ -80,8 +80,8 @@ Public SBK As Variant           'Книги продаж
 Public PRP As Variant           'Настройки
 
 'Настройки
-Public DirImport As String
-Public DirExport As String
+Public DirImport As String      'Каталог импорта
+Public DirExport As String      'Каталог экспорта
 
 'Общие переменные
 Public selIndexes As Variant    'Словарь индексов продавцов (номера строк в справочнике по ИНН)

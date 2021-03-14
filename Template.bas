@@ -33,9 +33,9 @@ Sub Generate()
             If Cells(i, cTStat).text <> "OK" Then
                 'Создаём папку и файл
                 If brk <> "" Then brk = "\" + brk
-                folder fold + "\" + cln
-                folder fold + "\" + cln + brk
-                folder fold + "\" + cln + brk + "\" + tem
+                MakeDir fold + "\" + cln
+                MakeDir fold + "\" + cln + brk
+                MakeDir fold + "\" + cln + brk + "\" + tem
                 name = fold + "\" + cln + brk + "\" + tem + "\" + tem + ".xlsx"
                 res = NewTemplate(cln, tem, name, Cells(i, cTCode).text)
                 If res = 0 Then

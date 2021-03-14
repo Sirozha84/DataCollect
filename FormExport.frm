@@ -138,7 +138,8 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     Message "Экспорт файла " + NUM + seller
     
     'Определяемся с путём и именем файла
-    Patch = DirExport
+    Patch = DirExport + "\Отгрузки"
+    MakeDir Patch
     fol = ""
     mnC = OptionMonth.Value
     mn = ComboBoxMonths.Value
@@ -146,7 +147,7 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     qr = ComboBoxQuartals.Value
     If mnC Then fol = "\" + mn
     If qrC Then fol = "\" + qr
-    If fol <> "" Then folder (Patch + fol)
+    If fol <> "" Then MakeDir (Patch + fol)
     fileName = Patch + fol + "\" + cutBadSymbols(seller) + ".xlsx"
     
     'Создаём книгу

@@ -8,10 +8,9 @@ Sub Message(text As String)
 End Sub
 
 'Создание папки
-Sub folder(name As String)
-    On Error GoTo er
+Public Sub MakeDir(ByVal name As String)
+    On Error Resume Next
     MkDir (name)
-er:
 End Sub
 
 'Удаление неугодных символов для имени файла
