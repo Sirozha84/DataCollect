@@ -7,7 +7,7 @@ Public Const Secret = "123"     'Пароль для защиты
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const tmpVersion = "20210108"    'Версия реестра
 
-'Колонки "Данные"
+'Колонки "Отгрузки"
 Public Const cUIN = 1           'УИН
 Public Const cDates = 2         'Дата
 Public Const cBuyINN = 3        'ИНН покупателя
@@ -21,6 +21,8 @@ Public Const cDateCol = 17      'Дата сбора
 Public Const cFile = 18         'Имя файла
 Public Const cCode = 19         'Код формы
 Public Const cAccept = 20       'Принято/не принято
+
+'Колонки "Поступления"
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
@@ -48,7 +50,7 @@ Public Const cTResult = 6       'Результат
 Public Const cTStat = 7         'Статус
 
 'Первые строки
-Public Const firstDat = 8       'Первая строка в коллекции данных
+Public Const firstDat = 6       'Первая строка в коллекции данных
 Public Const firstSrc = 5       'Первая строка в исходных файлах
 Public Const firstTempl = 6     'Первая строка в списке реестра
 Public Const firstDic = 4       'Первая строка в справочнике
@@ -65,7 +67,8 @@ Public colGray As Long
 Public colBlue As Long
 
 'Ссылки на таблицы
-Public DAT As Variant           'Данные
+Public DAT As Variant           'Данные о продажах
+Public DTB As Variant           'Данные о поступлениях
 Public SRC As Variant           'Исходные данные
 Public DIC As Variant           'Справочники
 Public ERR As Variant           'Список ошибок
@@ -74,6 +77,11 @@ Public VAL As Variant           'Значения объёмов
 Public VLS As Variant           'Сводная таблица
 Public TMP As Variant           'Шаблоны
 Public SBK As Variant           'Книги продаж
+Public PRP As Variant           'Настройки
+
+'Настройки
+Public DirImport As String
+Public DirExport As String
 
 'Общие переменные
 Public selIndexes As Variant    'Словарь индексов продавцов (номера строк в справочнике по ИНН)
@@ -89,14 +97,19 @@ Sub Init()
     colBlue = RGB(192, 217, 255)
     
     If isRelease Then On Error GoTo er
-    Set DAT = Sheets("Данные")
+    Set DAT = Sheets("Отгрузки")
+    Set DTB = Sheets("Поступления")
     Set DIC = Sheets("Справочник")
-    Set ERR = Sheets("Ошибки")
-    Set NUM = Sheets("Словарь нумератора")
     Set VAL = Sheets("Объёмы")
     Set VLS = Sheets("Сводная таблица")
     Set TMP = Sheets("Шаблоны")
     Set SBK = Sheets("Книги продаж")
+    Set ERR = Sheets("Ошибки")
+    Set NUM = Sheets("Нумератор")
+    Set PRP = Sheets("Настройки")
+    
+    DirImport = PRP.Cells(4, 2).text
+    DirExport = PRP.Cells(5, 2).text
     
     Exit Sub
 er:
@@ -104,21 +117,12 @@ er:
     End
 End Sub
 
+Sub ButtonProperties()
+    Init
+    FormProperties.Show
+End Sub
+
 '******************** Вкладка "Данные" ********************
-
-'Выбор директории с данными
-Sub ButtonDirSelectImport()
-    Set diag = Application.FileDialog(msoFileDialogFolderPicker)
-    If diag.Show = 0 Then Exit Sub
-    Cells(1, 3) = diag.SelectedItems(1)
-End Sub
-
-'Выбор директории для экспорта
-Sub ButtonDirSelectExport()
-    Set diag = Application.FileDialog(msoFileDialogFolderPicker)
-    If diag.Show = 0 Then Exit Sub
-    Cells(2, 3) = diag.SelectedItems(1)
-End Sub
 
 'Кнопка "Сбор данных"
 Sub ButtonDataCollect()

@@ -11,7 +11,7 @@ Sub Run()
     Verify.Init
     
     'Получаем коллекцию файлов
-    Set files = Source.getFiles(DAT.Cells(1, 3), True)
+    Set files = Source.getFiles(DirImport, True)
     
     'Обрабатываем список файлов
     n = 1

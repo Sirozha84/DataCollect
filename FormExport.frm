@@ -138,7 +138,7 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     Message "Ёкспорт файла " + NUM + seller
     
     'ќпредел€емс€ с путЄм и именем файла
-    Patch = DAT.Cells(2, 3)
+    Patch = DirExport
     fol = ""
     mnC = OptionMonth.Value
     mn = ComboBoxMonths.Value
