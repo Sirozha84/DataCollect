@@ -7,6 +7,32 @@ Dim Quartals As Object
 Dim BUY As Object
 Dim SEL As Object
 
+Sub Run()
+    Verify.Init
+    Set diag = Application.FileDialog(msoFileDialogFolderPicker)
+    If diag.Show = 0 Then Exit Sub
+    Patch = diag.SelectedItems(1)
+    Set files = getFiles(Patch, False)
+    Range(SBK.Cells(7, 1), SBK.Cells(maxRow, 2)).Clear
+    i = 7
+    For Each file In files
+        SBK.Cells(i, 1) = file
+        er = ExportBook(file)
+        If er = 0 Then SBK.Cells(i, 2) = "Ошибка при работе с файлом"
+        If er = 1 Then
+            If BookCount > 0 Then
+                SBK.Cells(i, 2) = "Созданы книги продаж (" + CStr(BookCount) + ")"
+            Else
+                SBK.Cells(i, 2) = "Реестр пустой"
+            End If
+        End If
+        If er = 2 Then SBK.Cells(i, 2) = "Реестр имеет некорректные записи"
+        i = i + 1
+    Next
+    Message "Готово!"
+    MsgBox "Формирование книг продаж завершено!"
+End Sub
+
 'Формирование книги продаж
 'Возвращает 0 - при ошибке открытия, 1 - когда всё успешно, 2 - имеются ошибочные записи
 Function ExportBook(ByVal file As String) As Byte
