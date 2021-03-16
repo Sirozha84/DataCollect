@@ -23,6 +23,7 @@ Public Const cCode = 19         'Код формы
 Public Const cAccept = 20       'Принято/не принято
 
 'Колонки "Поступления"
+Public Const clFile = 17        'Имя файла
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
@@ -31,11 +32,12 @@ Public Const cSDate = 3         'Дата регистрации
 Public Const cGroup = 4         'Группы
 Public Const cPLiter = 6        'Префикс - литер
 Public Const cPCode = 7         'Префикс - код
-Public Const cPStat = 8         'Статус
-Public Const cLimits = 9        'Первая колонка с остатками
-Public Const cPFact = 21        'Первая колонка с фактическими объёмами
-Public Const cPBalance = 33     'Первая колонка с остатками
-Public Const cPRev = 45
+Public Const cPND = 8
+Public Const cPStat = 9         'Статус
+Public Const cLimits = 10       'Первая колонка с остатками
+Public Const cPFact = 22        'Первая колонка с фактическими объёмами
+Public Const cPBalance = 34     'Первая колонка с остатками (*2)
+Public Const cPRev = 70         'Первая колонка с фактическими отгрузками (для ревизии остатков)
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
 Public Const lastYear = 2020    'Первый расчётный год (потом это будет переменной, но пока статика)
 Public Const lastQuartal = 4    'Первыё расчётный квартал (аналогично)
