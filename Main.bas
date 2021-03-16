@@ -23,7 +23,19 @@ Public Const cCode = 19         'Код формы
 Public Const cAccept = 20       'Принято/не принято
 
 'Колонки "Поступления"
-Public Const clFile = 17        'Имя файла
+Public Const clMark = 1         'Маркер
+Public Const clNum = 2          'Номер
+Public Const clDate = 3         'Дата
+Public Const clOutINN = 4       'Выход ИНН
+Public Const clOutName = 5      'Выход Наименование
+Public Const clInINN = 6        'Вход ИНН
+Public Const clInName = 7       'Вход Наименование
+Public Const clPrice = 8        'Стоимость с НДС
+Public Const clCom = 15         'Комментарий
+Public Const clStatus = 16      'Статус
+Public Const clDateCol = 17     'Дата сбора
+Public Const clFile = 18        'Имя файла
+Public Const clAccept = 19      'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
@@ -37,10 +49,13 @@ Public Const cPStat = 9         'Статус
 Public Const cLimits = 10       'Первая колонка с остатками
 Public Const cPFact = 22        'Первая колонка с фактическими объёмами
 Public Const cPBalance = 34     'Первая колонка с остатками (*2)
+Public Const cCorrect = 58      'Первая колонка с корректировками лимитов
 Public Const cPRev = 70         'Первая колонка с фактическими отгрузками (для ревизии остатков)
+
+'Прочие параметры справочника, в будущем они будут настраиваемые, но пока константы...
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
-Public Const lastYear = 2020    'Первый расчётный год (потом это будет переменной, но пока статика)
-Public Const lastQuartal = 4    'Первыё расчётный квартал (аналогично)
+Public Const lastYear = 2020    'Первый расчётный год
+Public Const lastQuartal = 4    'Первыё расчётный квартал
 
 'Колонки "Шаблоны"
 Public Const cTClient = 1       'Клиент

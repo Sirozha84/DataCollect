@@ -9,14 +9,13 @@ Dim curProvINN As String
 Sub Run()
     
     Log.Init
-    Range(DTL.Cells(firstDtL, 1), DTL.Cells(maxRow, 18)).Clear
-    Range(DTL.Cells(firstDtL, 17), DTL.Cells(maxRow, 18)).Interior.Color = colGray
-    Range(DTL.Cells(firstDtL, 17), DTL.Cells(maxRow, 18)).Font.Color = RGB(166, 166, 166)
+    Range(DTL.Cells(firstDtL, 1), DTL.Cells(maxRow, clAccept)).Clear
+    Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Interior.Color = colGray
+    Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Font.Color = RGB(166, 166, 166)
     LastRec = firstDtL
     
-    'Получаем коллекцию файлов
+    'Получаем коллекцию файлов и делаем сбор
     Set files = Source.getFiles(DirImportLoad, False)
-
     n = 1
     s = 0
     e = 0
@@ -33,6 +32,39 @@ Sub Run()
         End If
         n = n + 1
     Next
+
+    'Обновляем данные в справочнике
+    Message "Расчёт квартальных лимитов"
+    Range(DIC.Cells(firstDic, cPBalance), DIC.Cells(maxRow, cPBalance + quartCount * 2 - 1)).Clear
+    Set salers = CreateObject("Scripting.Dictionary")
+    i = firstDic
+    Do While DIC.Cells(i, cINN) <> ""
+        salers(DIC.Cells(i, cINN).text) = i
+        i = i + 1
+    Loop
+    lastdic = i
+    
+    i = firstDtL
+    Do While DTL.Cells(i, clAccept) <> ""
+        If DTL.Cells(i, clAccept) = "OK" Then
+            INN = DTL.Cells(i, clInINN).text
+            If salers(INN) = "" Then
+                'Добавление нового продавца в справочник
+                salers(INN) = lastdic
+                DIC.Cells(lastdic, cSellerName) = DTL.Cells(i, clInName)
+                DIC.Cells(lastdic, cINN).NumberFormat = "@"
+                DIC.Cells(lastdic, cINN) = INN
+                For j = 0 To quartCount - 1
+                    DIC.Cells(lastdic, cLimits + j).NumberFormat = "### ### ##0.00"
+                    DIC.Cells(lastdic, cLimits + j).FormulaR1C1 = _
+                            "=SUM(RC[" + CStr(24 + j) + "]:RC[" + CStr(47 - j) + "])+" + _
+                            "SUM(RC[48]:RC[" + CStr(59 - j) + "])-SUM(RC[12]:RC[" + CStr(23 - j) + "])"
+                Next
+                lastdic = lastdic + 1
+            End If
+        End If
+        i = i + 1
+    Loop
 
     'ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
@@ -74,7 +106,13 @@ Function AddFile(ByVal file As String) As Byte
         
         i = 10
         Do While SRC.Cells(i, 2).text = "01"
-            If Not copyRecord(i) Then errors = True
+            If Not copyRecord(i) Then
+                errors = True
+                DTL.Cells(LastRec, clAccept) = "fail"
+            Else
+                DTL.Cells(LastRec, clDateCol) = DateTime.Now
+                DTL.Cells(LastRec, clAccept) = "OK"
+            End If
             DTL.Cells(LastRec, clFile) = file
             LastRec = LastRec + 1
             i = i + 1
@@ -98,23 +136,23 @@ End Function
 'si - строка в исходниках
 Function copyRecord(ByVal si As Long) As Boolean
     
-    DTL.Cells(LastRec, 1) = curMark
-    DTL.Cells(LastRec, 3).NumberFormat = "@"
-    DTL.Cells(LastRec, 3) = curProvINN
-    DTL.Cells(LastRec, 4) = curProv
-    DTL.Cells(LastRec, 5).NumberFormat = "@"
-    DTL.Cells(LastRec, 5) = SRC.Cells(si, 10)
-    DTL.Cells(LastRec, 6) = SRC.Cells(si, 11)
-    
-    DTL.Cells(LastRec, 7) = SRC.Cells(si, 16)
-    
-    DTL.Cells(LastRec, 8) = SRC.Cells(si, 17)
-    DTL.Cells(LastRec, 9) = SRC.Cells(si, 18)
-    DTL.Cells(LastRec, 10) = SRC.Cells(si, 19)
-    
-    DTL.Cells(LastRec, 11) = SRC.Cells(si, 21)
-    DTL.Cells(LastRec, 12) = SRC.Cells(si, 22)
-    DTL.Cells(LastRec, 13) = SRC.Cells(si, 23)
+    DTL.Cells(LastRec, clMark) = curMark
+    DTL.Cells(LastRec, clNum) = SRC.Cells(si, 1)
+    DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
+    DTL.Cells(LastRec, clDate) = SRC.Cells(si, 3)
+    DTL.Cells(LastRec, clOutINN).NumberFormat = "@"
+    DTL.Cells(LastRec, clOutINN) = curProvINN
+    DTL.Cells(LastRec, clOutName) = curProv
+    DTL.Cells(LastRec, clInINN).NumberFormat = "@"
+    DTL.Cells(LastRec, clInINN) = SRC.Cells(si, 10)
+    DTL.Cells(LastRec, clInName) = SRC.Cells(si, 9)
+    DTL.Cells(LastRec, clPrice) = SRC.Cells(si, 16)
+    DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(si, 17)
+    DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(si, 18)
+    DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(si, 19)
+    DTL.Cells(LastRec, clPrice + 4) = SRC.Cells(si, 21)
+    DTL.Cells(LastRec, clPrice + 5) = SRC.Cells(si, 22)
+    DTL.Cells(LastRec, clPrice + 6) = SRC.Cells(si, 23)
     
     copyRecord = True
     
