@@ -14,7 +14,6 @@ Dim summAll As Variant      '—чЄтчики сумм продажи всем
 Sub Init()
     
     Set dateS = CreateObject("Scripting.Dictionary")
-    Set limitPrs = CreateObject("Scripting.Dictionary")
     Set summOne = CreateObject("Scripting.Dictionary")
     Set summAll = CreateObject("Scripting.Dictionary")
     Set groups = CreateObject("Scripting.Dictionary")

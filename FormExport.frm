@@ -1,10 +1,10 @@
 VERSION 5.00
 Begin {C62A69F0-16DC-11CE-9E98-00AA00574A4F} FormExport 
    Caption         =   "Выгрузка данных"
-   ClientHeight    =   4088
+   ClientHeight    =   2520
    ClientLeft      =   119
    ClientTop       =   462
-   ClientWidth     =   4564
+   ClientWidth     =   4557
    OleObjectBlob   =   "FormExport.frx":0000
    StartUpPosition =   1  'CenterOwner
 End
@@ -21,27 +21,12 @@ Private Sub UserForm_Initialize()
     
     Verify.Init
     
+    'Выпадающий список продавцов
     ComboBoxBuyers.AddItem "Все"
     For Each seller In selIndexes
         ComboBoxBuyers.AddItem SellFileName(seller)
     Next
     ComboBoxBuyers.ListIndex = 0
-    
-    For y = lastYear To lastYear - Int(quartCount / 4) + 1 Step -1
-        For m = 12 To 1 Step -1
-            ComboBoxMonths.AddItem _
-                YearAndMonth("01." + Right(CStr(m + 100), 2) + "." + CStr(y))
-        Next
-    Next
-    ComboBoxMonths.ListIndex = 0
-    
-    For y = lastYear To lastYear - Int(quartCount / 4) + 1 Step -1
-        For m = 10 To 1 Step -3
-            ComboBoxQuartals.AddItem _
-                YearAndQuartal("01." + Right(CStr(m + 100), 2) + "." + CStr(y))
-        Next
-    Next
-    ComboBoxQuartals.ListIndex = 0
         
     'Период сбора
     TextBoxFirstCollect = PRP.Cells(8, 2)
@@ -84,21 +69,6 @@ er:
     YearAndQuartal = ""
 End Function
 
-Private Sub OptionAll_Click()
-    ComboBoxMonths.Enabled = False
-    ComboBoxQuartals.Enabled = False
-End Sub
-
-Private Sub OptionMonth_Click()
-    ComboBoxMonths.Enabled = True
-    ComboBoxQuartals.Enabled = False
-End Sub
-
-Private Sub OptionQuartal_Click()
-    ComboBoxMonths.Enabled = False
-    ComboBoxQuartals.Enabled = True
-End Sub
-
 Private Sub CommandExit_Click()
     End
 End Sub
@@ -109,7 +79,8 @@ Private Sub CommandExport_Click()
     On Error GoTo er
     FirstDate = CDate(TextBoxFirstCollect)
     LastDate = CDate(TextBoxLastCollect)
-
+    On Error GoTo 0
+    
     If ComboBoxBuyers.ListIndex = 0 Then
         n = 1
         a = selIndexes.Count
@@ -127,26 +98,36 @@ Private Sub CommandExport_Click()
     
     Message "Готово!"
     End
+
 er:
     MsgBox "Даты не введены или введены не корректно"
+
 End Sub
 
 'Экспорт файла
 Private Sub ExportFile(ByVal INN As String, NUM As String)
-    
+
     seller = SellFileName(INN)
     Message "Экспорт файла " + NUM + seller
+    
+    'Проверка обязательных данных в справочнике
+    si = selIndexes(INN)
+    limit = DIC.Cells(si, cLimND)
+    ermsg = "У продавца " + DIC.Cells(si, 1) + " с ИНН " + INN + " "
+    If limit = Empty Then
+        MsgBox ermsg + "не указан лимит!"
+        End
+    End If
+    oND = StupidQToQIndex(DIC.Cells(si, cOPND))
+    If oND < 0 Then
+        MsgBox ermsg + "не указан или указан не корректно основной период НД!"
+        End
+    End If
     
     'Определяемся с путём и именем файла
     Patch = DirExport + "\Отгрузки"
     MakeDir Patch
     fol = ""
-    mnC = OptionMonth.Value
-    mn = ComboBoxMonths.Value
-    qrC = OptionQuartal.Value
-    qr = ComboBoxQuartals.Value
-    If mnC Then fol = "\" + mn
-    If qrC Then fol = "\" + qr
     If fol <> "" Then MakeDir (Patch + fol)
     fileName = Patch + fol + "\" + cutBadSymbols(seller) + ".xlsx"
     
@@ -199,9 +180,8 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
                 cp = True
                 If DAT.Cells(i, cSellINN).text <> INN Then cp = False
                 d = DAT.Cells(i, cDates)
-                If mnC Then If YearAndMonth(d) <> mn Then cp = False
-                If qrC Then If YearAndQuartal(d) <> qr Then cp = False
                 If cp Then
+                    'Копирование данных из сбора
                     Cells(j, 1).NumberFormat = "@"
                     Cells(j, 1) = "01"
                     Cells(j, 2) = DAT.Cells(i, 1)
@@ -219,7 +199,14 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
                         Cells(j, 8 + c).NumberFormat = "### ### ##0.00"
                         Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
                     Next
-                    Cells(j, 15) = YearAndQuartal(DAT.Cells(i, 2))
+                    'Временные колонки - индекс квартала и сумма НДС
+                    'Cells(j, 15) = YearAndQuartal(DAT.Cells(i, 2))
+                    Cells(j, 15) = DateToQIndex(DAT.Cells(i, 2))
+                    Sum = 0
+                    For j2 = 11 To 13
+                        If IsNumeric(Cells(j, j2)) Then Sum = Sum + Cells(j, j2)
+                    Next
+                    Cells(j, 16) = Sum
                     j = j + 1
                 End If
             End If
@@ -227,17 +214,22 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
         i = i + 1
     Loop
     
-    'Сортировка и удаление временного столбца
+    'Сортировка по периодам
     Cells(1, 15) = "Квартал"
+    Cells(1, 16) = "НДС"
     With ActiveSheet.Sort
         .SortFields.Clear
-        .SortFields.Add Key:=Range("O2")
-        .SortFields.Add Key:=Range("F2")
-        .setRange Range("A2:O" + CStr(j - 1))
+        .SortFields.Add Key:=Range("O2") 'Первый порядок сортировки
+        .SortFields.Add Key:=Range("F2") 'Второй порядок сортировки
+        .setRange Range("A2:P" + CStr(j - 1)) 'Диапазон сортируемой таблицы
         .Apply
     End With
+    
+    PeriodND limit, oND
+    
+    'Удаление временных столбцов
     Columns(15).Delete
-    'End
+    Columns(15).Delete
     
     'Сохранение и закрытие документа
     On Error GoTo er
@@ -245,7 +237,19 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     If j > firstEx Then ActiveWorkbook.SaveAs fileName:=fileName
     ActiveWorkbook.Close
     Exit Sub
+
 er:
     ActiveWorkbook.Close
     MsgBox "Произошла ошибка при сохранении файла " + fileName
+
+End Sub
+
+'Расчёт периодов налоговой декларации
+'oND - основной период НД
+Sub PeriodND(ByVal limit As Double, ByVal oND)
+    
+    
+    
+    End
+    
 End Sub

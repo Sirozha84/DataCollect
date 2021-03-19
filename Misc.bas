@@ -56,6 +56,7 @@ End Function
 'Вычисляет индекс квартала из даты
 'Если ошибка или дата в не диапазона - возвращает -1
 Function DateToQIndex(ByVal d As Date) As Integer
+    On Error GoTo er
     i = (lastYear - Year(d)) * 4
     i = i + lastQuartal - ((Month(d) - 1) \ 3) - 1
     If i < 0 Or i >= quartCount Then i = -1
@@ -63,6 +64,19 @@ Function DateToQIndex(ByVal d As Date) As Integer
     Exit Function
 er:
     DateToQIndex = -1
+End Function
+
+'Вычисляет индекс квартала из строки типа КГГГГ
+'Если ошибка или дата в не диапазона - возвращает -1
+Function StupidQToQIndex(ByVal d As String) As Integer
+    On Error GoTo er
+    i = (lastYear - CInt(Right(d, 4))) * 4
+    i = i + lastQuartal - (CInt(Left(d, 1))) '- 1
+    If i < 0 Or i >= quartCount Then i = -1
+    StupidQToQIndex = i
+    Exit Function
+er:
+    StupidQToQIndex = -1
 End Function
 
 'Установка защиты

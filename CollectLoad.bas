@@ -78,7 +78,7 @@ Sub Run()
         i = i + 1
     Loop
 
-    'ActiveWorkbook.Save
+    ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True
     

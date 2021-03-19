@@ -26,8 +26,13 @@ Public Sub Run()
             For j = 12 To 14
                 If DAT.Cells(i, j).text <> "" Then s = s + DAT.Cells(i, j)
             Next
-            sl = selIndexes(DAT.Cells(i, 5).text)
-            kv = Kvartal(DAT.Cells(i, 2))
+            sl = selIndexes(DAT.Cells(i, cSellINN).text)
+            If sl = Empty Then
+                MsgBox "Произошла неожиданная ошибка:" + Chr(10) + "Продавец " + DAT.Cells(i, cSeller) + _
+                        " c ИНН " + DAT.Cells(i, cSellINN).text + " отсутствует в справочнике!"
+                End
+            End If
+            kv = Kvartal(DAT.Cells(i, cDates))
             kvin = cPRev + qrtIndexes(kv)
             DIC.Cells(sl, kvin) = DIC.Cells(sl, kvin) + s
         End If

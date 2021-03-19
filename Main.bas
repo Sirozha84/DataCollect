@@ -42,9 +42,10 @@ Public Const cSellerName = 1    'Наименование продавца
 Public Const cINN = 2           'ИНН
 Public Const cSDate = 3         'Дата регистрации
 Public Const cGroup = 4         'Группы
+Public Const cLimND = 5         'Лимит НД за квартал
 Public Const cPLiter = 6        'Префикс - литер
 Public Const cPCode = 7         'Префикс - код
-Public Const cPND = 8
+Public Const cOPND = 8          'Основной период НД
 Public Const cPStat = 9         'Статус
 Public Const cLimits = 10       'Первая колонка с остатками
 Public Const cPFact = 22        'Первая колонка с фактическими объёмами
@@ -56,6 +57,7 @@ Public Const cPRev = 70         'Первая колонка с фактическими отгрузками (для р
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
 Public Const lastYear = 2020    'Первый расчётный год
 Public Const lastQuartal = 4    'Первыё расчётный квартал
+Public Const limitOND = 10      'Лимит в основной период НД (5 000 000)
 
 'Колонки "Шаблоны"
 Public Const cTClient = 1       'Клиент
@@ -191,7 +193,8 @@ End Sub
 Sub ButtonCollectLoad()
     Init
     If isRelease Then If MsgBox("Начинается сбор данных по поступлениям. " + _
-        "Начала этого процесса очистит уже собранные данные. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+        "Начала этого процесса очистит уже собранные данные. " + _
+        "Также пересчитаются начальные остатки. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     Message "Подготовка..."
     CollectLoad.Run
     DTL.Activate
