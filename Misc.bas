@@ -53,6 +53,18 @@ er:
     Kvartal = ""
 End Function
 
+'Вычисляет индекс квартала из даты
+'Если ошибка или дата в не диапазона - возвращает -1
+Function DateToQIndex(ByVal d As Date) As Integer
+    i = (lastYear - Year(d)) * 4
+    i = i + lastQuartal - ((Month(d) - 1) \ 3) - 1
+    If i < 0 Or i >= quartCount Then i = -1
+    DateToQIndex = i
+    Exit Function
+er:
+    DateToQIndex = -1
+End Function
+
 'Установка защиты
 'Возвращает True, если удалось, если возвращается False - значит пароль не подошёл
 Function SetProtect(table As Variant) As Boolean
