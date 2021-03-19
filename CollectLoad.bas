@@ -57,8 +57,8 @@ Sub Run()
                 For j = 0 To quartCount - 1
                     DIC.Cells(lastdic, cLimits + j).NumberFormat = "### ### ##0.00"
                     DIC.Cells(lastdic, cLimits + j).FormulaR1C1 = _
-                            "=SUM(RC[" + CStr(24 + j) + "]:RC[" + CStr(47 - j) + "])+" + _
-                            "SUM(RC[48]:RC[" + CStr(59 - j) + "])-SUM(RC[12]:RC[" + CStr(23 - j) + "])"
+                            "=SUM(RC[" + CStr(24 + j) + "]:RC[" + CStr(47 - j) + "])-" + _
+                            "SUM(RC[12]:RC[" + CStr(23 - j) + "])"
                 Next
                 lastdic = lastdic + 1
             End If
@@ -154,6 +154,6 @@ Function copyRecord(ByVal si As Long) As Boolean
     DTL.Cells(LastRec, clPrice + 5) = SRC.Cells(si, 22)
     DTL.Cells(LastRec, clPrice + 6) = SRC.Cells(si, 23)
     
-    copyRecord = True
+    copyRecord = VerifyLoad(LastRec)
     
 End Function

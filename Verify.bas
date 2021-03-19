@@ -46,7 +46,7 @@ Sub Init()
 
 End Sub
 
-'Проверка корректности данных, возвращает true если нет ошибок
+'Проверка корректности данных отгрузок, возвращает true если нет ошибок
 'iC - строка в данных
 'iI - строка в исходниках
 Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) As Boolean
@@ -79,7 +79,6 @@ Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) 
     Else
         If selIndexes(DAT.Cells(iC, 5).text) = Empty Then AddCom "ИНН не найден в справочнике"
     End If
-    
     
     '7 - Стоимость
     If Not isPrice(DAT.Cells(iC, 7)) Then
@@ -127,6 +126,66 @@ Function Verify(ByVal iC As Long, ByVal iI As Long, ByVal oldINN, ByVal oldSum) 
     SRC.Cells(iI, cCom).Interior.Color = col
     
     Verify = Not errors
+    
+End Function
+
+'Проверка корректности данных поступлений, возвращает true если нет ошибок
+'i - номер строки
+Function VerifyLoad(ByVal i As Long) As Boolean
+    
+    Comment = ""
+    errors = False
+    VerifyLoad = True
+
+    'Дата
+    If Not isDateMy(DTL.Cells(i, clDate).text) Then
+        DTL.Cells(i, clDate).Interior.Color = colRed
+        AddCom "Дата введена не корректно"
+    End If
+
+    'ИНН на выходе
+    If Not isINN(DTL.Cells(i, clOutINN).text) Then
+        DTL.Cells(i, clOutINN).Interior.Color = colRed
+        AddCom "Неверный ИНН на выходе"
+    End If
+
+    'ИНН на входе
+    If Not isINN(DTL.Cells(i, clInINN).text) Then
+        DTL.Cells(i, clInINN).Interior.Color = colRed
+        AddCom "Неверный ИНН на входе"
+    End If
+
+    'Стоимость
+    If Not isPrice(DTL.Cells(i, clPrice)) Then
+        DTL.Cells(i, clPrice).Interior.Color = colRed
+        AddCom "Сумма с НДС введена не корректно"
+    End If
+    
+    '9-11 - Стоимость продаж облагаемых налогом
+    For j = 9 To 11
+        If Not isPriceNDS(DTL.Cells(i, j)) Then
+            DTL.Cells(i, j).Interior.Color = colRed
+            errors = True
+        End If
+    Next
+    
+    '12-14 - Сумма НДС
+    e = False
+    For j = 12 To 14
+        If Not isPriceNDS(DTL.Cells(i, j)) Then e = True
+    Next
+    If e Then
+        DTL.Cells(i, j).Interior.Color = colRed
+        errors = True
+    End If
+    
+    'Пишем комментарий и расскрашиваем его
+    col = colRed
+    If Not errors Then col = colGreen: Comment = "Принято"
+    DTL.Cells(i, clCom) = Comment
+    DTL.Cells(i, clCom).Interior.Color = col
+    
+    VerifyLoad = Not errors
     
 End Function
 
