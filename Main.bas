@@ -57,7 +57,7 @@ Public Const cPRev = 70         'Первая колонка с фактическими отгрузками (для р
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
 Public Const lastYear = 2020    'Первый расчётный год
 Public Const lastQuartal = 4    'Первыё расчётный квартал
-Public Const limitOND = 10      'Лимит в основной период НД (5 000 000)
+Public Const limitOND = 1       'Лимит в основной период НД (5 000 000)
 
 'Колонки "Шаблоны"
 Public Const cTClient = 1       'Клиент

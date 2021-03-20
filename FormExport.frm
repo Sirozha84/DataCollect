@@ -40,35 +40,6 @@ Function SellFileName(INN) As String
     If ind <> Empty Then SellFileName = INN + "-" + DIC.Cells(ind, 1)
 End Function
 
-Function YearAndMonth(ByVal d As String) As String
-    On Error GoTo er:
-    YearAndMonth = CStr(Year(d)) + " - "
-    dy = Month(d)
-    If dy = 1 Then YearAndMonth = YearAndMonth + "Январь"
-    If dy = 2 Then YearAndMonth = YearAndMonth + "Февраль"
-    If dy = 3 Then YearAndMonth = YearAndMonth + "Март"
-    If dy = 4 Then YearAndMonth = YearAndMonth + "Апрель"
-    If dy = 5 Then YearAndMonth = YearAndMonth + "Май"
-    If dy = 6 Then YearAndMonth = YearAndMonth + "Июнь"
-    If dy = 7 Then YearAndMonth = YearAndMonth + "Июль"
-    If dy = 8 Then YearAndMonth = YearAndMonth + "Август"
-    If dy = 9 Then YearAndMonth = YearAndMonth + "Сентябрь"
-    If dy = 10 Then YearAndMonth = YearAndMonth + "Октябрь"
-    If dy = 11 Then YearAndMonth = YearAndMonth + "Ноябрь"
-    If dy = 12 Then YearAndMonth = YearAndMonth + "Декабрь"
-    Exit Function
-er:
-    YearAndMonth = ""
-End Function
-
-Function YearAndQuartal(ByVal d As String) As String
-    On Error GoTo er
-    YearAndQuartal = CStr(Year(d)) + " - " + CStr((Month(d) - 1) \ 3 + 1) + " квартал"
-    Exit Function
-er:
-    YearAndQuartal = ""
-End Function
-
 Private Sub CommandExit_Click()
     End
 End Sub
@@ -200,7 +171,6 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
                         Cells(j, 8 + c) = DAT.Cells(i, 9 + c)
                     Next
                     'Временные колонки - индекс квартала и сумма НДС
-                    'Cells(j, 15) = YearAndQuartal(DAT.Cells(i, 2))
                     Cells(j, 15) = DateToQIndex(DAT.Cells(i, 2))
                     Sum = 0
                     For j2 = 11 To 13
@@ -225,6 +195,7 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
         .Apply
     End With
     
+    'Заполняем периоды НД
     PeriodND limit, oND
     
     'Удаление временных столбцов
@@ -248,7 +219,63 @@ End Sub
 'oND - основной период НД
 Sub PeriodND(ByVal limit As Double, ByVal oND)
     
+    'Составляем список минимальных значений по каждому ИНН для периода oND
+    Set ni = CreateObject("Scripting.Dictionary")   'Индексы
+    Set ns = CreateObject("Scripting.Dictionary")   'Суммы (по идее можно брать по индексу, но пока оставлю, может так удобней будет)
+    i = 2
+    Do While Cells(i, 1) <> ""
+        INN = Cells(i, 4)
+        If Cells(i, 15) = oND Then
+            s = Cells(i, 16)
+            If ns(INN) = 0 Or ns(INN) > s Then
+                ns(INN) = s
+                ni(INN) = i
+            End If
+        End If
+        i = i + 1
+    Loop
     
+    'Проверяем сумму всех найденных записей на лимит оНД
+    Do
+        Sum = 0
+        For Each i In ni
+            Sum = Sum + ns(i)
+        Next
+        per = Sum - 0.01 'limitOND
+        'И.. если сумма превышает лимит...
+        If per > 0 Then
+            'Находим запись, которая ближе всего к сумме превышения (per)
+            Min = 0         'Минимальная разница
+            isk = ""        'Запись, которую надо исключить
+            plus = False    'Есть ли пололжительная разница?
+            For Each i In ni
+                If ns(i) <> 0 Then
+                    r = ns(i) - per
+                    If r >= 0 Then
+                        If plus = False Or Min > r Then
+                            Min = r
+                            isk = i
+                        End If
+                        plus = True
+                    End If
+                    If r < 0 And Not plus Then
+                        If Min = 0 Or Min < r Then
+                            Min = r
+                            isk = i
+                        End If
+                    End If
+                End If
+            Next
+            'Переносим найденную запись в очередь
+            ns(isk) = 0
+            ni(isk) = 0
+            
+        End If
+    Loop Until per <= 0
+    
+    
+    Debug.Print Now; "-----"
+    For Each i In ni: Debug.Print i, ns(i), ni(i): Next
     
     End
     
