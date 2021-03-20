@@ -222,6 +222,7 @@ Sub PeriodND(ByVal limit As Double, ByVal oND)
     'Составляем список минимальных значений по каждому ИНН для периода oND
     Set ni = CreateObject("Scripting.Dictionary")   'Индексы
     Set ns = CreateObject("Scripting.Dictionary")   'Суммы (по идее можно брать по индексу, но пока оставлю, может так удобней будет)
+    'Set nxt = CreateObject("Scripting.Dictionary")  'Список записей, не вошедших в период
     i = 2
     Do While Cells(i, 1) <> ""
         INN = Cells(i, 4)
@@ -241,7 +242,7 @@ Sub PeriodND(ByVal limit As Double, ByVal oND)
         For Each i In ni
             Sum = Sum + ns(i)
         Next
-        per = Sum - 0.01 'limitOND
+        per = Sum - limitOND
         'И.. если сумма превышает лимит...
         If per > 0 Then
             'Находим запись, которая ближе всего к сумме превышения (per)
@@ -267,12 +268,16 @@ Sub PeriodND(ByVal limit As Double, ByVal oND)
                 End If
             Next
             'Переносим найденную запись в очередь
-            ns(isk) = 0
-            ni(isk) = 0
-            
+            ns.Remove (isk)
+            ni.Remove (isk)
         End If
     Loop Until per <= 0
     
+    'Расставим период НД оставшимся записям
+    pnd = IndexToQYYYY(oND)
+    For Each n In ni
+        Cells(ni(n), 14) = pnd
+    Next
     
     Debug.Print Now; "-----"
     For Each i In ni: Debug.Print i, ns(i), ni(i): Next
