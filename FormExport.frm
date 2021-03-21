@@ -83,14 +83,13 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     
     'Проверка обязательных данных в справочнике
     si = selIndexes(INN)
-    limit = DIC.Cells(si, cLimND)
+    Limit = DIC.Cells(si, cLimND)
     ermsg = "У продавца " + DIC.Cells(si, 1) + " с ИНН " + INN + " "
-    If limit = Empty Then
+    If Limit = Empty Then
         MsgBox ermsg + "не указан лимит!"
         End
     End If
-    oND = StupidQToQIndex(DIC.Cells(si, cOPND))
-    If oND < 0 Then
+    If StupidQToQIndex(DIC.Cells(si, cOPND)) < 0 Then
         MsgBox ermsg + "не указан или указан не корректно основной период НД!"
         End
     End If
@@ -196,7 +195,7 @@ Private Sub ExportFile(ByVal INN As String, NUM As String)
     End With
     
     'Заполняем периоды НД
-    PeriodND limit, oND
+    PeriodND si
     
     'Удаление временных столбцов
     Columns(15).Delete
@@ -216,13 +215,17 @@ er:
 End Sub
 
 'Расчёт периодов налоговой декларации
-'oND - основной период НД
-Sub PeriodND(ByVal limit As Double, ByVal oND)
+'sIndex - индекс продавца
+Sub PeriodND(ByVal sIndex As Double)
+    
+    Dim oND As Integer
+    oND = StupidQToQIndex(DIC.Cells(sIndex, cOPND))
+    
+    '******************** Первый этап ********************
     
     'Составляем список минимальных значений по каждому ИНН для периода oND
-    Set ni = CreateObject("Scripting.Dictionary")   'Индексы
-    Set ns = CreateObject("Scripting.Dictionary")   'Суммы (по идее можно брать по индексу, но пока оставлю, может так удобней будет)
-    'Set nxt = CreateObject("Scripting.Dictionary")  'Список записей, не вошедших в период
+    Set ni = CreateObject("Scripting.Dictionary")   'Индексы по ИНН
+    Set ns = CreateObject("Scripting.Dictionary")   'Суммы по ИНН
     i = 2
     Do While Cells(i, 1) <> ""
         INN = Cells(i, 4)
@@ -275,12 +278,91 @@ Sub PeriodND(ByVal limit As Double, ByVal oND)
     
     'Расставим период НД оставшимся записям
     pnd = IndexToQYYYY(oND)
-    For Each n In ni
-        Cells(ni(n), 14) = pnd
+    For Each i In ni
+        Cells(ni(i), 14) = pnd
     Next
     
-    Debug.Print Now; "-----"
-    For Each i In ni: Debug.Print i, ns(i), ni(i): Next
+    '******************** Второй этап ********************
+    
+    Dim tND As Integer
+    Dim Qi As Object
+    tND = oND 'Основной период теперь текущий период, с него будет начинаться цикл для второго этапа
+    Do
+        
+        'Соберём записи, которые "не влезли" в текущем периоде
+        Set Qi = CreateObject("Scripting.Dictionary")  'Очередь записей (Сумма по индексу)
+        i = 2
+        Do While Cells(i, 1) <> ""
+            If Cells(i, 14) = "" And Cells(i, 15) = tND Then Qi(i) = Cells(i, 16)
+            i = i + 1
+        Loop
+        
+        'Переходим к следующему периоду
+        tND = tND + 1
+        Dim Limit As Double
+        Limit = DIC.Cells(sIndex, cLimND) - DIC.Cells(sIndex, cCorrect + tND)
+        
+        'Составляем список записей текущего периода
+        Set ti = CreateObject("Scripting.Dictionary")  'Список записей текущего периода (Сумма по индексу)
+        i = 2
+        Do While Cells(i, 1) <> ""
+            If Cells(i, 15) = tND Then ti(i) = Cells(i, 16)
+            i = i + 1
+        Loop
+        
+        'Проверяем сумму всех записей периода на лимит НД
+        Do
+            s = 0
+            For Each i In ti
+                s = s + ti(i)
+            Next
+            per = s - Limit
+            If per > 0 Then
+                If Limit < minLimit Then
+                    'В этом случае период пропускаем
+                    'Переносим все записи в очередь
+                    For Each i In ti
+                        Qi.Add i, ti(i)
+                        ti(i).Remove
+                    Next
+                Else
+                    'Переносим запись с максимальным значением
+                    maxs = 0    'Максимальное значение
+                    msxi = 0    'Индекс записи с максимальным значением
+                    For Each i In ti
+                        If max < ti(i) Then
+                            maxs = ti(i)
+                            maxi = i
+                        End If
+                        Qi.Add maxi, ti(maxi)
+                        ti(maxi).Remove
+                    Next
+                End If
+            End If
+            
+        Loop Until per <= 0
+        
+        'Расставим период НД оставшимся записям
+        pnd = IndexToQYYYY(tND)
+        For Each i In ti
+            Cells(i, 14) = pnd
+        Next
+        
+        'Если осталось "место", расставляем данные из очереди
+        
+        
+        
+        
+        'Debug.Print Now; "-----"
+        'For Each i In Qi: Debug.Print i, Qi(i): Next
+        End
+        
+        'Тут надо придумать когда всё это заканчивается, чтоб выйти (например узнать последний tnd
+        
+    Loop
+    
+    'Debug.Print Now; "-----"
+    'For Each i In ni: Debug.Print i, ns(i), ni(i): Next
     
     End
     

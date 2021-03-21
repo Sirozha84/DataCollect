@@ -58,7 +58,7 @@ Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
 Public Const lastYear = 2020    'Первый расчётный год
 Public Const lastQuartal = 4    'Первыё расчётный квартал
 Public Const limitOND = 5000000 'Лимит в основной период НД (5 000 000)
-
+Public Const minLimit = 2       'Минимальный лимит, если меньше него, период пропускается (5 000 000)
 'Колонки "Шаблоны"
 Public Const cTClient = 1       'Клиент
 Public Const cTBroker = 2       'Посредник
