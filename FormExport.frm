@@ -284,18 +284,18 @@ Sub PeriodND(ByVal sIndex As Double)
     
     '******************** Второй этап ********************
     
-    Dim tND As Integer
-    Dim Qi As Object
-    tND = oND 'Основной период теперь текущий период, с него будет начинаться цикл для второго этапа
+    Dim tND As Integer  'Текущий период
+    Dim Qi As Object    'Очередь записей (Сумма по индексу)
+    'Соберём записи, которые "не влезли" в основном периоде
+    Set Qi = CreateObject("Scripting.Dictionary")
+    i = 2
+    Do While Cells(i, 1) <> ""
+        If Cells(i, 14) = "" And Cells(i, 15) = oND Then Qi(i) = Cells(i, 16)
+        i = i + 1
+    Loop
+    tND = oND 'Основной период теперь текущий период, с него начнётся цикл второго этапа
+    
     Do
-        
-        'Соберём записи, которые "не влезли" в текущем периоде
-        Set Qi = CreateObject("Scripting.Dictionary")  'Очередь записей (Сумма по индексу)
-        i = 2
-        Do While Cells(i, 1) <> ""
-            If Cells(i, 14) = "" And Cells(i, 15) = tND Then Qi(i) = Cells(i, 16)
-            i = i + 1
-        Loop
         
         'Переходим к следующему периоду
         tND = tND + 1
@@ -323,47 +323,61 @@ Sub PeriodND(ByVal sIndex As Double)
                     'Переносим все записи в очередь
                     For Each i In ti
                         Qi.Add i, ti(i)
-                        ti(i).Remove
+                        ti.Remove (i)
                     Next
                 Else
                     'Переносим запись с максимальным значением
                     maxs = 0    'Максимальное значение
                     msxi = 0    'Индекс записи с максимальным значением
                     For Each i In ti
-                        If max < ti(i) Then
+                        If maxs < ti(i) Then
                             maxs = ti(i)
                             maxi = i
                         End If
-                        Qi.Add maxi, ti(maxi)
-                        ti(maxi).Remove
                     Next
+                    Qi.Add maxi, ti(maxi)
+                    ti.Remove (maxi)
                 End If
             End If
             
         Loop Until per <= 0
         
         'Расставим период НД оставшимся записям
+        ost = -per
         pnd = IndexToQYYYY(tND)
         For Each i In ti
             Cells(i, 14) = pnd
         Next
         
-        'Если осталось "место", расставляем данные из очереди
+        'Если очередь не пуста и осталось "место",
+        'расставляем данные из неё, начиная с минимального значения
+        If Qi.Count > 0 Then
+            Do
+                mins = 0    'Минимальное значение
+                mini = 0    'Индекс минимального значения
+                For Each i In Qi
+                    If mins = 0 Or mins > Qi(i) Then
+                        mins = Qi(i)
+                        mini = i
+                    End If
+                Next
+                Enter = ost >= mins
+                If Enter Then
+                    Cells(mini, 14) = pnd
+                    Qi.Remove (mini)
+                    ost = ost - mins
+                End If
+            Loop Until Not Enter Or Qi.Count = 0
+        End If
         
+        Debug.Print "Очередь на период " + CStr(tND)
+        For Each i In Qi: Debug.Print i: Next
         
-        
-        
-        'Debug.Print Now; "-----"
-        'For Each i In Qi: Debug.Print i, Qi(i): Next
-        End
-        
-        'Тут надо придумать когда всё это заканчивается, чтоб выйти (например узнать последний tnd
-        
-    Loop
-    
-    'Debug.Print Now; "-----"
-    'For Each i In ni: Debug.Print i, ns(i), ni(i): Next
-    
+    Loop While tND < quartCount - 1
+       
+    'Сууууукаааа, вроде это всё работает!!!!!
+       
+    'Ещё надо подумать что делать, если все периоды обработаны, а данные в очереди остались.
     End
     
 End Sub
