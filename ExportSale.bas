@@ -22,9 +22,7 @@ Public Sub Run(ByVal INN As String, ByVal NUM As String, _
     'Определяемся с путём и именем файла
     Patch = DirExport + "\Отгрузки"
     MakeDir Patch
-    fol = ""
-    If fol <> "" Then MakeDir (Patch + fol)
-    fileName = Patch + fol + "\" + cutBadSymbols(seller) + ".xlsx"
+    fileName = Patch + "\" + cutBadSymbols(seller) + ".xlsx"
     
     'Создаём книгу
     Workbooks.Add
@@ -312,3 +310,5 @@ Sub PeriodND(ByVal sIndex As Double)
     'End
     
 End Sub
+
+'******************** End of File ********************

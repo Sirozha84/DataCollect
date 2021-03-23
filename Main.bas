@@ -155,7 +155,6 @@ End Sub
 Sub ButtonDataCollect()
     Init
     If isRelease Then If MsgBox("Начинается сбор данных по отгрузкам. Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Message "Подготовка..."
     SetProtect DAT
     CollectSale.Run
     DAT.Activate
@@ -195,14 +194,15 @@ Sub ButtonCollectLoad()
     If isRelease Then If MsgBox("Начинается сбор данных по поступлениям. " + _
         "Начала этого процесса очистит уже собранные данные. " + _
         "Также пересчитаются начальные остатки. Продолжить?", vbYesNo) = vbNo Then Exit Sub
-    Message "Подготовка..."
     CollectLoad.Run
-    DTL.Activate
 End Sub
 
 'Кнопка "Экспорт поступлений в 1С"
 Sub ButtonExportLoad()
-
+    Init
+    If isRelease Then If MsgBox("Начинается экспорт данных о поступлениях. Продолжить?", _
+            vbYesNo) = vbNo Then Exit Sub
+    ExportLoad.Run
 End Sub
 
 '******************** Вкладка "Объёмы" ********************
@@ -235,3 +235,5 @@ Public Sub ButtonSellBook()
     Init
     SellBook.Run
 End Sub
+
+'******************** End of File ********************

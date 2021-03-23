@@ -8,6 +8,8 @@ Dim curProvINN As String
 'Запуск процесса сбора данных
 Sub Run()
     
+    Message "Подготовка..."
+    
     Log.Init
     Range(DTL.Cells(firstDtL, 1), DTL.Cells(maxRow, clAccept)).Clear
     Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Interior.Color = colGray
@@ -63,16 +65,16 @@ Sub Run()
                 lastdic = lastdic + 1
             End If
             'Добавление поступлений
-            qi = DateToQIndex(DTL.Cells(i, 3))
-            If qi >= 0 Then
+            Qi = DateToQIndex(DTL.Cells(i, 3))
+            If Qi >= 0 Then
                 Sum = 0
                 For j = 12 To 14
                     If IsNumeric(DTL.Cells(i, j)) Then Sum = Sum + DTL.Cells(i, j)
                 Next
                 s = salers(INN) 'строка
-                qi = qi * 2 + cPBalance
-                If DTL.Cells(i, 1).text = "З" Then qi = qi + 1
-                DIC.Cells(s, qi) = DIC.Cells(s, qi) + Sum
+                Qi = Qi * 2 + cPBalance
+                If DTL.Cells(i, 1).text = "З" Then Qi = Qi + 1
+                DIC.Cells(s, Qi) = DIC.Cells(s, Qi) + Sum
             End If
         End If
         i = i + 1
@@ -169,3 +171,5 @@ Function copyRecord(ByVal si As Long) As Boolean
     copyRecord = VerifyLoad(LastRec)
     
 End Function
+
+'******************** End of File ********************

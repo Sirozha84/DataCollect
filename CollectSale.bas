@@ -6,6 +6,7 @@ Dim curCode As String
 'Запуск процесса сбора данных
 Sub Run()
     
+    Message "Подготовка..."
     Numerator.Init
     Log.Init
     Verify.Init
@@ -306,3 +307,5 @@ Sub CheckChanges(ByVal di As Long, ByVal si As Long, ByVal j As Long)
     End If
 
 End Sub
+
+'******************** End of File ********************

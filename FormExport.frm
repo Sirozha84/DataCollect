@@ -16,7 +16,7 @@ Attribute VB_Exposed = False
 'Инициализация диалогового окна
 Private Sub UserForm_Initialize()
     
-    Verify.Init
+    Dictionary.Init
     
     'Выпадающий список продавцов
     ComboBoxBuyers.AddItem "Все"
@@ -66,3 +66,5 @@ End Sub
 Private Sub CommandExit_Click()
     End
 End Sub
+
+'******************** End of File ********************
