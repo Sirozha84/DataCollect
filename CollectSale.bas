@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectSale"
-'Последняя правка: 26.03.2021
+'Последняя правка: 26.03.2021 21:14
 
 Dim LastRec As Long
 Dim curFile As String
@@ -64,6 +64,7 @@ Function AddFile(ByVal file As String) As Byte
     On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
+    On Error GoTo 0
     
     If Not impBook Is Nothing Then
         Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
@@ -168,6 +169,7 @@ Function AddFile(ByVal file As String) As Byte
         
     End If
     
+    On Error GoTo er
     Numerator.Save
     Application.ScreenUpdating = True
     DoEvents
@@ -190,93 +192,93 @@ Function NotEmpty(ByVal i As Long) As Boolean
 End Function
 
 'Копирование записи. Возвращает True, если запись принялась без ошибок
-'di - строка в данных
-'si - строка в исходниках
+'Di - строка в данных
+'Si - строка в исходниках
 'refresh - true, если обновление данных (проверять что поменялось)
-Function copyRecord(ByVal di As Long, ByVal si As Long, refresh As Boolean) As Boolean
+Function copyRecord(ByVal Di As Long, ByVal Si As Long, refresh As Boolean) As Boolean
     
-    stat = DAT.Cells(di, cStatus).text
+    stat = DAT.Cells(Di, cStatus).text
     If stat = "0" Then
         copyRecord = False
         Exit Function
     End If
     
-    SetFormates di
-    SRC.Cells(si, 1).ClearFormats
+    SetFormates Di
+    SRC.Cells(Si, 1).ClearFormats
     
     'Запись зафиксирована, возвращаем изменение из собранных данных в реестр
     If stat = "2" Then
         For j = 2 To 14
-            CheckChanges di, si, j
-            SRC.Cells(si, j) = DAT.Cells(di, j)
+            CheckChanges Di, Si, j
+            SRC.Cells(Si, j) = DAT.Cells(Di, j)
         Next
         copyRecord = True
         Exit Function
     End If
     
-    If refresh And DAT.Cells(di, cAccept) = "OK" Then
+    If refresh And DAT.Cells(Di, cAccept) = "OK" Then
         oldSum = 0
         For i = 12 To 14
-            If DAT.Cells(di, i) <> "" Then oldSum = oldSum + DAT.Cells(di, i)
+            If DAT.Cells(Di, i) <> "" Then oldSum = oldSum + DAT.Cells(Di, i)
         Next
-        RestoreBalance DAT.Cells(di, cDates), DAT.Cells(di, cSellINN).text, oldSum
+        RestoreBalance DAT.Cells(Di, cDates), DAT.Cells(Di, cSellINN).text, oldSum
     End If
     
     'Копирование записей с проверкой на изменение
     For j = 2 To 14
         If j <> 6 Then
-            CheckChanges di, si, j
-            If Not IsError(SRC.Cells(si, j)) Then DAT.Cells(di, j) = SRC.Cells(si, j)
+            CheckChanges Di, Si, j
+            If Not IsError(SRC.Cells(Si, j)) Then DAT.Cells(Di, j) = SRC.Cells(Si, j)
         Else
-            s = selIndexes(DAT.Cells(di, 5).text)
+            s = selIndexes(DAT.Cells(Di, 5).text)
             If s <> Empty Then
-                DAT.Cells(di, 6) = DIC.Cells(s, 1)
+                DAT.Cells(Di, 6) = DIC.Cells(s, 1)
             Else
                 AddCom ("ИНН не найден в справочнике")
             End If
         End If
     Next
-    DAT.Cells(di, cFile) = curFile
-    DAT.Cells(di, cCode) = curCode
-    DAT.Cells(di, cAccept) = "fail" 'По умолчанию будем считать строку не верной
+    DAT.Cells(Di, cFile) = curFile
+    DAT.Cells(Di, cCode) = curCode
+    DAT.Cells(Di, cAccept) = "fail" 'По умолчанию будем считать строку не верной
     
     'Проверка на удалённую запись (если это обновление и строка с датой пустая)
-    If refresh And SRC.Cells(si, cDates).text = "" Then
-        SRC.Cells(si, 1).Font.Color = colWhite
-        SRC.Cells(si, cCom) = "Данные удалены заказчиком"
-        SRC.Cells(si, cCom).Interior.Color = colYellow
-        DAT.Cells(di, cCom) = "Данные удалены заказчиком"
-        DAT.Cells(di, cCom).Interior.Color = colYellow
-        DAT.Cells(di, cAccept) = "lost"
+    If refresh And SRC.Cells(Si, cDates).text = "" Then
+        SRC.Cells(Si, 1).Font.Color = colWhite
+        SRC.Cells(Si, cCom) = "Данные удалены заказчиком"
+        SRC.Cells(Si, cCom).Interior.Color = colYellow
+        DAT.Cells(Di, cCom) = "Данные удалены заказчиком"
+        DAT.Cells(Di, cCom).Interior.Color = colYellow
+        DAT.Cells(Di, cAccept) = "lost"
         copyRecord = True
         Exit Function
         'Дальнейшие действия в этом случае не требуются, выходим...
     End If
     
-    copyRecord = Verify.Verify(di, si, oldINN, oldSum)
+    copyRecord = Verify.Verify(Di, Si, oldINN, oldSum)
     
     'Если нужно, присваиваем записи новый номер
     If copyRecord Then
         Dim needNum As Boolean
         If refresh Then
-            needNum = Not Numerator.CheckPrefix(DAT.Cells(di, 1).text, _
-                DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
+            needNum = Not Numerator.CheckPrefix(DAT.Cells(Di, 1).text, _
+                DAT.Cells(Di, 2), DAT.Cells(Di, cSellINN).text)
         Else
             needNum = True
         End If
         If needNum Then
-            n = Numerator.Generate(DAT.Cells(di, 2), DAT.Cells(di, cSellINN).text)
-            DAT.Cells(di, cUIN).NumberFormat = "@"
-            DAT.Cells(di, cUIN) = n
-            DAT.Cells(di, cDateCol) = DateTime.Now
-            SRC.Cells(si, 1).NumberFormat = "@"
-            SRC.Cells(si, 1) = n
+            n = Numerator.Generate(DAT.Cells(Di, 2), DAT.Cells(Di, cSellINN).text)
+            DAT.Cells(Di, cUIN).NumberFormat = "@"
+            DAT.Cells(Di, cUIN) = n
+            DAT.Cells(Di, cDateCol) = DateTime.Now
+            SRC.Cells(Si, 1).NumberFormat = "@"
+            SRC.Cells(Si, 1) = n
         End If
-        DAT.Cells(di, cAccept) = "OK"
+        DAT.Cells(Di, cAccept) = "OK"
     End If
     
     If Not refresh Then LastRec = LastRec + 1
-    If DAT.Cells(di, cStatus).text = "" Then DAT.Cells(di, cStatus) = 1
+    If DAT.Cells(Di, cStatus).text = "" Then DAT.Cells(Di, cStatus) = 1
     
 End Function
 
@@ -292,20 +294,22 @@ Sub SetFormates(ByVal i As Long)
 End Sub
 
 'Отслеживание изменений и пометка их цветом
-Sub CheckChanges(ByVal di As Long, ByVal si As Long, ByVal j As Long)
+'Di - строка в данных
+'Si - строка в исходниках
+Sub CheckChanges(ByVal Di As Long, ByVal Si As Long, ByVal j As Long)
     
     'Сброс формата
-    DAT.Cells(di, j).Interior.Color = colWhite
+    DAT.Cells(Di, j).Interior.Color = colWhite
     If j = 2 Or j = 4 Or j = 6 Or j = 7 Or j = 8 Then
-        SRC.Cells(si, j).Interior.Color = colYellow
+        SRC.Cells(Si, j).Interior.Color = colYellow
     Else
-        SRC.Cells(si, j).Interior.Color = colWhite
+        SRC.Cells(Si, j).Interior.Color = colWhite
     End If
     
     'Подсветка, если есть разница
-    If DAT.Cells(di, j).text <> SRC.Cells(si, j).text Then
-        DAT.Cells(di, j).Interior.Color = colBlue
-        SRC.Cells(si, j).Interior.Color = colBlue
+    If DAT.Cells(Di, j).text <> SRC.Cells(Si, j).text Then
+        DAT.Cells(Di, j).Interior.Color = colBlue
+        SRC.Cells(Si, j).Interior.Color = colBlue
     End If
 
 End Sub
