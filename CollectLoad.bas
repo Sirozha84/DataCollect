@@ -1,4 +1,6 @@
 Attribute VB_Name = "CollectLoad"
+'Последняя правка: 26.03.2021
+
 Dim LastRec As Long
 Dim curFile As String
 Dim curMark As String
@@ -49,13 +51,16 @@ Sub Run()
     i = firstDtL
     Do While DTL.Cells(i, clAccept) <> ""
         If DTL.Cells(i, clAccept) = "OK" Then
-            INN = DTL.Cells(i, clInINN).text
+            inn = DTL.Cells(i, clInINN).text
             'Добавление нового продавца в справочник
-            If salers(INN) = "" Then
-                salers(INN) = lastdic
+            
+            'Сначала надо проверить если он есть совпадает ли его имя с тем что в справочнике
+            
+            If salers(inn) = "" Then
+                salers(inn) = lastdic
                 DIC.Cells(lastdic, cSellerName) = DTL.Cells(i, clInName)
                 DIC.Cells(lastdic, cINN).NumberFormat = "@"
-                DIC.Cells(lastdic, cINN) = INN
+                DIC.Cells(lastdic, cINN) = inn
                 For j = 0 To quartCount - 1
                     DIC.Cells(lastdic, cLimits + j).NumberFormat = "### ### ##0.00"
                     DIC.Cells(lastdic, cLimits + j).FormulaR1C1 = _
@@ -71,10 +76,10 @@ Sub Run()
                 For j = 12 To 14
                     If IsNumeric(DTL.Cells(i, j)) Then Sum = Sum + DTL.Cells(i, j)
                 Next
-                s = salers(INN) 'строка
+                si = salers(inn) 'строка
                 Qi = Qi * 2 + cPBalance
                 If DTL.Cells(i, 1).text = "З" Then Qi = Qi + 1
-                DIC.Cells(s, Qi) = DIC.Cells(s, Qi) + Sum
+                DIC.Cells(si, Qi) = DIC.Cells(si, Qi) + Sum
             End If
         End If
         i = i + 1
@@ -84,8 +89,8 @@ Sub Run()
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True
     
-    If isRelease Then MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + _
-                                                CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
+    MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + _
+            CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
     
 End Sub
 
@@ -101,7 +106,7 @@ Function AddFile(ByVal file As String) As Byte
     If Not TrySave(file) Then AddFile = 6: Exit Function
     errors = False
     Application.ScreenUpdating = False
-    If isRelease Then On Error GoTo er
+    On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     

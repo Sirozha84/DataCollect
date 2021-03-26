@@ -237,7 +237,7 @@ Function NewTemplate(ByVal cln As String, ByVal tem As String, _
     'Защита и сохранение книги
     Sheets(1).Activate
     SetProtect ActiveSheet
-    If isRelease Then On Error GoTo er
+    On Error GoTo er
     ActiveWorkbook.SaveAs fileName:=fileName    'Для тестов эти строки комментируем и смотрим
     ActiveWorkbook.Close                        'результат сразу (список только делаем из одного файла)
     NewTemplate = 1

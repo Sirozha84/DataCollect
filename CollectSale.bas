@@ -1,4 +1,6 @@
 Attribute VB_Name = "CollectSale"
+'Последняя правка: 26.03.2021
+
 Dim LastRec As Long
 Dim curFile As String
 Dim curCode As String
@@ -37,8 +39,8 @@ Sub Run()
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True
     
-    If isRelease Then MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + _
-                                                CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
+    MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + _
+            CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
     
 End Sub
 
@@ -59,7 +61,7 @@ Function AddFile(ByVal file As String) As Byte
     If Not TrySave(file) Then AddFile = 6: Exit Function
     errors = False
     Application.ScreenUpdating = False
-    If isRelease Then On Error GoTo er
+    On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
     
@@ -162,7 +164,7 @@ Function AddFile(ByVal file As String) As Byte
         Else
             AddFile = 3
         End If
-        impBook.Close saveSource
+        impBook.Close True
         
     End If
     

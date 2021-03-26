@@ -1,11 +1,17 @@
 Attribute VB_Name = "Main"
-Public Const isRelease = True   'True - полноценная работа, False - режим отладки (нет вопросов, нет записи в файлы)
-Public Const saveSource = True  'True - сохранение данных в формах, False - данные не записываются (отладка)
+'Последняя правка: 26.03.2021
 
-Public Const Secret = "123"     'Пароль для защиты
-
+'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
-Public Const tmpVersion = "20210108"    'Версия реестра
+Public Const tmpVersion = "20210108"    'Необходимая версия реестра
+
+'Настройки
+Public Const Secret = "123"     'Пароль для защиты
+Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
+Public Const lastYear = 2020    'Первый расчётный год
+Public Const lastQuartal = 4    'Первый расчётный квартал
+Public Const limitOND = 5000000 'Лимит в основной период НД (5м)
+Public Const minLimit = 5000000 'Минимальный лимит, если меньше него, период пропускается (5м)
 
 'Колонки "Отгрузки"
 Public Const cUIN = 1           'УИН
@@ -52,13 +58,8 @@ Public Const cPFact = 22        'Первая колонка с фактическими объёмами
 Public Const cPBalance = 34     'Первая колонка с остатками (*2)
 Public Const cCorrect = 58      'Первая колонка с корректировками лимитов
 Public Const cPRev = 70         'Первая колонка с фактическими отгрузками (для ревизии остатков)
+Public Const cSaleProtect = 82  'Первая колонка с запретами отгрузок
 
-'Прочие параметры справочника, в будущем они будут настраиваемые, но пока константы...
-Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
-Public Const lastYear = 2020    'Первый расчётный год
-Public Const lastQuartal = 4    'Первыё расчётный квартал
-Public Const limitOND = 5000000 'Лимит в основной период НД (5 000 000)
-Public Const minLimit = 1       'Минимальный лимит, если меньше него, период пропускается (5 000 000)
 'Колонки "Шаблоны"
 Public Const cTClient = 1       'Клиент
 Public Const cTBroker = 2       'Посредник
@@ -84,12 +85,12 @@ Public Const pImportLoad = 5    'Импорт поступлений
 Public Const pExport = 6        'Экспорт
 
 'Цвета
-Public colWhite As Long
-Public colRed As Long
-Public colGreen As Long
-Public colYellow As Long
-Public colGray As Long
-Public colBlue As Long
+Public colWhite As Long         'Для невидимости строк
+Public colRed As Long           'Ошибки
+Public colGreen As Long         'Принятые
+Public colYellow As Long        'Разрешёные для редактирования
+Public colGray As Long          'Служебные поля
+Public colBlue As Long          'Замечены изменения
 
 'Ссылки на таблицы
 Public DAT As Variant           'Данные о продажах
@@ -122,7 +123,7 @@ Sub Init()
     colGray = RGB(217, 217, 217)
     colBlue = RGB(192, 217, 255)
     
-    If isRelease Then On Error GoTo er
+    On Error GoTo er
     Set DAT = Sheets("Отгрузки")
     Set DTL = Sheets("Поступления")
     Set DIC = Sheets("Справочник")
@@ -154,7 +155,7 @@ End Sub
 'Кнопка "Сбор данных"
 Sub ButtonDataCollect()
     Init
-    If isRelease Then If MsgBox("Начинается сбор данных по отгрузкам. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+    If MsgBox("Начинается сбор данных по отгрузкам. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     SetProtect DAT
     CollectSale.Run
     DAT.Activate
@@ -169,14 +170,12 @@ End Sub
 'Кнопка "Удаление данных"
 Sub ButtonClear()
     Init
-    If isRelease Then
-        e = Chr(10)
-        If InputBox("Внимание! " + e + e + _
-            "Данная процедура очистит все собранные данные. " + _
-            "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код. " + _
-            "Справочник и словари нумератора удаляться не будут." + e + e + _
-            "Для продолжения введите пароль.", "Удаление данных") <> Secret Then Exit Sub
-    End If
+    e = Chr(10)
+    If InputBox("Внимание! " + e + e + _
+        "Данная процедура очистит все собранные данные. " + _
+        "Уже зарегистрированные данные при повторной регистрации могут присвоить другой код. " + _
+        "Справочник и словари нумератора удаляться не будут." + e + e + _
+        "Для продолжения введите пароль.", "Удаление данных") <> Secret Then Exit Sub
     SetProtect DAT
     Range(Cells(firstDat, 1), Cells(maxRow, cAccept)).Clear
     Range(Cells(firstDat, cStatus), Cells(maxRow, cDateCol)).Interior.Color = colYellow
@@ -191,7 +190,7 @@ End Sub
 'Кнопка "Сбор поступлений"
 Sub ButtonCollectLoad()
     Init
-    If isRelease Then If MsgBox("Начинается сбор данных по поступлениям. " + _
+    If MsgBox("Начинается сбор данных по поступлениям. " + _
         "Начала этого процесса очистит уже собранные данные. " + _
         "Также пересчитаются начальные остатки. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     CollectLoad.Run
@@ -200,8 +199,7 @@ End Sub
 'Кнопка "Экспорт поступлений в 1С"
 Sub ButtonExportLoad()
     Init
-    If isRelease Then If MsgBox("Начинается экспорт данных о поступлениях. Продолжить?", _
-            vbYesNo) = vbNo Then Exit Sub
+    If MsgBox("Начинается экспорт данных о поступлениях. Продолжить?", vbYesNo) = vbNo Then Exit Sub
     ExportLoad.Run
 End Sub
 
@@ -210,6 +208,8 @@ End Sub
 'Кнопка ревизии остатков
 Sub ButtonRevisionVolumes()
     Init
+    DIC.Activate
+    DIC.Cells(firstDic, cPRev).Activate
     Revision.Run
 End Sub
 
@@ -225,6 +225,7 @@ End Sub
 'Кнопка "Генерировать шаблоны"
 Sub ButtonCreateTemplates()
     Init
+    TMP.Activate
     Template.Generate
 End Sub
 
