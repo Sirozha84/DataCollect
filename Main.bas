@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-'Последняя правка: 26.03.2021
+'Последняя правка: 27.03.2021 11:10
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
@@ -27,6 +27,7 @@ Public Const cDateCol = 17      'Дата сбора
 Public Const cFile = 18         'Имя файла
 Public Const cCode = 19         'Код формы
 Public Const cAccept = 20       'Принято/не принято
+Public Const cPND = 21          'Период НД
 
 'Колонки "Поступления"
 Public Const clMark = 1         'Маркер

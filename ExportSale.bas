@@ -1,20 +1,22 @@
 Attribute VB_Name = "ExportSale"
+'Последняя правка: 27.03.2021 11:09
+
 'Экспорт файла
-Public Sub Run(ByVal INN As String, ByVal NUM As String, _
+Public Sub Run(ByVal inn As String, ByVal NUM As String, _
         ByVal FirstDate As Date, ByVal LastDate As Date)
 
-    seller = SellFileName(INN)
-    Message "Экспорт файла " + NUM + seller
+    saler = SellFileName(inn)
+    Message "Экспорт файла " + NUM + saler
     
     'Проверка обязательных данных в справочнике
-    si = selIndexes(INN)
-    Limit = DIC.Cells(si, cLimND)
-    ermsg = "У продавца " + DIC.Cells(si, 1) + " с ИНН " + INN + " "
+    Si = selIndexes(inn)
+    Limit = DIC.Cells(Si, cLimND)
+    ermsg = "У продавца " + DIC.Cells(Si, 1) + " с ИНН " + inn + " "
     If Limit = Empty Then
         MsgBox ermsg + "не указан лимит!"
         End
     End If
-    If StupidQToQIndex(DIC.Cells(si, cOPND)) < 0 Then
+    If StupidQToQIndex(DIC.Cells(Si, cOPND)) < 0 Then
         MsgBox ermsg + "не указан или указан не корректно основной период НД!"
         End
     End If
@@ -22,7 +24,7 @@ Public Sub Run(ByVal INN As String, ByVal NUM As String, _
     'Определяемся с путём и именем файла
     Patch = DirExport + "\Отгрузки"
     MakeDir Patch
-    fileName = Patch + "\" + cutBadSymbols(seller) + ".xlsx"
+    fileName = Patch + "\" + cutBadSymbols(saler) + ".xlsx"
     
     'Создаём книгу
     Workbooks.Add
@@ -41,6 +43,9 @@ Public Sub Run(ByVal INN As String, ByVal NUM As String, _
     Cells(i, 12) = "НДС 18%"
     Cells(i, 13) = "НДС 10%"
     Cells(i, 14) = "Период НД"
+    Cells(i, 15) = "Квартал" 'Временные колонки
+    Cells(i, 16) = "НДС"
+    Cells(i, 17) = "Нндекс"
     Columns(1).ColumnWidth = 10
     Columns(2).ColumnWidth = 13
     Columns(3).ColumnWidth = 10
@@ -71,7 +76,7 @@ Public Sub Run(ByVal INN As String, ByVal NUM As String, _
             dc = DAT.Cells(i, cDateCol)
             If dc >= FirstDate And dc < LastDate + 1 Then
                 cp = True
-                If DAT.Cells(i, cSellINN).text <> INN Then cp = False
+                If DAT.Cells(i, cSellINN).text <> inn Then cp = False
                 d = DAT.Cells(i, cDates)
                 If cp Then
                     'Копирование данных из сбора
@@ -99,6 +104,7 @@ Public Sub Run(ByVal INN As String, ByVal NUM As String, _
                         If IsNumeric(Cells(j, j2)) Then Sum = Sum + Cells(j, j2)
                     Next
                     Cells(j, 16) = Sum
+                    Cells(j, 17) = i
                     j = j + 1
                 End If
             End If
@@ -106,21 +112,21 @@ Public Sub Run(ByVal INN As String, ByVal NUM As String, _
         i = i + 1
     Loop
     
-    'Сортировка по периодам
-    Cells(1, 15) = "Квартал"
-    Cells(1, 16) = "НДС"
-    With ActiveSheet.Sort
-        .SortFields.Clear
-        .SortFields.Add Key:=Range("O2") 'Первый порядок сортировки
-        .SortFields.Add Key:=Range("F2") 'Второй порядок сортировки
-        .setRange Range("A2:P" + CStr(j - 1)) 'Диапазон сортируемой таблицы
-        .Apply
-    End With
+    'Сортировка по периодам и продавцам
+    Columns("A:Q").Sort key1:=Range("O2"), order1:=xlDescending, _
+                        key2:=Range("F2"), order2:=xlAscending
     
-    'Заполняем периоды НД
-    PeriodND si
-    
+    'Заполняем периоды НД и копируем их на лист сбора
+    SetProtect DAT
+    PeriodND Si
+    i = firstEx
+    Do While Cells(i, 1) <> ""
+        DAT.Cells(Cells(i, 17), cPND) = Cells(i, 14)
+        i = i + 1
+    Loop
+
     'Удаление временных столбцов
+    Columns(15).Delete
     Columns(15).Delete
     Columns(15).Delete
     
@@ -137,18 +143,12 @@ er:
 
 End Sub
 
-'Имя файла по ИНН продавца
-Function SellFileName(INN) As String
-    ind = selIndexes(INN)
-    If ind <> Empty Then SellFileName = INN + "-" + DIC.Cells(ind, 1)
-End Function
-
 'Расчёт периодов налоговой декларации
-'sIndex - индекс продавца
-Sub PeriodND(ByVal sIndex As Double)
+'Si - индекс продавца
+Sub PeriodND(ByVal Si As Double)
     
     Dim oND As Integer
-    oND = StupidQToQIndex(DIC.Cells(sIndex, cOPND))
+    oND = StupidQToQIndex(DIC.Cells(Si, cOPND))
     
     '******************** Первый этап ********************
     
@@ -157,12 +157,12 @@ Sub PeriodND(ByVal sIndex As Double)
     Set ns = CreateObject("Scripting.Dictionary")   'Суммы по ИНН
     i = 2
     Do While Cells(i, 1) <> ""
-        INN = Cells(i, 4)
+        inn = Cells(i, 4)
         If Cells(i, 15) = oND Then
             s = Cells(i, 16)
-            If ns(INN) = 0 Or ns(INN) > s Then
-                ns(INN) = s
-                ni(INN) = i
+            If ns(inn) = 0 Or ns(inn) > s Then
+                ns(inn) = s
+                ni(inn) = i
             End If
         End If
         i = i + 1
@@ -229,7 +229,7 @@ Sub PeriodND(ByVal sIndex As Double)
         'Переходим к следующему периоду
         tND = tND + 1
         Dim Limit As Double
-        Limit = DIC.Cells(sIndex, cLimND) - DIC.Cells(sIndex, cCorrect + tND)
+        Limit = DIC.Cells(Si, cLimND) - DIC.Cells(Si, cCorrect + tND)
         
         'Составляем список записей текущего периода
         Set ti = CreateObject("Scripting.Dictionary")  'Список записей текущего периода (Сумма по индексу)
@@ -303,12 +303,7 @@ Sub PeriodND(ByVal sIndex As Double)
         For Each i In Qi: Debug.Print i: Next
         
     Loop While tND < quartCount - 1
-       
-    'Сууууукаааа, вроде это всё работает!!!!!
-       
-    'Ещё надо подумать что делать, если все периоды обработаны, а данные в очереди остались.
-    'End
-    
+
 End Sub
 
 '******************** End of File ********************
