@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportSale"
-'Последняя правка: 27.03.2021 11:09
+'Последняя правка: 27.03.2021 16:02
 
 'Экспорт файла
 Public Sub Run(ByVal inn As String, ByVal NUM As String, _
@@ -247,7 +247,7 @@ Sub PeriodND(ByVal Si As Double)
             Next
             per = s - Limit
             If per > 0 Then
-                If Limit < minLimit Then
+                If Limit < minLim Then
                     'В этом случае период пропускаем
                     'Переносим все записи в очередь
                     For Each i In ti

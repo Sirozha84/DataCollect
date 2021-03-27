@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-'Последняя правка: 27.03.2021 11:10
+'Последняя правка: 27.03.2021 16:05
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
@@ -10,8 +10,8 @@ Public Const Secret = "123"     'Пароль для защиты
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
 Public Const lastYear = 2020    'Первый расчётный год
 Public Const lastQuartal = 4    'Первый расчётный квартал
-Public Const limitOND = 5000000 'Лимит в основной период НД (5м)
-Public Const minLimit = 5000000 'Минимальный лимит, если меньше него, период пропускается (5м)
+Public Const limitOND = 9000000 'Лимит в основной период НД (9м)
+Public Const minLim = 5000000   'Минимальный лимит, если меньше него, период пропускается (5м)
 
 'Колонки "Отгрузки"
 Public Const cUIN = 1           'УИН
@@ -40,9 +40,12 @@ Public Const clInName = 7       'Вход Наименование
 Public Const clPrice = 8        'Стоимость с НДС
 Public Const clCom = 15         'Комментарий
 Public Const clStatus = 16      'Статус
-Public Const clDateCol = 17     'Дата сбора
-Public Const clFile = 18        'Имя файла
-Public Const clAccept = 19      'Принято/не принято
+Public Const clRasp = 17        'Распределено
+Public Const clPND = 18         'Период НД
+Public Const clOst = 19         'Остаток НДС
+Public Const clDateCol = 20     'Дата сбора
+Public Const clFile = 21        'Имя файла
+Public Const clAccept = 22      'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
