@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-'Последняя правка: 28.03.2021 14:25
+'Последняя правка: 28.03.2021 20:39
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
@@ -31,23 +31,24 @@ Public Const cPND = 21          'Период НД
 
 'Колонки "Поступления"
 Public Const clMark = 1         'Маркер
-Public Const clNum = 2          'Номер
-Public Const clDate = 3         'Дата
-Public Const clProvINN = 4      'Поставщик ИНН
-Public Const clProvName = 5     'Поставшик Наименование
-Public Const clSaleINN = 6      'Продавец ИНН
-Public Const clSaleName = 7     'Продавец Наименование
-Public Const clPrice = 8        'Стоимость с НДС
-Public Const clNDS = 12         'Сумма НДС
-Public Const clCom = 13         'Комментарий
-Public Const clStatus = 14      'Статус
-Public Const clRasp = 15        'Распределено
-Public Const clPND = 16         'Период НД
-Public Const clOst = 17         'Остаток НДС
-Public Const clDateCol = 18     'Дата сбора
-Public Const clUIN = 19         'УИН
-Public Const clFile = 20        'Имя файла
-Public Const clAccept = 21      'Принято/не принято
+Public Const clKVO = 2          'Код вида операции (КВО)
+Public Const clNum = 3          'Номер
+Public Const clDate = 4         'Дата
+Public Const clProvINN = 5      'Поставщик ИНН
+Public Const clProvName = 6     'Поставшик Наименование
+Public Const clSaleINN = 7      'Продавец ИНН
+Public Const clSaleName = 8     'Продавец Наименование
+Public Const clPrice = 9        'Стоимость с НДС
+Public Const clNDS = 13         'Сумма НДС
+Public Const clCom = 14         'Комментарий
+Public Const clStatus = 15      'Статус
+Public Const clRasp = 16        'Распределено
+Public Const clPND = 17         'Период НД
+Public Const clOst = 18         'Остаток НДС
+Public Const clDateCol = 19     'Дата сбора
+Public Const clUIN = 20         'УИН
+Public Const clFile = 21        'Имя файла
+Public Const clAccept = 22      'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца

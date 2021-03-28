@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectSale"
-'Последняя правка: 26.03.2021 21:14
+'Последняя правка: 28.03.2021 20:34
 
 Dim LastRec As Long
 Dim curFile As String
@@ -64,115 +64,114 @@ Function AddFile(ByVal file As String) As Byte
     On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
+    Set SRC = impBook.Worksheets(1)
+    SetProtect SRC
     On Error GoTo 0
     
-    If Not impBook Is Nothing Then
-        Set SRC = impBook.Worksheets(1) 'Пока берём данные с первого листа
-        SetProtect SRC
-        ver = SRC.Cells(2, 1).text
-        If ver <> tmpVersion Then
-            AddFile = 4
-            impBook.Close False
-            Exit Function
-        End If
-        curFile = file
-        curCode = SRC.Cells(1, 1)
-        If curCode <> "" Then
-            
-            'Очищаем предыдущие строки без номеров
-            i = firstDat
-            Do While DAT.Cells(i, cAccept) <> ""
-                If DAT.Cells(i, cUIN) = "" And DAT.Cells(i, cCode) = curCode Then
-                    DAT.Rows(i).Delete
-                Else
-                    i = i + 1
-                End If
-            Loop
+    'Проверка версии шаблона реестра
+    ver = SRC.Cells(2, 1).text
+    If ver <> tmpVersion Then
+        AddFile = 4
+        impBook.Close False
+        Exit Function
+    End If
+    curFile = file
+    curCode = SRC.Cells(1, 1)
+    If curCode <> "" Then
         
-            'Индексируем существующие записи
-            Set Indexes = CreateObject("Scripting.Dictionary")
-            i = firstDat
-            Do While DAT.Cells(i, cAccept) <> ""
-                UID = DAT.Cells(i, cUIN)
-                If UID <> "" Then Indexes.Add UID, i
+        'Очищаем предыдущие строки без номеров
+        i = firstDat
+        Do While DAT.Cells(i, cAccept) <> ""
+            If DAT.Cells(i, cUIN) = "" And DAT.Cells(i, cCode) = curCode Then
+                DAT.Rows(i).Delete
+            Else
                 i = i + 1
-            Loop
-            LastRec = i
-        
-            'Обрабатываем строки исходника
-            Set resUIDs = CreateObject("Scripting.Dictionary")
-            i = firstSrc
-            Do While NotEmpty(i)
-                UID = SRC.Cells(i, 1)
-                'Строка уже есть (наверное)
-                If UID <> "" Then
+            End If
+        Loop
+    
+        'Индексируем существующие записи
+        Set Indexes = CreateObject("Scripting.Dictionary")
+        i = firstDat
+        Do While DAT.Cells(i, cAccept) <> ""
+            UID = DAT.Cells(i, cUIN)
+            If UID <> "" Then Indexes.Add UID, i
+            i = i + 1
+        Loop
+        LastRec = i
+    
+        'Обрабатываем строки исходника
+        Set resUIDs = CreateObject("Scripting.Dictionary")
+        i = firstSrc
+        Do While NotEmpty(i)
+            UID = SRC.Cells(i, 1)
+            'Строка уже есть (наверное)
+            If UID <> "" Then
+                
+                ind = Indexes(UID)
+                If ind <> Empty Then
                     
-                    ind = Indexes(UID)
-                    If ind <> Empty Then
-                        
-                        'И строка действительно есть, обновляем данные
-                        If Not copyRecord(ind, i, True) Then errors = True
-                        
-                        'Данные не обновлены
-                        stat = DAT.Cells(ind, cStatus).text
-                        If stat = "0" Then
-                            DAT.Cells(ind, cCom) = "Данные аннулированы!"
-                            DAT.Cells(ind, cCom).Interior.Color = colRed
-                            SRC.Cells(i, cCom) = "Данные аннулированы!"
-                            SRC.Cells(i, cCom).Interior.Color = colRed
-                        End If
-                        If stat = "2" Then
-                            DAT.Cells(ind, cCom) = "Данные зафиксированы!"
-                            DAT.Cells(ind, cCom).Interior.Color = colGreen
-                            SRC.Cells(i, cCom) = "Данные зафиксированы!"
-                            SRC.Cells(i, cCom).Interior.Color = colGreen
-                        End If
-                        
-                    Else
-                        'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
-                        UID = ""
+                    'И строка действительно есть, обновляем данные
+                    If Not copyRecord(ind, i, True) Then errors = True
+                    
+                    'Данные не обновлены
+                    stat = DAT.Cells(ind, cStatus).text
+                    If stat = "0" Then
+                        DAT.Cells(ind, cCom) = "Данные аннулированы!"
+                        DAT.Cells(ind, cCom).Interior.Color = colRed
+                        SRC.Cells(i, cCom) = "Данные аннулированы!"
+                        SRC.Cells(i, cCom).Interior.Color = colRed
                     End If
-                End If
-                'Новая строка
-                If UID = "" Then If Not copyRecord(LastRec, i, False) Then errors = True
-                rUID = SRC.Cells(i, 1).text
-                
-                'Составляем словарь resUIDs - все номера, которые есть в реестре
-                'Далее в сборе ищем все записи по коду из этого реестра, которые отсутствуют в этом
-                'словаре, их считаем удалёнными.
-                'Если в реестре будет два одинаковых номера, то тут будет ошибка!
-                On Error Resume Next
-                If rUID <> "" Then resUIDs.Add rUID, 1
-                
-                i = i + 1
-            Loop
-            
-            'Проверяем исходник на удалённые записи (на предмет пропавших УИНов)
-            i = firstDat
-            Do While DAT.Cells(i, cAccept) <> ""
-                UID = DAT.Cells(i, cUIN).text
-                If UID <> "" And DAT.Cells(i, cCode) = curCode Then
-                    If resUIDs(UID) = Empty Then
-                        DAT.Cells(i, cCom) = "Данные удалены заказчиком (вместе с УИН)"
-                        DAT.Cells(i, cCom).Interior.Color = colYellow
-                        DAT.Cells(i, cAccept) = "lost"
-                        AddFile = 2
+                    If stat = "2" Then
+                        DAT.Cells(ind, cCom) = "Данные зафиксированы!"
+                        DAT.Cells(ind, cCom).Interior.Color = colGreen
+                        SRC.Cells(i, cCom) = "Данные зафиксированы!"
+                        SRC.Cells(i, cCom).Interior.Color = colGreen
                     End If
+                    
+                Else
+                    'А вот и нет, такой строки нет, стоит непонятный UID, которого у нас нет
+                    UID = ""
                 End If
-                i = i + 1
-            Loop
+            End If
+            'Новая строка
+            If UID = "" Then If Not copyRecord(LastRec, i, False) Then errors = True
+            rUID = SRC.Cells(i, 1).text
             
-        Else
-            AddFile = 3
-        End If
-        impBook.Close True
+            'Составляем словарь resUIDs - все номера, которые есть в реестре
+            'Далее в сборе ищем все записи по коду из этого реестра, которые отсутствуют в этом
+            'словаре, их считаем удалёнными.
+            'Если в реестре будет два одинаковых номера, то тут будет ошибка!
+            On Error Resume Next
+            If rUID <> "" Then resUIDs.Add rUID, 1
+            
+            i = i + 1
+        Loop
         
+        'Проверяем исходник на удалённые записи (на предмет пропавших УИНов)
+        i = firstDat
+        Do While DAT.Cells(i, cAccept) <> ""
+            UID = DAT.Cells(i, cUIN).text
+            If UID <> "" And DAT.Cells(i, cCode) = curCode Then
+                If resUIDs(UID) = Empty Then
+                    DAT.Cells(i, cCom) = "Данные удалены заказчиком (вместе с УИН)"
+                    DAT.Cells(i, cCom).Interior.Color = colYellow
+                    DAT.Cells(i, cAccept) = "lost"
+                    AddFile = 2
+                End If
+            End If
+            i = i + 1
+        Loop
+        
+    Else
+        AddFile = 3
     End If
     
+    'Завершение
     On Error GoTo er
+    impBook.Close True
     Numerator.Save
     Application.ScreenUpdating = True
-    DoEvents
+    DoEvents    'Не помню для чего это, вроде как без этого всё зависало, а потом открывалось много окон
     If errors Then AddFile = 2
     Exit Function
 

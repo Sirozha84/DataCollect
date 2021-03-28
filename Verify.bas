@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 28.03.2021 13:15
+'Последняя правка: 28.03.2021 18:42
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -299,7 +299,7 @@ End Function
 Function isPrice(ByVal var As Variant)
     isPrice = False
     If IsNumeric(var) Then
-        If var >= 0 And var <> "" Then isPrice = True
+        If var >= 1 And var <> "" Then isPrice = True
     End If
 End Function
 

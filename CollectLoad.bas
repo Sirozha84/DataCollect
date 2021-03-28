@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 28.03.2021 16:22
+'Последняя правка: 28.03.2021 20:46
 
 Dim LastRec As Long
 Dim curFile As String
@@ -13,6 +13,7 @@ Sub Run()
     
     Message "Подготовка..."
     Dictionary.Init
+    Numerator.InitLoad
     Log.Init
     
     'Очищаем сбор от старых непринятых записей
@@ -29,7 +30,7 @@ Sub Run()
     Loop
     LastRec = i
     
-    'Получаем коллекцию файлов и делаем сбор
+    'Получаем коллекцию файлов и делаем сбор из них
     Set files = Source.getFiles(DirImportLoad, False)
     n = 1
     s = 0
@@ -54,23 +55,20 @@ Sub Run()
     i = firstDtL
     Do While DTL.Cells(i, clAccept) <> ""
         If DTL.Cells(i, clAccept) = "OK" Then
-            inn = DTL.Cells(i, clSaleINN).text
-            'Добавление поступлений
-            Qi = DateToQIndex(DTL.Cells(i, 3))
+            Qi = DateToQIndex(DTL.Cells(i, clDate))
             If Qi >= 0 Then
-                Sum = 0
-                For j = 12 To 14
-                    If IsNumeric(DTL.Cells(i, j)) Then Sum = Sum + DTL.Cells(i, j)
-                Next
-                Si = selIndexes(inn) 'строка
+                Si = selIndexes(DTL.Cells(i, clSaleINN).text)
                 Qi = Qi * 2 + cPBalance
+                Sum = DTL.Cells(i, clNDS)
                 If DTL.Cells(i, 1).text = "З" Then Qi = Qi + 1
                 DIC.Cells(Si, Qi) = DIC.Cells(Si, Qi) + Sum
             End If
+            
         End If
         i = i + 1
     Loop
 
+    'Завершение
     ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True
@@ -95,50 +93,51 @@ Function AddFile(ByVal file As String) As Byte
     On Error GoTo er
     Set impBook = Nothing
     Set impBook = Workbooks.Open(file, False, False)
+    Set SRC = impBook.Worksheets(1)
     On Error GoTo 0
     
-    If Not impBook Is Nothing Then
+    'Сбор данных
+    If Left(SRC.Cells(1, 1), 6) = "Журнал" Then
         
-        Set SRC = impBook.Worksheets(1)
-        
-        If Left(SRC.Cells(1, 1), 6) = "Журнал" Then
-            curMark = UCase(SRC.Cells(6, 4).text)
-            If curMark <> "К" And curMark <> "З" Then
-                AddFile = 3
-                impBook.Close False
-                Exit Function
-            End If
-            
-            curProv = Split(SRC.Cells(3, 2).text, ": ")(1)
-            curProvINN = Right(SRC.Cells(4, 2).text, 20)
-            
-            i = 12
-            Do While SRC.Cells(i, 2).text <> ""
-                If UINs(SRC.Cells(i, 21).text) = "" Then
-                    If Not copyRecord(i) Then
-                        errors = True
-                        DTL.Cells(LastRec, clAccept) = "fail"
-                    Else
-                        DTL.Cells(LastRec, clDateCol) = DateTime.Now
-                        uin = GenerateLoad
-                        DTL.Cells(LastRec, clUIN) = uin
-                        SRC.Cells(i, 21) = uin
-                        DTL.Cells(LastRec, clAccept) = "OK"
-                    End If
-                    DTL.Cells(LastRec, clFile) = file
-                    LastRec = LastRec + 1
-                End If
-                i = i + 1
-            Loop
+        'Чтение и проверка маркера
+        curMark = UCase(SRC.Cells(6, 4).text)
+        If curMark <> "К" And curMark <> "З" Then
+            AddFile = 3
+            impBook.Close False
+            Exit Function
         End If
         
-        On Error GoTo er
-        impBook.Close True
+        'Чтение данных поставщика
+        curProv = Split(SRC.Cells(3, 2).text, ": ")(1)
+        curProvINN = Right(SRC.Cells(4, 2).text, 20)
+        
+        'Чтение данных о закупках
+        i = 12
+        Do While SRC.Cells(i, 2).text <> ""
+            If UINs(SRC.Cells(i, 21).text) = "" Then
+                If Not copyRecord(i) Then
+                    errors = True
+                    DTL.Cells(LastRec, clAccept) = "fail"
+                Else
+                    DTL.Cells(LastRec, clDateCol) = DateTime.Now
+                    uin = GenerateLoad
+                    DTL.Cells(LastRec, clUIN) = uin
+                    SRC.Cells(i, 21) = uin
+                    DTL.Cells(LastRec, clAccept) = "OK"
+                End If
+                DTL.Cells(LastRec, clFile) = file
+                LastRec = LastRec + 1
+            End If
+            i = i + 1
+        Loop
         
     End If
     
+    'Завершение
+    On Error GoTo er
+    impBook.Close True
     Application.ScreenUpdating = True
-    DoEvents
+    DoEvents    'Не помню для чего это, вроде как без этого всё зависало, а потом открывалось много окон
     If errors Then AddFile = 2
     Exit Function
 
@@ -151,8 +150,12 @@ End Function
 'Si - строка в исходниках
 Function copyRecord(ByVal Si As Long) As Boolean
     
+    On Error GoTo er
     DTL.Cells(LastRec, clMark) = curMark
-    DTL.Cells(LastRec, clNum) = SRC.Cells(Si, 1)
+    DTL.Cells(LastRec, clKVO).NumberFormat = "@"
+    kvo = SRC.Cells(Si, 4)
+    If kvo = "01" Then DTL.Cells(LastRec, clKVO) = kvo
+    DTL.Cells(LastRec, clNum) = Split(SRC.Cells(Si, 5), " от ")(0)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clDate) = Right(SRC.Cells(Si, 5), 10)
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
@@ -163,8 +166,11 @@ Function copyRecord(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 9)
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 15)
     DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, 16)
-    
     copyRecord = VerifyLoad(LastRec)
+    Exit Function
+    
+er:
+    copyRecord = False
     
 End Function
 
