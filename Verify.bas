@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 26.03.2021 21:13
+'Последняя правка: 28.03.2021 13:15
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -144,16 +144,20 @@ Function VerifyLoad(ByVal i As Long) As Boolean
         AddCom "Дата введена не корректно"
     End If
 
-    'ИНН на выходе
-    If Not isINN(DTL.Cells(i, clOutINN).text) Then
-        DTL.Cells(i, clOutINN).Interior.Color = colRed
-        AddCom "Неверный ИНН на выходе"
+    'ИНН поставщика
+    If Not isINNKPP(DTL.Cells(i, clProvINN).text) Then
+        DTL.Cells(i, clProvINN).Interior.Color = colRed
+        AddCom "Неверный ИНН поставщика"
     End If
 
-    'ИНН на входе
-    If Not isINN(DTL.Cells(i, clInINN).text) Then
-        DTL.Cells(i, clInINN).Interior.Color = colRed
-        AddCom "Неверный ИНН на входе"
+    'ИНН продавца
+    If Not isINN(DTL.Cells(i, clSaleINN).text) Then
+        DTL.Cells(i, clSaleINN).Interior.Color = colRed
+        AddCom "Неверный ИНН продавца"
+    Else
+        If Not CorrectSaler(DTL.Cells(i, clSaleINN).text, DTL.Cells(i, clSaleName).text) Then
+            AddCom "Наименование и ИНН продавца не совпадают с данными в справочнике"
+        End If
     End If
 
     'Стоимость

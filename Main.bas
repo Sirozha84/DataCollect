@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-'Последняя правка: 27.03.2021 16:05
+'Последняя правка: 28.03.2021 14:25
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
@@ -16,10 +16,10 @@ Public Const minLim = 5000000   'Минимальный лимит, если меньше него, период про
 'Колонки "Отгрузки"
 Public Const cUIN = 1           'УИН
 Public Const cDates = 2         'Дата
-Public Const cBuyINN = 3        'ИНН покупателя
-Public Const cBuyer = 4         'Наименование покупателя
-Public Const cSellINN = 5       'ИНН продавца
-Public Const cSeller = 6        'Наименование продавец
+Public Const cBuyINN = 3        'Покупатель ИНН
+Public Const cBuyer = 4         'Покупатель Наименование
+Public Const cSellINN = 5       'Продавец ИНН
+Public Const cSeller = 6        'Продавец Наименование
 Public Const cPrice = 7         'Стоимость с НДС
 Public Const cCom = 15          'Комментарий
 Public Const cStatus = 16       'Статус
@@ -33,19 +33,21 @@ Public Const cPND = 21          'Период НД
 Public Const clMark = 1         'Маркер
 Public Const clNum = 2          'Номер
 Public Const clDate = 3         'Дата
-Public Const clOutINN = 4       'Выход ИНН
-Public Const clOutName = 5      'Выход Наименование
-Public Const clInINN = 6        'Вход ИНН
-Public Const clInName = 7       'Вход Наименование
+Public Const clProvINN = 4      'Поставщик ИНН
+Public Const clProvName = 5     'Поставшик Наименование
+Public Const clSaleINN = 6      'Продавец ИНН
+Public Const clSaleName = 7     'Продавец Наименование
 Public Const clPrice = 8        'Стоимость с НДС
-Public Const clCom = 15         'Комментарий
-Public Const clStatus = 16      'Статус
-Public Const clRasp = 17        'Распределено
-Public Const clPND = 18         'Период НД
-Public Const clOst = 19         'Остаток НДС
-Public Const clDateCol = 20     'Дата сбора
-Public Const clFile = 21        'Имя файла
-Public Const clAccept = 22      'Принято/не принято
+Public Const clNDS = 12         'Сумма НДС
+Public Const clCom = 13         'Комментарий
+Public Const clStatus = 14      'Статус
+Public Const clRasp = 15        'Распределено
+Public Const clPND = 16         'Период НД
+Public Const clOst = 17         'Остаток НДС
+Public Const clDateCol = 18     'Дата сбора
+Public Const clUIN = 19         'УИН
+Public Const clFile = 20        'Имя файла
+Public Const clAccept = 21      'Принято/не принято
 
 'Колонки "Справочник"
 Public Const cSellerName = 1    'Наименование продавца
@@ -181,12 +183,16 @@ Sub ButtonClear()
         "Справочник и словари нумератора удаляться не будут." + e + e + _
         "Для продолжения введите пароль.", "Удаление данных") <> Secret Then Exit Sub
     SetProtect DAT
-    Range(Cells(firstDat, 1), Cells(maxRow, cAccept)).Clear
-    Range(Cells(firstDat, cStatus), Cells(maxRow, cDateCol)).Interior.Color = colYellow
-    Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Interior.Color = colGray
-    Range(Cells(firstDat, cFile), Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
+    Range(DAT.Cells(firstDat, 1), DAT.Cells(maxRow, cAccept)).Clear
+    Range(DAT.Cells(firstDat, cStatus), DAT.Cells(maxRow, cDateCol)).Interior.Color = colYellow
+    Range(DAT.Cells(firstDat, cFile), DAT.Cells(maxRow, cAccept)).Interior.Color = colGray
+    Range(DAT.Cells(firstDat, cFile), DAT.Cells(maxRow, cAccept)).Font.Color = RGB(166, 166, 166)
+    Range(DTL.Cells(firstDtL, 1), DTL.Cells(maxRow, clAccept)).Clear
+    Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Interior.Color = colGray
+    Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Font.Color = RGB(166, 166, 166)
     Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
-    Message "Готово!"
+    Message "Готово! Файл не был сохранён. " + _
+            "Если передумали - закройте файл не сохраняясь и откройте снова."
 End Sub
 
 '******************** Вкладка "Поступления" ********************
@@ -195,8 +201,7 @@ End Sub
 Sub ButtonCollectLoad()
     Init
     If MsgBox("Начинается сбор данных по поступлениям. " + _
-        "Начала этого процесса очистит уже собранные данные. " + _
-        "Также пересчитаются начальные остатки. Продолжить?", vbYesNo) = vbNo Then Exit Sub
+            "Продолжить?", vbYesNo) = vbNo Then Exit Sub
     CollectLoad.Run
 End Sub
 
