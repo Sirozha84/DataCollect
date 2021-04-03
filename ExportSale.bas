@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportSale"
-'ѕоследн€€ правка: 27.03.2021 16:02
+'ѕоследн€€ правка: 03.04.2021 21:33
 
 'Ёкспорт файла
 Public Sub Run(ByVal inn As String, ByVal NUM As String, _
@@ -299,8 +299,8 @@ Sub PeriodND(ByVal Si As Double)
             Loop Until Not Enter Or Qi.Count = 0
         End If
         
-        Debug.Print "ќчередь на период " + CStr(tND)
-        For Each i In Qi: Debug.Print i: Next
+        'Debug.Print "ќчередь на период " + CStr(tND)
+        'For Each i In Qi: Debug.Print i: Next
         
     Loop While tND < quartCount - 1
 
