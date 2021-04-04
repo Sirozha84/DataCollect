@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportLoad"
-'Последняя правка: 03.04.2021 21:36
+'Last change: 04.04.2021 18:47
 
 Sub Run()
     
@@ -31,9 +31,9 @@ Sub Run()
 End Sub
 
 'Формирование файла выгрузки
-Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
+Sub CreateExportFile(ByVal INN As String, ByVal NUM As String)
     
-    saler = SellFileName(inn)
+    saler = SellFileName(INN)
     Message "Экспорт файла " + NUM + saler
     
     'Определяемся с путём и именем файла
@@ -66,31 +66,37 @@ End Sub
 'Распределение поступлений
 Sub LoadAllocation()
     
-    For Each inn In selIndexes
+    For Each INN In selIndexes
         
-        Si = selIndexes(inn)
+        Si = selIndexes(INN)
         oND = StupidQToQIndex(DIC.Cells(Si, cOPND))
         
-        For cPer = oND To Quartals
+        For cPer = oND To quartCount - 1
             
             'Расчёт суммы всех отгрузок за текущий период
-            Sum = 0
-            i = firstDat
-            Do While DAT.Cells(i, cAccept) <> ""
-                If DAT.Cells(i, cAccept) = "OK" And DAT.Cells(i, cSellINN) = inn Then
-                    If StupidQToQIndex(DAT.Cells(i, cPND)) = cPer Then
-                        Sum = Sum + WorksheetFunction.Sum(Range(DAT.Cells(i, clNDS), DAT.Cells(i, clNDS + 2)))
-                    End If
-                End If
-                i = i + 1
-            Loop
+            Sum = GetSaleSumm(INN, cPer)
             If Sum > minSale Then
             
                 Set dateS = GetDatesList(cPer)
-
-                'Далее делаем подбор начиная с первой строки в dataS
-
-            
+                
+                'Подбираем список поступлений
+                Dim ndlist As Collection
+                Set ndlist = New Collection
+                For Each postdate In dateS
+                    i = dateS(postdate)
+                    Post = DTL.Cells(i, clNDS)
+                    If Sum - Post >= 0 Then
+                        Sum = Sum - Post
+                        If Sum >= 0 Then ndlist.Add i
+                        If Sum < maxDif Then Exit For
+                    End If
+                Next
+                
+                'По собранному списку поступлений проставляем текущий период
+                For Each i In ndlist
+                    DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
+                Next
+                
             End If
             
         Next
@@ -101,7 +107,22 @@ Sub LoadAllocation()
     
 End Sub
 
-'Формирование сортированного списка дат входящих в 12 кварталов начиная от заданного
+'Расчёт суммы отгрузок продавца с INN за квартал Q
+Function GetSaleSumm(ByVal INN As String, ByVal Q As Integer) As Double
+    i = firstDat
+    Sum = 0
+    Do While DAT.Cells(i, cAccept) <> ""
+        If DAT.Cells(i, cAccept) = "OK" And DAT.Cells(i, cSellINN) = INN Then
+            If StupidQToQIndex(DAT.Cells(i, cPND)) = Q Then
+                Sum = Sum + WorksheetFunction.Sum(Range(DAT.Cells(i, clNDS), DAT.Cells(i, clNDS + 2)))
+            End If
+        End If
+        i = i + 1
+    Loop
+    GetSaleSumm = Sum
+End Function
+
+'Формирование сортированного списка дат входящих в 12 кварталов начиная от cPer
 Function GetDatesList(ByVal cPer As Integer) As Object
             
     'Собираем подходящие даты
@@ -110,15 +131,14 @@ Function GetDatesList(ByVal cPer As Integer) As Object
     Do While DTL.Cells(i, clAccept) <> ""
         Dim d As Date
         d = DTL.Cells(i, clDate)
-        q = DateToQIndex(d)
-        If q >= cPer And q <= cPer + 11 Then dateS(d) = i
+        Q = DateToQIndex(d)
+        If Q >= cPer And Q <= cPer + 11 And DTL.Cells(i, clPND) = "" Then dateS(d) = i
         i = i + 1
     Loop
     
     'Сортируем собранные даты
     Set datesSorted = CreateObject("Scripting.Dictionary")
     Do While dateS.Count > 0
-        'Находим максимальную дату
         Dim max As Date
         max = 0
         For Each dt In dateS
@@ -127,7 +147,9 @@ Function GetDatesList(ByVal cPer As Integer) As Object
         datesSorted(max) = dateS(max)
         dateS.Remove (max)
     Loop
+    
     Set GetDatesList = datesSorted
+    
 End Function
 
 '******************** End of File ********************
