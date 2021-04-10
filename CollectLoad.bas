@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 10.04.2021 17:01
+'Последняя правка: 10.04.2021 19:07
 
 Dim LastRec As Long
 Dim curFile As String
@@ -67,6 +67,8 @@ Sub Run()
         End If
         i = i + 1
     Loop
+    
+    FindDuplicates
 
     'Завершение
     ActiveWorkbook.Save
@@ -236,8 +238,25 @@ er:
     
 End Function
 
-Function CompNameSeparate(ByVal s As String) As String
-    CompNameSeparate = Trim(Split(s, ":"))
-End Function
+'Проверка собранных записей на отсутствие повторяющихся номеров
+Sub FindDuplicates()
+    Set numbers = CreateObject("Scripting.Dictionary")
+    i = firstDtL
+    Do While DTL.Cells(i, clAccept) <> ""
+        NUM = DTL.Cells(i, clNum).text
+        If numbers(NUM) = Empty Then
+            numbers(NUM) = i
+        Else
+            io = numbers(NUM)
+            DTL.Cells(io, clCom) = "Номер СФ повторяется"
+            DTL.Cells(i, clCom) = "Номер СФ повторяется"
+            DTL.Cells(io, clCom).Interior.Color = colRed
+            DTL.Cells(i, clCom).Interior.Color = colRed
+            DTL.Cells(io, clAccept) = "fail"
+            DTL.Cells(i, clAccept) = "fail"
+        End If
+        i = i + 1
+    Loop
+End Sub
 
 '******************** End of File ********************
