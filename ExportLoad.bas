@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportLoad"
-'Last change: 05.04.2021 20:32
+'Last change: 10.04.2021 20:35
 
 Sub Run()
     
@@ -149,9 +149,11 @@ Sub LoadAllocation()
                     End If
                 Next
                 
-                'ѕо собранному списку поступлений проставл€ем текущий период
+                'ѕо собранному списку поступлений проставл€ем текущий период и распределЄнную сумму
                 For Each i In ndlist
                     DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
+                    If DTL.Cells(i, clRasp).text = "" Then _
+                            DTL.Cells(i, clRasp) = DTL.Cells(i, clNDS)
                 Next
                 
             End If

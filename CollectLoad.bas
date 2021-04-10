@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 10.04.2021 19:07
+'Последняя правка: 10.04.2021 20:32
 
 Dim LastRec As Long
 Dim curFile As String
@@ -192,6 +192,8 @@ Function copyRecordZH(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 15)
     DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, 16)
     copyRecordZH = VerifyLoad(LastRec)
+    On Error GoTo 0
+    AddFormuls
     Exit Function
     
 er:
@@ -231,12 +233,26 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     Next
     DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum(Range(Cells(Si, 21), Cells(Si, 23)))
     copyRecordSB = VerifyLoad(LastRec)
+    On Error GoTo 0
+    AddFormuls
     Exit Function
     
 er:
     copyRecordSB = False
     
 End Function
+
+'Добавление формул и проверки данных
+Sub AddFormuls()
+    s = CStr(LastRec)
+    DTL.Cells(LastRec, clOst).Formula = "=M" + s + "-OneCellSum(P" + s + ")"
+    formul = "=R" + s + ">=0"
+    With DTL.Cells(LastRec, clRasp).Validation
+        .Delete
+        .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:=formul
+        .ErrorMessage = "Распределённая сумма превысила сумму НДС"
+    End With
+End Sub
 
 'Проверка собранных записей на отсутствие повторяющихся номеров
 Sub FindDuplicates()
