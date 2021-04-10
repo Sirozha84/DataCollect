@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 28.03.2021 20:46
+'Последняя правка: 10.04.2021 17:01
 
 Dim LastRec As Long
 Dim curFile As String
@@ -95,34 +95,33 @@ Function AddFile(ByVal file As String) As Byte
     Set impBook = Workbooks.Open(file, False, False)
     Set SRC = impBook.Worksheets(1)
     On Error GoTo 0
+        
+    'Чтение и проверка маркера
+    curMark = UCase(SRC.Cells(2, 2).text)
+    If curMark <> "К" And curMark <> "З" Then
+        AddFile = 3
+        impBook.Close False
+        Exit Function
+    End If
     
-    'Сбор данных
-    If Left(SRC.Cells(1, 1), 6) = "Журнал" Then
-        
-        'Чтение и проверка маркера
-        curMark = UCase(SRC.Cells(6, 4).text)
-        If curMark <> "К" And curMark <> "З" Then
-            AddFile = 3
-            impBook.Close False
-            Exit Function
-        End If
-        
-        'Чтение данных поставщика
+    'Чтение заголовков
+    nm = Left(SRC.Cells(1, 1), 5)
+    If nm = "Журна" Then    '(Обрезано, потому что берутся первые 5 символов)
         curProv = Split(SRC.Cells(3, 2).text, ": ")(1)
         curProvINN = Right(SRC.Cells(4, 2).text, 20)
-        
+        i = 12  'Первая строка данных
+        c = 21  'Колонка с обратной связью
         'Чтение данных о закупках
-        i = 12
         Do While SRC.Cells(i, 2).text <> ""
-            If UINs(SRC.Cells(i, 21).text) = "" Then
-                If Not copyRecord(i) Then
+            If UINs(SRC.Cells(i, c).text) = "" Then
+                If Not copyRecordZH(i) Then
                     errors = True
                     DTL.Cells(LastRec, clAccept) = "fail"
                 Else
                     DTL.Cells(LastRec, clDateCol) = DateTime.Now
                     uin = GenerateLoad
                     DTL.Cells(LastRec, clUIN) = uin
-                    SRC.Cells(i, 21) = uin
+                    SRC.Cells(i, c) = uin
                     DTL.Cells(LastRec, clAccept) = "OK"
                 End If
                 DTL.Cells(LastRec, clFile) = file
@@ -130,9 +129,33 @@ Function AddFile(ByVal file As String) As Byte
             End If
             i = i + 1
         Loop
-        
     End If
-    
+    If nm = "Книга" Then
+        curProv = Split(SRC.Cells(6, 1).text, "= ")(1)
+        curProvINN = Right(SRC.Cells(4, 1).text, 20)
+        i = 10  'Первая строка данных
+        c = 25  'Колонка с обратной связью
+        'Чтение данных о закупках
+        Do While SRC.Cells(i, 2).text <> ""
+            If UINs(SRC.Cells(i, c).text) = "" Then
+                If Not copyRecordSB(i) Then
+                    errors = True
+                    DTL.Cells(LastRec, clAccept) = "fail"
+                Else
+                    DTL.Cells(LastRec, clDateCol) = DateTime.Now
+                    uin = GenerateLoad
+                    DTL.Cells(LastRec, clUIN) = uin
+                    SRC.Cells(i, c) = uin
+                    DTL.Cells(LastRec, clAccept) = "OK"
+                End If
+                DTL.Cells(LastRec, clFile) = file
+                LastRec = LastRec + 1
+            End If
+            i = i + 1
+        Loop
+    End If
+        
+
     'Завершение
     On Error GoTo er
     impBook.Close True
@@ -146,18 +169,18 @@ er:
     
 End Function
 
-'Копирование записи. Возвращает True, если запись принялась без ошибок
+'Копирование записи из журнала. Возвращает True, если запись принялась без ошибок
 'Si - строка в исходниках
-Function copyRecord(ByVal Si As Long) As Boolean
+Function copyRecordZH(ByVal Si As Long) As Boolean
     
     On Error GoTo er
     DTL.Cells(LastRec, clMark) = curMark
     DTL.Cells(LastRec, clKVO).NumberFormat = "@"
-    kvo = SRC.Cells(Si, 4)
-    If kvo = "01" Then DTL.Cells(LastRec, clKVO) = kvo
-    DTL.Cells(LastRec, clNum) = Split(SRC.Cells(Si, 5), " от ")(0)
+    DTL.Cells(LastRec, clKVO) = SRC.Cells(Si, 4)
+    nd = SRC.Cells(Si, 5).text
+    DTL.Cells(LastRec, clNum) = Split(nd, " от ")(0)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
-    DTL.Cells(LastRec, clDate) = Right(SRC.Cells(Si, 5), 10)
+    DTL.Cells(LastRec, clDate) = Right(nd, 10)
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
@@ -166,11 +189,50 @@ Function copyRecord(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 9)
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 15)
     DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, 16)
-    copyRecord = VerifyLoad(LastRec)
+    copyRecordZH = VerifyLoad(LastRec)
     Exit Function
     
 er:
-    copyRecord = False
+    copyRecordZH = False
+    
+End Function
+
+'Копирование записи из книги продаж. Возвращает True, если запись принялась без ошибок
+'Si - строка в исходниках
+Function copyRecordSB(ByVal Si As Long) As Boolean
+    
+    On Error GoTo er
+    DTL.Cells(LastRec, clMark) = curMark
+    DTL.Cells(LastRec, clKVO).NumberFormat = "@"
+    kvo = SRC.Cells(Si, 2)
+    DTL.Cells(LastRec, clKVO) = kvo
+    DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
+    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 10), 10)
+    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 9)
+    If kvo = "02" Then
+        DTL.Cells(LastRec, clKVO) = "22"
+        DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
+        DTL.Cells(LastRec, clSaleINN) = curProvINN
+        DTL.Cells(LastRec, clSaleName) = curProv
+    End If
+    nd = SRC.Cells(Si, 3).text
+    DTL.Cells(LastRec, clNum).NumberFormat = "@"
+    DTL.Cells(LastRec, clNum) = Split(nd, " от")(0)
+    DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
+    DTL.Cells(LastRec, clDate) = Right(nd, 10)
+    DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
+    DTL.Cells(LastRec, clProvINN) = curProvINN
+    DTL.Cells(LastRec, clProvName) = curProv
+    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 16)
+    For i = 0 To 2
+        DTL.Cells(LastRec, clPrice + 1 + i) = SRC.Cells(Si, 17 + i)
+    Next
+    DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum(Range(Cells(Si, 21), Cells(Si, 23)))
+    copyRecordSB = VerifyLoad(LastRec)
+    Exit Function
+    
+er:
+    copyRecordSB = False
     
 End Function
 
