@@ -1,4 +1,6 @@
 Attribute VB_Name = "Misc"
+'Последняя правка: 10.04.2021 20:00
+
 'Сообщение в строке статуса
 Sub Message(text As String)
     Application.ScreenUpdating = True
@@ -101,3 +103,15 @@ Function SetProtect(table As Variant) As Boolean
 er:
     SetProtect = False
 End Function
+
+'Сумма значений, разделённых ";"
+Function OneCellSum(cell As String)
+    sts = Split(cell, ";")
+    Sum = 0
+    For Each st In sts
+        Sum = Sum + CStr(st)
+    Next
+    OneCellSum = Sum
+End Function
+
+'******************** End of File ********************
