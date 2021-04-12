@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 10.04.2021 20:32
+'Последняя правка: 12.04.2021 19:19
 
 Dim LastRec As Long
 Dim curFile As String
@@ -218,6 +218,7 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
         DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
         DTL.Cells(LastRec, clSaleINN) = curProvINN
         DTL.Cells(LastRec, clSaleName) = curProv
+        kvochange = True
     End If
     nd = SRC.Cells(Si, 3).text
     DTL.Cells(LastRec, clNum).NumberFormat = "@"
@@ -233,6 +234,12 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     Next
     DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum(Range(Cells(Si, 21), Cells(Si, 23)))
     copyRecordSB = VerifyLoad(LastRec)
+    'КВО менялся с 02 на 22, делаем связанные с этим событием действия
+    If kvochange Then
+        i = selIndexes(DTL.Cells(LastRec, clSaleINN).text)
+        j = DateToQIndex(DTL.Cells(LastRec, clDate))
+        DIC.Cells(i, cSaleProtect + j) = "Да"
+    End If
     On Error GoTo 0
     AddFormuls
     Exit Function
