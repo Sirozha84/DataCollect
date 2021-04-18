@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 28.03.2021 18:42
+'Последняя правка: 18.04.2021 20:19
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -138,6 +138,10 @@ Function VerifyLoad(ByVal i As Long) As Boolean
     errors = False
     VerifyLoad = True
 
+    'КВО, после манипуляций должно остаться только 01 и 22, если что-то другое - значит ошибка
+    kvo = DTL.Cells(i, clKVO).text
+    If kvo <> "01" And kvo <> "22" Then AddCom "Ошибка КВО"
+
     'Дата
     If Not isDateMy(DTL.Cells(i, clDate).text) Then
         DTL.Cells(i, clDate).Interior.Color = colRed
@@ -151,7 +155,7 @@ Function VerifyLoad(ByVal i As Long) As Boolean
     End If
 
     'ИНН продавца
-    If Not isINN(DTL.Cells(i, clSaleINN).text) Then
+    If Not isINN(DTL.Cells(i, clSaleINN).text) And Not isINNKPP(DTL.Cells(i, clSaleINN).text) Then
         DTL.Cells(i, clSaleINN).Interior.Color = colRed
         AddCom "Неверный ИНН продавца"
     Else

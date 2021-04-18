@@ -1,5 +1,5 @@
 Attribute VB_Name = "Dictionary"
-'Последняя правка: 18.04.2021 19:45
+'Последняя правка: 18.04.2021 20:21
 
 'Чтение словаря продавцов
 Public Sub Init()
@@ -41,7 +41,7 @@ Function CorrectSaler(ByVal inn As String, ByVal name As String) As Boolean
         Next
         lastdic = lastdic + 1
     Else
-        If DIC.Cells(selIndexes(inn), 1) <> name Then CorrectSaler = False
+        If LCase(DIC.Cells(selIndexes(inn), 1)) <> LCase(name) Then CorrectSaler = False
     End If
 End Function
 
