@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 18.04.2021 13:55
+'Последняя правка: 18.04.2021 19:58
 
 Dim LastRec As Long
 Dim curFile As String
@@ -57,7 +57,7 @@ Sub Run()
         If DTL.Cells(i, clAccept) = "OK" Then
             Qi = DateToQIndex(DTL.Cells(i, clDate))
             If Qi >= 0 Then
-                Si = selIndexes(DTL.Cells(i, clSaleINN).text)
+                Si = IndexByINN(DTL.Cells(i, clSaleINN).text)
                 Qi = Qi * 2 + cPBalance
                 Sum = DTL.Cells(i, clNDS)
                 If DTL.Cells(i, 1).text = "З" Then Qi = Qi + 1
@@ -186,7 +186,8 @@ Function copyRecordZH(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clKVO).NumberFormat = "@"
     DTL.Cells(LastRec, clKVO) = SRC.Cells(Si, 4)                'КВО
     nd = SRC.Cells(Si, 6).text                                  'Номер и дата
-    DTL.Cells(LastRec, clNum) = Split(nd, " от ")(0)
+    DTL.Cells(LastRec, clNum).NumberFormat = "@"
+    DTL.Cells(LastRec, clNum) = NumFromND(nd)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clDate) = Right(nd, 10)
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
@@ -229,7 +230,7 @@ Function copyRecordSB(ByVal Si As Long, ByVal fNDS As Integer) As Boolean
     End If
     nd = SRC.Cells(Si, 3).text
     DTL.Cells(LastRec, clNum).NumberFormat = "@"
-    DTL.Cells(LastRec, clNum) = Split(nd, " от")(0)
+    DTL.Cells(LastRec, clNum) = NumFromND(nd)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clDate) = Right(nd, 10)
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
@@ -252,7 +253,7 @@ Function copyRecordSB(ByVal Si As Long, ByVal fNDS As Integer) As Boolean
     copyRecordSB = VerifyLoad(LastRec)
     'КВО менялся с 02 на 22, делаем связанные с этим событием действия
     If kvochange Then
-        i = selIndexes(DTL.Cells(LastRec, clSaleINN).text)
+        i = IndexByINN(DTL.Cells(LastRec, clSaleINN).text)
         j = DateToQIndex(DTL.Cells(LastRec, clDate))
         DIC.Cells(i, cSaleProtect + j) = "Да"
     End If
@@ -297,5 +298,13 @@ Sub FindDuplicates()
         i = i + 1
     Loop
 End Sub
+
+'Отделение номера от "Номер и дата"
+Function NumFromND(ByVal nd As String) As String
+    ss = Split(nd, " от")
+    If UBound(ss) > 0 Then NumFromND = ss(0)
+    ss = Split(nd, ";")
+    If UBound(ss) > 0 Then NumFromND = ss(0)
+End Function
 
 '******************** End of File ********************
