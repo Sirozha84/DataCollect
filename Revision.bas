@@ -1,4 +1,6 @@
 Attribute VB_Name = "Revision"
+'Последняя правка: 19.04.2021 20:51
+
 'Ревизия остатков
 Public Sub Run()
     
@@ -22,19 +24,15 @@ Public Sub Run()
     i = firstDat
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cAccept) = "OK" Then
-            s = 0
-            For j = 12 To 14
-                If DAT.Cells(i, j).text <> "" Then s = s + DAT.Cells(i, j)
-            Next
+            s = WorksheetFunction.Sum(Range(DAT.Cells(i, 12), DAT.Cells(i, 14)))
             sl = selIndexes(DAT.Cells(i, cSellINN).text)
             If sl = Empty Then
                 MsgBox "Произошла неожиданная ошибка:" + Chr(10) + "Продавец " + DAT.Cells(i, cSeller) + _
                         " c ИНН " + DAT.Cells(i, cSellINN).text + " отсутствует в справочнике!"
                 End
             End If
-            kv = Kvartal(DAT.Cells(i, cDates))
-            kvin = cPRev + qrtIndexes(kv)
-            DIC.Cells(sl, kvin) = DIC.Cells(sl, kvin) + s
+            q = DateToQIndex(DAT.Cells(i, cDates))
+            If q >= 0 Then DIC.Cells(sl, cPRev + q) = DIC.Cells(sl, cPRev + q) + s
         End If
         i = i + 1
     Loop
@@ -55,3 +53,5 @@ Public Sub Run()
     Message "Готово"
     
 End Sub
+
+'******************** End of File ********************

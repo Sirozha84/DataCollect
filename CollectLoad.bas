@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 18.04.2021 19:58
+'Последняя правка: 19.04.2021 20:32
 
 Dim LastRec As Long
 Dim curFile As String
@@ -113,7 +113,7 @@ Function AddFile(ByVal file As String) As Byte
     If LCase(Left(SRC.Cells(2, 27), 6)) = "журнал" Then ftyp = "j"
     
     'Читаем данные
-    c = 50  'Колонка с обратной связью
+    c = 60  'Колонка с обратной связью
     If ftyp = "j" Then
         curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
         curProvINN = Right(SRC.Cells(5, 2).text, 20)

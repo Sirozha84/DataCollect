@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 18.04.2021 20:19
+'Последняя правка: 19.04.2021 21:14
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -211,14 +211,12 @@ End Sub
 'oldINN, oldSum - прежние инн продавца и прежняя сумма (если это перепроверка)
 Sub LimitsTest(ByVal Di As Long, ByVal Si As Long, ByVal oldINN, ByVal oldSum)
     
-    dt = DAT.Cells(Di, 2)
     cod = DAT.Cells(Di, cCode).text + "!"
-    kv = Kvartal(dt)
-    kvin = qrtIndexes(kv)
+    q = DateToQIndex(DAT.Cells(Di, cDates))
     SEL = DAT.Cells(Di, cSellINN).text
-    selCur = SEL + "!" + kv + "!"
+    selCur = SEL + "!" + CStr(q) + "!"
     BUY = DAT.Cells(Di, cBuyINN).text
-    buyCur = BUY + "!" + kv + "!"
+    buyCur = BUY + "!" + CStr(q) + "!"
     grp = groups(SEL)
     Sum = 0
     For j = 12 To 14
@@ -230,7 +228,7 @@ Sub LimitsTest(ByVal Di As Long, ByVal Si As Long, ByVal oldINN, ByVal oldSum)
     ind = selIndexes(SEL)
     
     'Проверка на запрет отгрузки в этом периоде
-    If DIC.Cells(ind, cSaleProtect + DateToQIndex(dt)) = "Да" Then
+    If DIC.Cells(ind, cSaleProtect + q) = "Да" Then
         AddCom "Данный продавец не может отгружать в данном периоде"
         Exit Sub 'Дальнейшие проверки бессмысленны
     End If
@@ -241,11 +239,11 @@ Sub LimitsTest(ByVal Di As Long, ByVal Si As Long, ByVal oldINN, ByVal oldSum)
     
     'Проверка на остатки
     over = False
-    For j = 0 To kvin
+    For j = 0 To q
         If Sum > DIC.Cells(ind, cLimits + j) Then over = True
     Next
     If Not over Then
-        DIC.Cells(ind, cPFact + kvin) = DIC.Cells(ind, cPFact + kvin) + Sum
+        DIC.Cells(ind, cPFact + q) = DIC.Cells(ind, cPFact + q) + Sum
     Else
         AddCom "Сумма превышает свободный остаток у данного продавца": e = True
     End If
@@ -269,11 +267,11 @@ End Sub
 
 'Восстановление остатка
 Sub RestoreBalance(dt, oldINN, oldSum)
-    kvin = qrtIndexes(Kvartal(dt))
-    If oldSum > 0 Then
+    q = DateToQIndex(dt)
+    If oldSum > 0 And q >= 0 Then
         ind = selIndexes(oldINN)
         If ind <> Empty Then _
-                DIC.Cells(ind, cPFact + kvin) = DIC.Cells(ind, cPFact + kvin) - oldSum
+                DIC.Cells(ind, cPFact + q) = DIC.Cells(ind, cPFact + q) - oldSum
     End If
 End Sub
 

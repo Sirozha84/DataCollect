@@ -1,4 +1,6 @@
 Attribute VB_Name = "Values"
+'Последняя правка: 19.04.2021 21:20
+
 'Формирование отчёта "Объёмы продаж"
 Sub CreateReport()
 
@@ -14,14 +16,11 @@ Sub CreateReport()
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cAccept) = "OK" Then
             cod = DAT.Cells(i, cCode).text
-            kv = Kvartal(DAT.Cells(i, cDates))
+            q = DateToQIndex(DAT.Cells(i, cDates))
             BUY = DAT.Cells(i, cBuyINN).text
             sell = DAT.Cells(i, cSellINN).text
-            nds = 0
-            For j = 12 To 14
-                If DAT.Cells(i, j) <> "" Then nds = nds + DAT.Cells(i, j)
-            Next
-            ID = cod + "!" + kv + "!" + sell + "!" + BUY
+            nds = WorksheetFunction.Sum(Range(DAT.Cells(i, 12), DAT.Cells(i, 14)))
+            ID = cod + "!" + CStr(q) + "!" + sell + "!" + BUY
             summPrice(ID) = summPrice(ID) + DAT.Cells(i, cPrice)
             summNDS(ID) = summNDS(ID) + nds
             buyList(DAT.Cells(i, cBuyINN).text) = DAT.Cells(i, cBuyer).text
@@ -98,3 +97,5 @@ Sub CreateReport()
     Message "Готово!"
     
 End Sub
+
+'******************** End of File ********************

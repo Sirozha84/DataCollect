@@ -1,5 +1,5 @@
 Attribute VB_Name = "Misc"
-'Последняя правка: 10.04.2021 20:00
+'Последняя правка: 19.04.2021 21:17
 
 'Сообщение в строке статуса
 Sub Message(text As String)
@@ -44,15 +44,6 @@ End Function
 'Расчёт квартала по номеру индекса
 Function IndexToQuartal(ByVal i As Integer) As String
     IndexToQuartal = CStr(lastYear - Int((lastQuartal + i) / 4) + 1) + CStr(4 - i Mod 4)
-End Function
-
-'Вычисляет из даты ГГГГК
-Function Kvartal(sdata As Variant) As String
-    On Error GoTo er
-    Kvartal = CStr(Year(sdata)) + CStr((Month(sdata) - 1) \ 3 + 1)
-    Exit Function
-er:
-    Kvartal = ""
 End Function
 
 'Вычисляет из индекса КГГГГ
