@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-'Last change: 23.04.2021 14:09
+'Last change: 23.04.2021 14:54
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
@@ -8,8 +8,6 @@ Public Const tmpVersion = "20210108"    'Необходимая версия реестра
 'Настройки
 Public Const Secret = "123"     'Пароль для защиты
 Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
-Public Const lastYear = 2020    'Первый расчётный год
-Public Const lastQuartal = 4    'Первый расчётный квартал
 Public Const limitOND = 9000000 'Лимит в основной период НД (9м)
 Public Const minLim = 5000000   'Минимальная сумма продаж, если меньше, период пропускается (5м)
 Public Const minSale = 20000    'Минимальная сумма продаж, достаточная для распределения закупок (20т)
@@ -92,6 +90,8 @@ Public Const firstValues = 6    'Отчёт "Объёмы"
 Public Const pImportSale = 4    'Импорт отгрузок
 Public Const pImportLoad = 5    'Импорт поступлений
 Public Const pExport = 6        'Экспорт
+Public Const pLastYear = 11     'Последний год
+Public Const pLastQuartal = 12  'Последний квартал
 
 'Цвета
 Public colWhite As Long         'Для невидимости строк
@@ -122,6 +122,8 @@ Public DirExport As String      'Каталог экспорта
 'Общие переменные
 Public selIndexes As Variant    'Словарь индексов продавцов (номера строк в справочнике по ИНН)
 Public BookCount As Long        'Счётчик сгенерированных книг
+Public lastYear As Integer      'Последний год рассматриваемого периода
+Public lastQuartal As Integer   'Последний квартал рассматриваемого периода
 
 'Инициализация таблиц, цветов
 Sub Init()
@@ -147,7 +149,9 @@ Sub Init()
     DirImportSale = PRP.Cells(pImportSale, 2).text
     DirImportLoad = PRP.Cells(pImportLoad, 2).text
     DirExport = PRP.Cells(pExport, 2).text
-    
+    lastYear = PRP.Cells(pLastYear, 2)
+    lastQuartal = PRP.Cells(pLastQuartal, 2)
+
     Exit Sub
 er:
     MsgBox ("Ошибка целостности документа! Необходимые вкладки были удалены или переименовены.")
