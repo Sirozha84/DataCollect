@@ -1,5 +1,5 @@
 Attribute VB_Name = "Template"
-'Последняя правка: 26.03.2021
+'Last change: 23.04.2021 18:20
 
 Const LastRec = 10000   'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxComps = 100    'Максимальное количество компаний (продавцов или покупателей)
@@ -191,9 +191,9 @@ Function NewTemplate(ByVal cln As String, ByVal tem As String, _
     Next
     
     'Поле 9-11 - Сумма с НДС 20,18,10%      Формула G/(100+H)*100
-    SetRange(9).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=20);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
-    SetRange(10).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=18);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
-    SetRange(11).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=10);ОКРУГЛ(G5/(100+H5)*100;2);"""")"
+    SetRange(9).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=20);ОКРУГЛ(G5-L5;2);"""")"
+    SetRange(10).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=18);ОКРУГЛ(G5-M5;2);"""")"
+    SetRange(11).FormulaLocal = "=ЕСЛИ(И(G5<>"""";H5=10);ОКРУГЛ(G5-N5;2);"""")"
     Cells(1, 9).FormulaLocal = "=СУММ(I5:I" + CStr(LastRec) + ")"
     Cells(1, 10).FormulaLocal = "=СУММ(J5:J" + CStr(LastRec) + ")"
     Cells(1, 11).FormulaLocal = "=СУММ(K5:K" + CStr(LastRec) + ")"
