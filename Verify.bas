@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 19.04.2021 21:14
+'Последняя правка: 23.04.2021 14:25
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -57,24 +57,26 @@ Function Verify(ByVal Di As Long, ByVal Si As Long, ByVal oldINN, ByVal oldSum) 
     Verify = True
     
     '2 - Дата
-    If Not isDateMy(DAT.Cells(Di, 2).text) Then
-        DAT.Cells(Di, 2).Interior.Color = colRed
+    d = DAT.Cells(Di, cDates).text
+    If Not isDateMy(DAT.Cells(Di, cDates).text) Then
+        DAT.Cells(Di, cDates).Interior.Color = colRed
         SRC.Cells(Si, 2).Interior.Color = colRed
         AddCom "Дата введена не корректно"
     Else
-        DateTest Di
+        DateTestReg Di
+        DateTestPeriod d
     End If
     
     '3 - ИНН/КПП
-    If Not isINNKPP(DAT.Cells(Di, 3).text) Then
-        DAT.Cells(Di, 3).Interior.Color = colRed
+    If Not isINNKPP(DAT.Cells(Di, cBuyINN).text) Then
+        DAT.Cells(Di, cBuyINN).Interior.Color = colRed
         SRC.Cells(Si, 3).Interior.Color = colRed
         AddCom "Неверные ИНН/КПП покупателя"
     End If
     
     '5 - ИНН
-    If Not isINN(DAT.Cells(Di, 5).text) Then
-        DAT.Cells(Di, 5).Interior.Color = colRed
+    If Not isINN(DAT.Cells(Di, cSellINN).text) Then
+        DAT.Cells(Di, cSellINN).Interior.Color = colRed
         SRC.Cells(Si, 5).Interior.Color = colRed
         AddCom "Неверный ИНН продавца"
     Else
@@ -82,8 +84,8 @@ Function Verify(ByVal Di As Long, ByVal Si As Long, ByVal oldINN, ByVal oldSum) 
     End If
     
     '7 - Стоимость
-    If Not isPrice(DAT.Cells(Di, 7)) Then
-        DAT.Cells(Di, 7).Interior.Color = colRed
+    If Not isPrice(DAT.Cells(Di, cPrice)) Then
+        DAT.Cells(Di, cPrice).Interior.Color = colRed
         SRC.Cells(Si, 7).Interior.Color = colRed
         AddCom "Сумма с НДС введена не корректно"
     End If
@@ -143,9 +145,12 @@ Function VerifyLoad(ByVal i As Long) As Boolean
     If kvo <> "01" And kvo <> "22" Then AddCom "Ошибка КВО"
 
     'Дата
-    If Not isDateMy(DTL.Cells(i, clDate).text) Then
+    d = DTL.Cells(i, clDate).text
+    If Not isDateMy(d) Then
         DTL.Cells(i, clDate).Interior.Color = colRed
         AddCom "Дата введена не корректно"
+    Else
+        DateTestPeriod d
     End If
 
     'ИНН поставщика
@@ -198,12 +203,18 @@ Function VerifyLoad(ByVal i As Long) As Boolean
     
 End Function
 
-'Проверка правильности даты
-Sub DateTest(ByVal i As Long)
-    SEL = DAT.Cells(i, 6)
-    dtt = DAT.Cells(i, 2)
-    If dtt < dateS(SEL) Then AddCom "Дата СФ не может быть ранее регистрации продавца"
+'Проверка даты
+Sub DateTestReg(ByVal i As Long)
+    s = DAT.Cells(i, cSeller)
+    d = DAT.Cells(i, cDates)
+    If d < dateS(s) Then AddCom "Дата СФ не может быть ранее регистрации продавца"
 End Sub
+
+'Проверка даты на вхождение в рассматриваемый период
+Sub DateTestPeriod(ByVal d As Date)
+    If DateToQIndex(d) < 0 Then AddCom "Дата за рамками текущего периода"
+End Sub
+
 
 'Проверка лимитов
 'Di - строка в данных
@@ -218,10 +229,7 @@ Sub LimitsTest(ByVal Di As Long, ByVal Si As Long, ByVal oldINN, ByVal oldSum)
     BUY = DAT.Cells(Di, cBuyINN).text
     buyCur = BUY + "!" + CStr(q) + "!"
     grp = groups(SEL)
-    Sum = 0
-    For j = 12 To 14
-        If IsNumeric(DAT.Cells(Di, j)) Then Sum = Sum + DAT.Cells(Di, j)
-    Next
+    Sum = WorksheetFunction.Sum(Range(DAT.Cells(Di, 12), DAT.Cells(Di, 14)))
     summOne(selCur + BUY) = summOne(selCur + BUY) + Sum
     summAll(selCur) = summAll(selCur) + Sum
     e = False

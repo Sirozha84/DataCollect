@@ -1,5 +1,5 @@
 Attribute VB_Name = "Main"
-'Last change: 04.04.2021 18:47
+'Last change: 23.04.2021 14:09
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
@@ -193,7 +193,10 @@ Sub ButtonClear()
     Range(DTL.Cells(firstDtL, 1), DTL.Cells(maxRow, clAccept)).Clear
     Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Interior.Color = colGray
     Range(DTL.Cells(firstDtL, clFile), DTL.Cells(maxRow, clAccept)).Font.Color = RGB(166, 166, 166)
-    Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount - 1)).Clear
+    Range(DIC.Cells(firstDic, cPFact), DIC.Cells(maxRow, cPFact + quartCount * 6 - 1)).Clear
+    Range(DIC.Cells(firstDic, cSaleProtect), DIC.Cells(maxRow, cSaleProtect + quartCount - 1)). _
+            Interior.Color = colGray
+    
     Message "Готово! Файл не был сохранён. " + _
             "Если передумали - закройте файл не сохраняясь и откройте снова."
 End Sub
