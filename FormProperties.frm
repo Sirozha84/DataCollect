@@ -13,7 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'Last change: 23.04.2021 16:02
+'Last change: 23.04.2021 18:06
 
 Private Sub UserForm_Activate()
     TextBoxImportSale = PRP.Cells(pImportSale, 2).text
@@ -63,14 +63,18 @@ End Sub
 'Кнопка "Переход к следующему кварталу"
 Private Sub CommandButtonNext_Click()
     
+    Application.ScreenUpdating = False
+    
     'Проверка "чистоты" удаляемого квартала
     cl = True
     i = firstDic
     Do While DIC.Cells(i, 2) <> ""
-        If DIC.Cells(i, cPFact + quartCount - 1) <> "" Then cl = False: Exit Do
-        If DIC.Cells(i, cPBalance + quartCount * 2 - 1) <> "" Then cl = False: Exit Do
-        If DIC.Cells(i, cPBalance + quartCount * 2 - 2) <> "" Then cl = False: Exit Do
-        If DIC.Cells(i, cCorrect + quartCount - 1) <> "" Then cl = False: Exit Do
+        If cl Then
+            If DIC.Cells(i, cPFact + quartCount - 1) <> "" Then cl = False
+            If DIC.Cells(i, cPBalance + quartCount * 2 - 1) <> "" Then cl = False
+            If DIC.Cells(i, cPBalance + quartCount * 2 - 2) <> "" Then cl = False
+            If DIC.Cells(i, cCorrect + quartCount - 1) <> "" Then cl = False
+        End If
         i = i + 1
     Loop
     If Not cl Then
@@ -79,25 +83,38 @@ Private Sub CommandButtonNext_Click()
     End If
     
     'Сдвиг колонок вправо
+    i = i - 1
+    MoveColumnsRight firstDic, i, cPFact, 1
+    MoveColumnsRight firstDic, i, cPBalance, 2
+    MoveColumnsRight firstDic, i, cCorrect, 1
+    MoveColumnsRight firstDic, i, cPRev, 1
+    MoveColumnsRight firstDic, i, cSaleProtect, 1, True
     
-    
-    
+    'Сдвиг периода в настройках
     lastQuartal = lastQuartal + 1
     If lastQuartal > 4 Then lastQuartal = 1: lastYear = lastYear + 1
+    QHeadCreate
     RefreshPeriod
+    
+    Application.ScreenUpdating = True
+    
 End Sub
 
 'Кнопка "Возврат к предыдущему кварталу"
 Private Sub CommandButton1_Click()
     
+    Application.ScreenUpdating = False
+    
     'Проверка "чистоты" удаляемого квартала
     cl = True
     i = firstDic
     Do While DIC.Cells(i, 2) <> ""
-        If DIC.Cells(i, cPFact) <> "" Then cl = False: Exit Do
-        If DIC.Cells(i, cPBalance) <> "" Then cl = False: Exit Do
-        If DIC.Cells(i, cPBalance + 1) <> "" Then cl = False: Exit Do
-        If DIC.Cells(i, cCorrect) <> "" Then cl = False: Exit Do
+        If cl Then
+            If DIC.Cells(i, cPFact) <> "" Then cl = False
+            If DIC.Cells(i, cPBalance) <> "" Then cl = False
+            If DIC.Cells(i, cPBalance + 1) <> "" Then cl = False
+            If DIC.Cells(i, cCorrect) <> "" Then cl = False
+        End If
         i = i + 1
     Loop
     If Not cl Then
@@ -106,14 +123,56 @@ Private Sub CommandButton1_Click()
     End If
     
     'Сдвиг колонок влево
+    i = i - 1
+    MoveColumnsLeft firstDic, i, cPFact, 1
+    MoveColumnsLeft firstDic, i, cPBalance, 2
+    MoveColumnsLeft firstDic, i, cCorrect, 1
+    MoveColumnsLeft firstDic, i, cPRev, 1
+    MoveColumnsLeft firstDic, i, cSaleProtect, 1, True
     
-    
-    
+    'Сдвиг периода в настройках
     lastQuartal = lastQuartal - 1
     If lastQuartal < 1 Then lastQuartal = 4: lastYear = lastYear - 1
+    QHeadCreate
     RefreshPeriod
+    
+    Application.ScreenUpdating = True
+    
 End Sub
 
+'Смещение колонок вправо
+Sub MoveColumnsRight(ByVal i1 As Long, ByVal i2 As Long, ByVal c, ByVal m, Optional gray As Boolean)
+    Range(DIC.Cells(i1, c), DIC.Cells(i2, c + (quartCount - 1) * m - 1)).Select
+    Selection.Copy
+    DIC.Cells(i1, c + m).Select
+    ActiveSheet.Paste
+    Range(DIC.Cells(i1, c), DIC.Cells(i2, c + m - 1)).Clear
+    If gray Then Range(DIC.Cells(i1, c), DIC.Cells(i2, c + m - 1)).Interior.Color = colGray
+End Sub
+
+'Смещение колонок влево
+Sub MoveColumnsLeft(ByVal i1 As Long, ByVal i2 As Long, ByVal c, ByVal m, Optional gray As Boolean)
+    Range(DIC.Cells(i1, c + m), DIC.Cells(i2, c + quartCount * m - 1)).Select
+    Selection.Copy
+    DIC.Cells(i1, c).Select
+    ActiveSheet.Paste
+    Range(DIC.Cells(i1, c + quartCount * m - m), DIC.Cells(i2, c + quartCount * m - 1)).Clear
+    If gray Then Range(DIC.Cells(i1, c + quartCount * m - m), _
+            DIC.Cells(i2, c + quartCount * m - 1)).Interior.Color = colGray
+End Sub
+
+'Обновление шапки колонок с кварталами
+Sub QHeadCreate()
+    For i = 0 To quartCount - 1
+        DIC.Cells(3, cLimits + i) = IndexToQYYYY(i)
+        DIC.Cells(3, cPFact + i) = IndexToQYYYY(i)
+        DIC.Cells(3, cPBalance + i * 2) = IndexToQYYYY(i)
+        DIC.Cells(3, cPBalance + i * 2 + 1) = IndexToQYYYY(i)
+        DIC.Cells(3, cCorrect + i) = IndexToQYYYY(i)
+        DIC.Cells(3, cPRev + i) = IndexToQYYYY(i)
+        DIC.Cells(3, cSaleProtect + i) = IndexToQYYYY(i)
+    Next
+End Sub
 
 'Кнопка "OK"
 Private Sub CommandOK_Click()

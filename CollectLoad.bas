@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 19.04.2021 20:32
+'Последняя правка: 23.04.2021 18:01
 
 Dim LastRec As Long
 Dim curFile As String
@@ -255,7 +255,7 @@ Function copyRecordSB(ByVal Si As Long, ByVal fNDS As Integer) As Boolean
     If kvochange Then
         i = IndexByINN(DTL.Cells(LastRec, clSaleINN).text)
         j = DateToQIndex(DTL.Cells(LastRec, clDate))
-        DIC.Cells(i, cSaleProtect + j) = "Да"
+        If j >= 0 Then DIC.Cells(i, cSaleProtect + j) = "Да"
     End If
     On Error GoTo 0
     AddFormuls
