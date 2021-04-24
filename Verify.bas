@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 23.04.2021 14:25
+'Последняя правка: 24.04.2021 21:53
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -339,11 +339,11 @@ Function isINNKPP(ByVal str As String) As Boolean
     If str = "" Then isINNKPP = False: Exit Function
     s = Split(str, "/")
     'Юридическое лицо
-    If IsNumeric(s(0)) And Len(s(0)) = 10 And UBound(s) > 0 Then
-        If IsNumeric(s(1)) And Len(s(1)) = 9 Then isINNKPP = True
+    If IsNumeric(s(0)) And Len(Trim(s(0))) = 10 And UBound(s) > 0 Then
+        If IsNumeric(s(1)) And Len(Trim(s(1))) = 9 Then isINNKPP = True
     End If
     'ИП
-    If IsNumeric(s(0)) And Len(s(0)) = 12 And UBound(s) = 0 Then isINNKPP = True
+    If IsNumeric(s(0)) And Len(Trim(s(0))) = 12 And UBound(s) = 0 Then isINNKPP = True
 End Function
 
 'Проверка на корректность НДС
