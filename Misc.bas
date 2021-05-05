@@ -1,5 +1,5 @@
 Attribute VB_Name = "Misc"
-'Последняя правка: 19.04.2021 21:17
+'Последняя правка: 05.05.2021 18:47
 
 'Сообщение в строке статуса
 Sub Message(text As String)
@@ -26,7 +26,9 @@ Function cutBadSymbols(ByVal name As String) As String
     name = Replace(name, ":", "")
     name = Replace(name, "<", "")
     name = Replace(name, ">", "")
-    cutBadSymbols = name
+    name = Replace(name, Chr(10), "")
+    name = Replace(name, Chr(13), "")
+    cutBadSymbols = Trim(name)
 End Function
 
 'Проверка на возможность созранениф
