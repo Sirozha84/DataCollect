@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 23.04.2021 18:01
+'Последняя правка: 26.06.2021 21:48
 
 Dim LastRec As Long
 Dim curFile As String
@@ -7,6 +7,19 @@ Dim curMark As String
 Dim curProv As String
 Dim curProvINN As String
 Dim UINs As Object
+
+'Колонки данных в обрабатываемых файлах
+Dim scKVO As Integer
+Dim scND As Integer
+Dim scSeller As Integer
+Dim scSellerINN As Integer
+Dim scPrice As Integer
+Dim scPWN20 As Integer
+Dim scPWN18 As Integer
+Dim scPWN10 As Integer
+Dim scNDS20 As Integer
+Dim scNDS18 As Integer
+Dim scNDS10 As Integer
 
 'Запуск процесса сбора данных
 Sub Run()
@@ -138,15 +151,14 @@ Function AddFile(ByVal file As String) As Byte
         Loop
     End If
     If ftyp = "b" Then
+        SBFieldRecognition
         curProv = Replace(SRC.Cells(4, 1).text, "Продавец  ", "")
         curProvINN = Right(SRC.Cells(5, 1).text, 20)
         i = 14  'Первая строка данных
-        fNDS = 20
-        If Left(SRC.Cells(11, 34).text, 2) = "18" And Left(SRC.Cells(11, 40).text, 2) = "18" Then fNDS = 18
         'Чтение данных о закупках
         Do While SRC.Cells(i, 2).text <> ""
             If UINs(SRC.Cells(i, c).text) = "" Then
-                If Not copyRecordSB(i, fNDS) Then
+                If Not copyRecordSB(i) Then
                     errors = True
                     DTL.Cells(LastRec, clAccept) = "fail"
                 Else
@@ -210,17 +222,16 @@ End Function
 
 'Копирование записи из книги продаж. Возвращает True, если запись принялась без ошибок
 'Si - строка в исходниках
-'fNDS - первый НДС в колонке (18 или 20)
-Function copyRecordSB(ByVal Si As Long, ByVal fNDS As Integer) As Boolean
+Function copyRecordSB(ByVal Si As Long) As Boolean
     
     On Error GoTo er
     DTL.Cells(LastRec, clMark) = curMark
     DTL.Cells(LastRec, clKVO).NumberFormat = "@"
-    kvo = SRC.Cells(Si, 2)
+    kvo = SRC.Cells(Si, scKVO)
     DTL.Cells(LastRec, clKVO) = kvo
     DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
-    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 10), 20) 'ИННКПП
-    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 17)          'Продавец
+    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 10), scSellerINN)    'ИННКПП
+    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, scSeller)    'Продавец
     If kvo = "02" Then
         DTL.Cells(LastRec, clKVO) = "22"
         DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
@@ -236,20 +247,14 @@ Function copyRecordSB(ByVal Si As Long, ByVal fNDS As Integer) As Boolean
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
-    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 32)             'Стоимость
-    If fNDS = 18 Then
-        DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, 34)     'Стоимость без НДС 18
-        DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, 36)     'Стоимость без НДС 10
-        DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum _
-                (Range(Cells(Si, 40), Cells(Si, 43)))           'сумма НДС
-    End If
-    If fNDS = 20 Then
-        DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, 34)     'Стоимость без НДС 20
-        DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, 36)     'Стоимость без НДС 18
-        DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, 38)     'Стоимость без НДС 10
-        DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum _
-                (Range(Cells(Si, 43), Cells(Si, 48)))           'сумма НДС
-    End If
+    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)        'Стоимость
+    If scPWN20 <> 0 Then DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)   'Стоимость без НДС 20
+    DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)    'Стоимость без НДС 18
+    DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)    'Стоимость без НДС 10
+    DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum(Range( _
+        DTL.Cells(LastRec, clPrice + 1), _
+        DTL.Cells(LastRec, clPrice + 3)))                       'сумма НДС
+    
     copyRecordSB = VerifyLoad(LastRec)
     'КВО менялся с 02 на 22, делаем связанные с этим событием действия
     If kvochange Then
@@ -305,6 +310,44 @@ Function NumFromND(ByVal nd As String) As String
     If UBound(ss) > 0 Then NumFromND = ss(0)
     ss = Split(nd, ";")
     If UBound(ss) > 0 Then NumFromND = ss(0)
+End Function
+
+'Распознавание колонок в книге продаж
+Function SBFieldRecognition() As Boolean
+    scKVO = 0
+    scND = 0
+    scSeller = 0
+    scSellerINN = 0
+    scPrice = 0
+    scPWN20 = 0
+    scPWN18 = 0
+    scPWN10 = 0
+    scNDS20 = 0
+    scNDS18 = 0
+    scNDS10 = 0
+
+    For i = 1 To 50
+        If SRC.Cells(8, i) = "Код вида опера-ции" Then scKVO = i
+        If Left(SRC.Cells(8, i), 12) = "Номер и дата" Then scND = i
+        If Left(SRC.Cells(8, i), 12) = "Наименование" Then scSeller = i
+        If Left(SRC.Cells(8, i), 7) = "ИНН/КПП" Then scSellerINN = i
+        If Left(SRC.Cells(11, i), 10) = "в рублях и" Then scPrice = i
+        If SRC.Cells(11, i) = "20 процентов" Then If scPWN20 = 0 Then scPWN20 = i Else scNDS20 = i
+        If SRC.Cells(11, i) = "18 процентов" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
+        If SRC.Cells(11, i) = "10 процентов" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
+    Next
+    
+    SBFieldRecognition = _
+        scKVO = 0 Or _
+        scND = 0 Or _
+        scSeller = 0 Or _
+        scSellerINN = 0 Or _
+        scPrice = 0 Or _
+        scPWN18 = 0 Or _
+        scPWN10 = 0 Or _
+        scNDS18 = 0 Or _
+        scNDS10 = 0
+
 End Function
 
 '******************** End of File ********************
