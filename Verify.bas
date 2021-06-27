@@ -1,5 +1,5 @@
 Attribute VB_Name = "Verify"
-'Последняя правка: 24.04.2021 21:53
+'Последняя правка: 27.06.2021 08:54
 
 Dim Comment As String       'Строка с комментариями
 Dim errors As Boolean       'Флаг наличия ошибок
@@ -164,9 +164,7 @@ Function VerifyLoad(ByVal i As Long) As Boolean
         DTL.Cells(i, clSaleINN).Interior.Color = colRed
         AddCom "Неверный ИНН продавца"
     Else
-        If Not CorrectSaler(DTL.Cells(i, clSaleINN).text, DTL.Cells(i, clSaleName).text) Then
-            AddCom "Наименование и ИНН продавца не совпадают с данными в справочнике"
-        End If
+        DTL.Cells(i, clSaleName) = CorrectSaler(DTL.Cells(i, clSaleINN).text, DTL.Cells(i, clSaleName).text)
     End If
 
     'Стоимость

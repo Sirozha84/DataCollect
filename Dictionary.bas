@@ -1,5 +1,5 @@
 Attribute VB_Name = "Dictionary"
-'Последняя правка: 18.04.2021 20:30
+'Последняя правка: 27.06.2021 08:54
 
 'Чтение словаря продавцов
 Public Sub Init()
@@ -19,8 +19,8 @@ Function SellFileName(inn) As String
 End Function
 
 'Проверка на совпадение имени и ИНН продавца, если ИНН не существует - добавление нового
-'Возвращает false, если ИНН есть, но имя не совпадает
-Function CorrectSaler(ByVal inn As String, ByVal name As String) As Boolean
+'Возвращает новое имя для нового продавца, или имя из справочника, если он там есть
+Function CorrectSaler(ByVal inn As String, ByVal name As String) As String
     If Len(inn) > 10 Then inn = Left(inn, 10)
     CorrectSaler = True
     If selIndexes(inn) = 0 Then
@@ -40,9 +40,8 @@ Function CorrectSaler(ByVal inn As String, ByVal name As String) As Boolean
                     "SUM(RC[12]:RC[" + CStr(23 - j) + "])"
         Next
         lastdic = lastdic + 1
-    Else
-        If Trim(LCase(DIC.Cells(selIndexes(inn), 1))) <> Trim(LCase(name)) Then CorrectSaler = False
     End If
+    CorrectSaler = DIC.Cells(selIndexes(inn), 1)
 End Function
 
 'Возвращает индекс в справочнике по ИНН[/КПП]
