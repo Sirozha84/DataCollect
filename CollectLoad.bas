@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 26.06.2021 21:48
+'Последняя правка: 27.06.2021 09:23
 
 Dim LastRec As Long
 Dim curFile As String
@@ -97,7 +97,8 @@ End Sub
 '0 - всё хорошо
 '1 - ошибка загрузки
 '2 - ошибка в данных (errors=true)
-'3 - нет маркера, или он не верный
+'7 - нет маркера, или он не верный
+'8 - поля не распознаны
 Function AddFile(ByVal file As String) As Byte
     
     'Подготовки
@@ -114,7 +115,7 @@ Function AddFile(ByVal file As String) As Byte
     'Чтение и проверка маркера
     curMark = UCase(SRC.Cells(1, 1).text)
     If curMark <> "К" And curMark <> "З" Then
-        AddFile = 3
+        AddFile = 7
         impBook.Close False
         Exit Function
     End If
@@ -151,7 +152,7 @@ Function AddFile(ByVal file As String) As Byte
         Loop
     End If
     If ftyp = "b" Then
-        SBFieldRecognition
+        If Not SBFieldRecognition Then AddFile = 8: GoTo ex
         curProv = Replace(SRC.Cells(4, 1).text, "Продавец  ", "")
         curProvINN = Right(SRC.Cells(5, 1).text, 20)
         i = 14  'Первая строка данных
@@ -175,13 +176,13 @@ Function AddFile(ByVal file As String) As Byte
         Loop
     End If
         
-
+    If errors Then AddFile = 2
+ex:
     'Завершение
     On Error GoTo er
     impBook.Close True
     Application.ScreenUpdating = True
     DoEvents    'Не помню для чего это, вроде как без этого всё зависало, а потом открывалось много окон
-    If errors Then AddFile = 2
     Exit Function
 
 er:
@@ -230,8 +231,8 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     kvo = SRC.Cells(Si, scKVO)
     DTL.Cells(LastRec, clKVO) = kvo
     DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
-    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 10), scSellerINN)    'ИННКПП
-    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, scSeller)    'Продавец
+    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, scSellerINN), 10)    'ИННКПП
+    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, scSeller)                'Продавец
     If kvo = "02" Then
         DTL.Cells(LastRec, clKVO) = "22"
         DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
@@ -247,13 +248,17 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
-    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)        'Стоимость
-    If scPWN20 <> 0 Then DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)   'Стоимость без НДС 20
-    DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)    'Стоимость без НДС 18
-    DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)    'Стоимость без НДС 10
+    For i = 0 To 4
+        DTL.Cells(LastRec, clPrice + i).NumberFormat = numFormat
+    Next
+    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)                    'Стоимость
+    If scPWN20 <> 0 Then _
+            DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)        'Стоимость без НДС 20
+    DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)                'Стоимость без НДС 18
+    DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)                'Стоимость без НДС 10
     DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum(Range( _
         DTL.Cells(LastRec, clPrice + 1), _
-        DTL.Cells(LastRec, clPrice + 3)))                       'сумма НДС
+        DTL.Cells(LastRec, clPrice + 3)))                                   'сумма НДС
     
     copyRecordSB = VerifyLoad(LastRec)
     'КВО менялся с 02 на 22, делаем связанные с этим событием действия
@@ -314,6 +319,7 @@ End Function
 
 'Распознавание колонок в книге продаж
 Function SBFieldRecognition() As Boolean
+    
     scKVO = 0
     scND = 0
     scSeller = 0
@@ -338,15 +344,15 @@ Function SBFieldRecognition() As Boolean
     Next
     
     SBFieldRecognition = _
-        scKVO = 0 Or _
-        scND = 0 Or _
-        scSeller = 0 Or _
-        scSellerINN = 0 Or _
-        scPrice = 0 Or _
-        scPWN18 = 0 Or _
-        scPWN10 = 0 Or _
-        scNDS18 = 0 Or _
-        scNDS10 = 0
+        scKVO <> 0 And _
+        scND <> 0 And _
+        scSeller <> 0 And _
+        scSellerINN <> 0 And _
+        scPrice <> 0 And _
+        scPWN18 <> 0 And _
+        scPWN10 <> 0 And _
+        scNDS18 <> 0 And _
+        scNDS10 <> 0
 
 End Function
 
