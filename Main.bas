@@ -1,13 +1,14 @@
 Attribute VB_Name = "Main"
-'Last change: 23.04.2021 14:54
+'Last change: 27.06.2021 15:24
 
 'Константы
 Public Const maxRow = 1048576   'Последняя строка везде (для очистки)
 Public Const tmpVersion = "20210108"    'Необходимая версия реестра
+Public Const numFormat = "### ### ### ##0.00"
 
 'Настройки
 Public Const Secret = "123"     'Пароль для защиты
-Public Const quartCount = 12    'Количество кварталов в расчётах лимитов
+Public Const quartCount = 20    'Количество кварталов в расчётах лимитов
 Public Const limitOND = 9000000 'Лимит в основной период НД (9м)
 Public Const minLim = 5000000   'Минимальная сумма продаж, если меньше, период пропускается (5м)
 Public Const minSale = 20000    'Минимальная сумма продаж, достаточная для распределения закупок (20т)
@@ -61,11 +62,11 @@ Public Const cPCode = 7         'Префикс - код
 Public Const cOPND = 8          'Основной период НД
 Public Const cPStat = 9         'Статус
 Public Const cLimits = 10       'Первая колонка с остатками
-Public Const cPFact = 22        'Первая колонка с фактическими объёмами
-Public Const cPBalance = 34     'Первая колонка с остатками (*2)
-Public Const cCorrect = 58      'Первая колонка с корректировками лимитов
-Public Const cPRev = 70         'Первая колонка с фактическими отгрузками (для ревизии остатков)
-Public Const cSaleProtect = 82  'Первая колонка с запретами отгрузок
+Public Const cPFact = 30        'Первая колонка с фактическими объёмами
+Public Const cPBalance = 50     'Первая колонка с остатками (*2)
+Public Const cCorrect = 90      'Первая колонка с корректировками лимитов
+Public Const cPRev = 110        'Первая колонка с фактическими отгрузками (для ревизии остатков)
+Public Const cSaleProtect = 130 'Первая колонка с запретами отгрузок
 
 'Колонки "Шаблоны"
 Public Const cTClient = 1       'Клиент
@@ -145,7 +146,7 @@ Sub Init()
     Set ERR = Sheets("Ошибки")
     Set NUM = Sheets("Нумератор")
     Set PRP = Sheets("Настройки")
-    
+
     DirImportSale = PRP.Cells(pImportSale, 2).text
     DirImportLoad = PRP.Cells(pImportLoad, 2).text
     DirExport = PRP.Cells(pExport, 2).text
