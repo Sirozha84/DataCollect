@@ -1,5 +1,5 @@
 Attribute VB_Name = "Dictionary"
-'Последняя правка: 27.06.2021 08:54
+'Последняя правка: 27.06.2021 15:20
 
 'Чтение словаря продавцов
 Public Sub Init()
@@ -33,11 +33,12 @@ Function CorrectSaler(ByVal inn As String, ByVal name As String) As String
         DIC.Cells(lastdic, cSellerName) = name
         DIC.Cells(lastdic, cINN).NumberFormat = "@"
         DIC.Cells(lastdic, cINN) = inn
+        
         For j = 0 To quartCount - 1
-            DIC.Cells(lastdic, cLimits + j).NumberFormat = "### ### ##0.00"
+            DIC.Cells(lastdic, cLimits + j).NumberFormat = numFormat
             DIC.Cells(lastdic, cLimits + j).FormulaR1C1 = _
-                    "=SUM(RC[" + CStr(24 + j) + "]:RC[" + CStr(47 - j) + "])-" + _
-                    "SUM(RC[12]:RC[" + CStr(23 - j) + "])"
+                    "=SUM(RC[" + CStr(quartCount * 2 + j) + "]:RC[" + CStr(quartCount * 4 - 1 - j) + "])-" + _
+                    "SUM(RC[" + CStr(quartCount) + "]:RC[" + CStr(quartCount * 2 - 1 - j) + "])"
         Next
         lastdic = lastdic + 1
     End If

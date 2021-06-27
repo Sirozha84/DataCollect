@@ -13,7 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'Last change: 23.04.2021 18:06
+'Last change: 27.06.2021 11:20
 
 Private Sub UserForm_Activate()
     TextBoxImportSale = PRP.Cells(pImportSale, 2).text
@@ -64,6 +64,7 @@ End Sub
 Private Sub CommandButtonNext_Click()
     
     Application.ScreenUpdating = False
+    DIC.Activate
     
     'ѕроверка "чистоты" удал€емого квартала
     cl = True
@@ -104,6 +105,7 @@ End Sub
 Private Sub CommandButton1_Click()
     
     Application.ScreenUpdating = False
+    DIC.Activate
     
     'ѕроверка "чистоты" удал€емого квартала
     cl = True
