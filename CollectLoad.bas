@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 28.06.2021 20:20
+'Последняя правка: 28.06.2021 21:05
 
 Dim LastRec As Long
 Dim curFile As String
@@ -131,10 +131,10 @@ Function AddFile(ByVal file As String) As Byte
     If ftyp = "j" Then
         curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
         curProvINN = Right(SRC.Cells(5, 2).text, 20)
-        i = 13  'Первая строка данных
+        i = 13
         'Чтение данных о закупках
-        Do While SRC.Cells(i, 2).text <> "" And SRC.Cells(i, 2).text <> "005"
-            If UINs(SRC.Cells(i, c).text) = "" Then
+        Do While SRC.Cells(i, 2).text <> ""
+            If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 2).text <> "005" Then
                 If Not copyRecordZH(i) Then
                     errors = True
                     DTL.Cells(LastRec, clAccept) = "fail"
@@ -155,10 +155,10 @@ Function AddFile(ByVal file As String) As Byte
         If Not SBFieldRecognition Then AddFile = 8: GoTo ex
         curProv = Replace(SRC.Cells(4, 1).text, "Продавец  ", "")
         curProvINN = Right(SRC.Cells(5, 1).text, 20)
-        i = 14  'Первая строка данных
+        i = 13
         'Чтение данных о закупках
         Do While SRC.Cells(i, 2).text <> ""
-            If UINs(SRC.Cells(i, c).text) = "" Then
+            If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 1).text <> "005" Then
                 If Not copyRecordSB(i) Then
                     errors = True
                     DTL.Cells(LastRec, clAccept) = "fail"
@@ -197,19 +197,19 @@ Function copyRecordZH(ByVal Si As Long) As Boolean
     SetFormates LastRec
     On Error GoTo er
     DTL.Cells(LastRec, clMark) = curMark
-    DTL.Cells(LastRec, clKVO) = SRC.Cells(Si, 4)                'КВО
-    nd = SRC.Cells(Si, 6).text                                  'Номер и дата
+    DTL.Cells(LastRec, clKVO) = SRC.Cells(Si, 4)
+    nd = SRC.Cells(Si, 6).text
     DTL.Cells(LastRec, clNum) = NumFromND(nd)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clDate) = Right(nd, 10)
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
-    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 15), 10) 'ИНН/КПП
-    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 13)          'Продавец
-    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 27)             'Стоимость
-    DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, 29)               'НДС
+    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 15), 10)
+    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 13)
+    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 27)
+    DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, 29)
+    
     copyRecordZH = VerifyLoad(LastRec)
-    On Error GoTo 0
     AddFormuls
     Exit Function
     
@@ -227,8 +227,8 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clMark) = curMark
     kvo = SRC.Cells(Si, scKVO)
     DTL.Cells(LastRec, clKVO) = kvo
-    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, scSellerINN), 10)    'ИННКПП
-    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, scSeller)                'Продавец
+    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, scSellerINN), 10)
+    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, scSeller)
     If kvo = "02" Then
         DTL.Cells(LastRec, clKVO) = "22"
         DTL.Cells(LastRec, clSaleINN) = curProvINN
@@ -241,23 +241,28 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clDate) = Right(nd, 10)
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
-    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)                    'Стоимость
-    If scPWN20 <> 0 Then _
-            DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)        'Стоимость без НДС 20
-    DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)                'Стоимость без НДС 18
-    DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)                'Стоимость без НДС 10
-    DTL.Cells(LastRec, clNDS) = WorksheetFunction.Sum(Range( _
-        DTL.Cells(LastRec, clPrice + 1), _
-        DTL.Cells(LastRec, clPrice + 3)))                                   'сумма НДС
-    
+    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)
+    If scPWN20 <> 0 Then
+        DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)
+        DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)
+        DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)
+        DTL.Cells(LastRec, clNDS) = _
+            WorksheetFunction.Sum(Range(SRC.Cells(Si, scNDS20), SRC.Cells(Si, scNDS10)))
+    Else
+        DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)
+        DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)
+        DTL.Cells(LastRec, clNDS) = _
+            WorksheetFunction.Sum(Range(SRC.Cells(Si, scNDS18), SRC.Cells(Si, scNDS10)))
+    End If
     copyRecordSB = VerifyLoad(LastRec)
+    
     'КВО менялся с 02 на 22, делаем связанные с этим событием действия
     If kvochange Then
         i = IndexByINN(DTL.Cells(LastRec, clSaleINN).text)
         j = DateToQIndex(DTL.Cells(LastRec, clDate))
         If j >= 0 Then DIC.Cells(i, cSaleProtect + j) = "Да"
     End If
-    On Error GoTo 0
+    
     AddFormuls
     Exit Function
     
