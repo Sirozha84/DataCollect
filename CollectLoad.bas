@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 28.06.2021 20:03
+'Последняя правка: 28.06.2021 20:20
 
 Dim LastRec As Long
 Dim curFile As String
@@ -194,19 +194,16 @@ End Function
 'Si - строка в исходниках
 Function copyRecordZH(ByVal Si As Long) As Boolean
     
+    SetFormates LastRec
     On Error GoTo er
     DTL.Cells(LastRec, clMark) = curMark
-    DTL.Cells(LastRec, clKVO).NumberFormat = "@"
     DTL.Cells(LastRec, clKVO) = SRC.Cells(Si, 4)                'КВО
     nd = SRC.Cells(Si, 6).text                                  'Номер и дата
-    DTL.Cells(LastRec, clNum).NumberFormat = "@"
     DTL.Cells(LastRec, clNum) = NumFromND(nd)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clDate) = Right(nd, 10)
-    DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
-    DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
     DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 15), 10) 'ИНН/КПП
     DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 13)          'Продавец
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 27)             'Стоимость
@@ -225,32 +222,25 @@ End Function
 'Si - строка в исходниках
 Function copyRecordSB(ByVal Si As Long) As Boolean
     
+    SetFormates LastRec
     On Error GoTo er
     DTL.Cells(LastRec, clMark) = curMark
-    DTL.Cells(LastRec, clKVO).NumberFormat = "@"
     kvo = SRC.Cells(Si, scKVO)
     DTL.Cells(LastRec, clKVO) = kvo
-    DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
     DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, scSellerINN), 10)    'ИННКПП
     DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, scSeller)                'Продавец
     If kvo = "02" Then
         DTL.Cells(LastRec, clKVO) = "22"
-        DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
         DTL.Cells(LastRec, clSaleINN) = curProvINN
         DTL.Cells(LastRec, clSaleName) = curProv
         kvochange = True
     End If
     nd = SRC.Cells(Si, 3).text
-    DTL.Cells(LastRec, clNum).NumberFormat = "@"
     DTL.Cells(LastRec, clNum) = NumFromND(nd)
     DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clDate) = Right(nd, 10)
-    DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
-    For i = 0 To 4
-        DTL.Cells(LastRec, clPrice + i).NumberFormat = numFormat
-    Next
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)                    'Стоимость
     If scPWN20 <> 0 Then _
             DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)        'Стоимость без НДС 20
@@ -275,6 +265,17 @@ er:
     copyRecordSB = False
     
 End Function
+
+'Установка форматов полей
+Sub SetFormates(ByVal i As Integer)
+    DTL.Cells(LastRec, clKVO).NumberFormat = "@"
+    DTL.Cells(LastRec, clNum).NumberFormat = "@"
+    DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
+    DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
+    For i = 0 To 4
+        DTL.Cells(LastRec, clPrice + i).NumberFormat = numFormat
+    Next
+End Sub
 
 'Добавление формул и проверки данных
 Sub AddFormuls()
