@@ -1,8 +1,8 @@
 Attribute VB_Name = "Values"
-'Последняя правка: 19.04.2021 21:20
+'Последняя правка: 30.06.2021 20:57
 
 'Формирование отчёта "Объёмы продаж"
-Sub CreateReport()
+Public Sub CreateReport()
 
     Message "Формирование отчёта по объёмам продаж..."
     Dim i As Long
