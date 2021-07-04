@@ -13,7 +13,7 @@ Attribute VB_GlobalNameSpace = False
 Attribute VB_Creatable = False
 Attribute VB_PredeclaredId = True
 Attribute VB_Exposed = False
-'Последняя правка: 04.07.2021 20:13
+'Последняя правка: 04.07.2021 20:36
 
 'Инициализация диалогового окна
 Private Sub UserForm_Initialize()
@@ -78,7 +78,7 @@ End Sub
 Sub ReSort()
     For i = 0 To ListSalersAll.ListCount - 2
         For i2 = i To ListSalersAll.ListCount - 1
-            If StrComp(ListSalersAll.List(i), ListSalersAll.List(i2)) > 0 Then
+            If NameCompare(ListSalersAll.List(i), ListSalersAll.List(i2)) > 0 Then
                 temp = ListSalersAll.List(i)
                 ListSalersAll.List(i) = ListSalersAll.List(i2)
                 ListSalersAll.List(i2) = temp
@@ -87,7 +87,7 @@ Sub ReSort()
     Next
     For i = 0 To ListSalersSelected.ListCount - 2
         For i2 = i To ListSalersSelected.ListCount - 1
-            If StrComp(ListSalersSelected.List(i), ListSalersSelected.List(i2)) > 0 Then
+            If NameCompare(ListSalersSelected.List(i), ListSalersSelected.List(i2)) > 0 Then
                 temp = ListSalersSelected.List(i)
                 ListSalersSelected.List(i) = ListSalersSelected.List(i2)
                 ListSalersSelected.List(i2) = temp
@@ -95,6 +95,13 @@ Sub ReSort()
         Next
     Next
 End Sub
+
+'Сравнение компаний по наименованию
+Function NameCompare(sal1, sal2)
+    sal1 = Right(sal1, Len(sal1) - 11)
+    sal2 = Right(sal2, Len(sal2) - 11)
+    NameCompare = StrComp(sal1, sal2)
+End Function
 
 'Кнопка "Экспорт"
 Private Sub CommandExport_Click()
@@ -104,15 +111,12 @@ Private Sub CommandExport_Click()
     LastDate = CDate(TextBoxLastCollect)
     On Error GoTo 0
     
-    If ComboBoxBuyers.ListIndex = 0 Then
-        n = 1
-        a = selIndexes.Count
-        For Each seller In selIndexes
-            ExportSale.Run seller, CStr(n) + " из " + CStr(a) + ": ", FirstDate, LastDate
-            n = n + 1
+    If ListSalersSelected.ListCount > 0 Then
+        a = ListSalersSelected.ListCount
+        For i = 1 To a
+            inn = Left(ListSalersSelected.List(i - 1), 10)
+            ExportSale.Run inn, CStr(i) + " из " + CStr(a) + ": ", FirstDate, LastDate
         Next
-    Else
-        ExportSale.Run Left(ComboBoxBuyers.Value, 10), "", FirstDate, LastDate
     End If
     
     'Сохранение дат периода сбора

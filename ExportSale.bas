@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportSale"
-'Последняя правка: 03.04.2021 21:33
+'Последняя правка: 04.07.2021 20:36
 
 'Экспорт файла
 Public Sub Run(ByVal inn As String, ByVal NUM As String, _
@@ -24,7 +24,8 @@ Public Sub Run(ByVal inn As String, ByVal NUM As String, _
     'Определяемся с путём и именем файла
     Patch = DirExport + "\Отгрузки"
     MakeDir Patch
-    fileName = Patch + "\" + cutBadSymbols(saler) + ".xlsx"
+    fileName = Patch + "\" + cutBadSymbols(saler) + _
+        " (" + CStr(FirstDate) + "-" + CStr(LastDate) + ").xlsx"
     
     'Создаём книгу
     Workbooks.Add
