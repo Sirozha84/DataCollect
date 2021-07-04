@@ -1,5 +1,5 @@
 Attribute VB_Name = "SellBook"
-'Последняя правка: 04.07.2021 16:22
+'Последняя правка: 04.07.2021 16:59
 
 Dim Patch As String
 Dim BuyersList As Variant
@@ -19,7 +19,8 @@ Sub Run()
     i = 7
     ClearOldBooks Path
     For Each file In files
-        SBK.Cells(i, 1) = file
+        SBK.Cells(i, 1).Hyperlinks.Add Anchor:=SBK.Cells(i, 1), _
+            Address:="file:" + file, TextToDisplay:=file
         er = ExportBook(file)
         If er = 0 Then SBK.Cells(i, 2) = "Ошибка при работе с файлом"
         If er = 1 Then
