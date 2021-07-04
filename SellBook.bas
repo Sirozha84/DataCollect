@@ -1,4 +1,6 @@
 Attribute VB_Name = "SellBook"
+'Последняя правка: 04.07.2021 14:58
+
 Dim Patch As String
 Dim BuyersList As Variant
 Dim SellersList As Variant
@@ -81,10 +83,8 @@ er:
     ExportBook = 0
 End Function
 
-'Подготовка:
-'проверка записей на отсутствие ошибочных
-'индексирование
-'подготовка списков кварталов
+'Подготовка: проверка записей на отсутствие ошибочных, индексирование, подготовка списков кварталов
+'Возвращает True, если ошибок нет
 Function Prepare(ByVal cod As String) As Boolean
     Set Where = New Collection
     Set Quartals = CreateObject("Scripting.Dictionary")
@@ -92,11 +92,10 @@ Function Prepare(ByVal cod As String) As Boolean
     i = firstDat
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cCode).text = cod Then
-            If DAT.Cells(i, cAccept) = "OK" Then
+            If DAT.Cells(i, cAccept) <> "fail" Then
                 Where.Add i
                 Quartals(GetQuartal(DAT.Cells(i, cDates))) = 1
-            End If
-            If DAT.Cells(i, cAccept) = "fail" Then
+            Else
                 Prepare = False
                 Exit Function
             End If
@@ -122,8 +121,8 @@ Sub GetLists()
     i = 2
     For i = 2 To 1000
         If SEL.Cells(i, 1).text <> "" Then
-            si = SEL.Cells(i, 2).text
-            SellersList(si) = DIC.Cells(selIndexes(si), 1).text
+            Si = SEL.Cells(i, 2).text
+            SellersList(Si) = DIC.Cells(selIndexes(Si), 1).text
         End If
     Next
 
@@ -332,7 +331,7 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
         Cells(i, 22) = DAT.Cells(j, 13): If Cells(i, 22) <> "" Then s5 = s5 + Cells(i, 22)
         Cells(i, 23) = DAT.Cells(j, 14): If Cells(i, 23) <> "" Then s6 = s6 + Cells(i, 23)
         Range(Cells(i, 9), Cells(i, 10)).WrapText = True
-        Range(Cells(i, 15), Cells(i, 23)).NumberFormat = "### ### ##0.00"
+        Range(Cells(i, 15), Cells(i, 23)).NumberFormat = numFormat
         i = i + 1
         n = n + 1
     Next
@@ -349,7 +348,7 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     If s4 > 0 Then Cells(i, 21) = s4
     If s5 > 0 Then Cells(i, 22) = s5
     If s6 > 0 Then Cells(i, 23) = s6
-    Range(Cells(i, 15), Cells(i, 23)).NumberFormat = "### ### ##0.00"
+    Range(Cells(i, 15), Cells(i, 23)).NumberFormat = numFormat
     Range(Cells(7, 1), Cells(i, 24)).Borders.Weight = 2
     
     'Сохранение и закрытие документа
@@ -371,3 +370,5 @@ Sub bigCell(txt As String, r As Variant, c As Variant, height As Variant, width 
     Cells(r, c).VerticalAlignment = xlCenter
     Cells(r, c).Font.Bold = True
 End Sub
+
+'******************** End of File ********************
