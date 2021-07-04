@@ -1,5 +1,5 @@
 Attribute VB_Name = "SellBook"
-'Последняя правка: 04.07.2021 14:58
+'Последняя правка: 04.07.2021 16:22
 
 Dim Patch As String
 Dim BuyersList As Variant
@@ -17,6 +17,7 @@ Sub Run()
     Set files = getFiles(Patch, False)
     Range(SBK.Cells(7, 1), SBK.Cells(maxRow, 2)).Clear
     i = 7
+    ClearOldBooks Path
     For Each file In files
         SBK.Cells(i, 1) = file
         er = ExportBook(file)
@@ -67,7 +68,6 @@ Function ExportBook(ByVal file As String) As Byte
     End If
     
     'Генерация книг
-    ClearOldBooks
     BookCount = 0
     For Each q In Quartals
         For Each b In BuyersList
@@ -143,17 +143,17 @@ Function Period(q As String)
 End Function
 
 'Чистка директории от предыдущих книг
-Sub ClearOldBooks()
+Sub ClearOldBooks(ByVal pat As String)
     On Error GoTo er
-    
+    If InStr(1, pat, ".sync") > 0 Then Exit Sub
     Set FSO = CreateObject("Scripting.FileSystemObject")
-    Set curfold = FSO.GetFolder(Patch)
+    Set curfold = FSO.GetFolder(pat)
     For Each file In curfold.files
-        If file.name Like "КнПрод*.xls*" Then
-            Kill Patch + file.name
-        End If
+        If file.name Like "КнПрод*.xls*" Then Kill file
     Next
-    
+    For Each subfolder In curfold.subFolders
+         ClearOldBooks subfolder
+    Next subfolder
     Exit Sub
 er:
     MsgBox "Произошла ошибка при удалении старых книг продаж. Формирование книг отменено."
