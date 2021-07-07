@@ -1,5 +1,5 @@
 Attribute VB_Name = "Log"
-'Последняя правка: 27.06.2021 08:36
+'Последняя правка: 06.07.2021 21:52
 
 Dim recN As Long    'Текущий номер строки
 
@@ -25,7 +25,8 @@ Sub Rec(ByVal file As String, ByVal code As Integer)
     If code = 6 Then msg = "Файл заблокирован"
     If code = 7 Then msg = "Отсутствует маркер, либо он не верный"
     If code = 8 Then msg = "Поля не распознаны"
-    ERR.Cells(recN, 1) = file
+    ERR.Cells(recN, 1).Hyperlinks.Add Anchor:=ERR.Cells(recN, 1), _
+        Address:="file:" + file, TextToDisplay:=file
     ERR.Cells(recN, 2) = msg
     recN = recN + 1
 End Sub
