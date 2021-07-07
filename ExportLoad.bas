@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportLoad"
-'Last change: 10.04.2021 20:35
+'Last change: 07.07.2021 19:49
 
 Sub Run()
     
@@ -21,7 +21,7 @@ Sub Run()
     Set files = Source.getFiles(DirExport + "\Отгрузки", False)
     
     n = 1
-    a = selIndexes.Count
+    a = files.Count
     For Each file In files
         CreateExportFile Left(Source.FSO.GetFileName(file), 10), CStr(n) + " из " + CStr(a) + ": "
     Next
@@ -31,9 +31,9 @@ Sub Run()
 End Sub
 
 'Формирование файла выгрузки
-Sub CreateExportFile(ByVal INN As String, ByVal NUM As String)
+Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
     
-    saler = SellFileName(INN)
+    saler = SellFileName(inn)
     Message "Экспорт файла " + NUM + saler
     
     'Определяемся с путём и именем файла
@@ -52,12 +52,7 @@ Sub CreateExportFile(ByVal INN As String, ByVal NUM As String)
     Cells(i, 6) = "Наименование"
     Cells(i, 7) = "Сумма в руб." + Chr(10) + "и коп."
     Cells(i, 8) = "Сумма НДС" '+ Chr(10) + "без НДС 20%"
-    'Cells(i, 9) = "Сумма" + Chr(10) + "без НДС 18%"
-    'Cells(i, 10) = "Сумма" + Chr(10) + "без НДС 10%"
-    'Cells(i, 11) = "НДС 20%"
-    'Cells(i, 12) = "НДС 18%"
-    'Cells(i, 13) = "НДС 10%"
-    Cells(i, 14) = "Период НД"
+    Cells(i, 9) = "Период НД"
     Columns(1).ColumnWidth = 10
     Columns(2).ColumnWidth = 13
     Columns(3).ColumnWidth = 10
@@ -67,13 +62,8 @@ Sub CreateExportFile(ByVal INN As String, ByVal NUM As String)
     Columns(7).ColumnWidth = 12
     Columns(8).ColumnWidth = 12
     Columns(9).ColumnWidth = 12
-    Columns(10).ColumnWidth = 12
-    Columns(11).ColumnWidth = 10
-    Columns(12).ColumnWidth = 10
-    Columns(13).ColumnWidth = 10
-    Columns(14).ColumnWidth = 10
     Rows(1).RowHeight = 30
-    Set hat = Range(Cells(1, 1), Cells(1, 14))
+    Set hat = Range(Cells(1, 1), Cells(1, 9))
     hat.HorizontalAlignment = xlCenter
     hat.VerticalAlignment = xlCenter
     hat.Interior.Color = colGray
@@ -85,7 +75,7 @@ Sub CreateExportFile(ByVal INN As String, ByVal NUM As String)
     j = firstEx
     Do While DTL.Cells(i, clAccept) <> ""
         If DTL.Cells(i, clAccept) = "OK" Then
-            If DTL.Cells(i, clSaleINN).text = INN Then
+            If Left(DTL.Cells(i, clSaleINN).text, 10) = inn Then
                 'Копирование данных из сбора
                 Cells(j, 1).NumberFormat = "@"
                 Cells(j, 1) = "01"
@@ -100,7 +90,7 @@ Sub CreateExportFile(ByVal INN As String, ByVal NUM As String)
                 Cells(j, 7) = DTL.Cells(i, clPrice)
                 Cells(j, 8).NumberFormat = "### ### ##0.00"
                 Cells(j, 8) = DTL.Cells(i, clNDS)
-                Cells(j, 14) = LastDateOfQuartal(DTL.Cells(i, clPND).text)
+                Cells(j, 9) = LastDateOfQuartal(DTL.Cells(i, clPND).text)
                 j = j + 1
             End If
         End If
@@ -123,15 +113,15 @@ End Sub
 'Распределение поступлений
 Sub LoadAllocation()
     
-    For Each INN In selIndexes
+    For Each inn In selIndexes
         
-        Si = selIndexes(INN)
+        Si = selIndexes(inn)
         oND = StupidQToQIndex(DIC.Cells(Si, cOPND))
         
         For cPer = oND To quartCount - 1
             
             'Расчёт суммы всех отгрузок за текущий период
-            Sum = GetSaleSumm(INN, cPer)
+            Sum = GetSaleSumm(inn, cPer)
             If Sum > minSale Then
             
                 Set dateS = GetDatesList(cPer)
@@ -165,11 +155,11 @@ Sub LoadAllocation()
 End Sub
 
 'Расчёт суммы отгрузок продавца с INN за квартал Q
-Function GetSaleSumm(ByVal INN As String, ByVal q As Integer) As Double
+Function GetSaleSumm(ByVal inn As String, ByVal q As Integer) As Double
     i = firstDat
     Sum = 0
     Do While DAT.Cells(i, cAccept) <> ""
-        If DAT.Cells(i, cAccept) = "OK" And DAT.Cells(i, cSellINN) = INN Then
+        If DAT.Cells(i, cAccept) = "OK" And DAT.Cells(i, cSellINN) = inn Then
             If StupidQToQIndex(DAT.Cells(i, cPND)) = q Then
                 Sum = Sum + WorksheetFunction.Sum(Range(DAT.Cells(i, clNDS), DAT.Cells(i, clNDS + 2)))
             End If
