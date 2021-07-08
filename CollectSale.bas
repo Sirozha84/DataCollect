@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectSale"
-'Последняя правка: 28.03.2021 20:34
+'Last change: 08.07.2021 21:27
 
 Dim LastRec As Long
 Dim curFile As String
@@ -225,11 +225,12 @@ Function copyRecord(ByVal Di As Long, ByVal Si As Long, refresh As Boolean) As B
     
     'Копирование записей с проверкой на изменение
     For j = 2 To 14
-        If j <> 6 Then
+        If j <> cSeller Then
             CheckChanges Di, Si, j
             If Not IsError(SRC.Cells(Si, j)) Then DAT.Cells(Di, j) = SRC.Cells(Si, j)
+            If j = cSellINN Then DAT.Cells(Di, cSellINN) = Left(DAT.Cells(Di, cSellINN).text, 10)
         Else
-            s = selIndexes(DAT.Cells(Di, 5).text)
+            s = selIndexes(DAT.Cells(Di, cSellINN).text)
             If s <> Empty Then
                 DAT.Cells(Di, 6) = DIC.Cells(s, 1)
             Else
