@@ -1,5 +1,5 @@
 Attribute VB_Name = "Template"
-'Last change: 08.07.2021 21:32
+'Last change: 08.07.2021 21:53
 
 Const LastRec = 10000   'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxComps = 100    'Максимальное количество компаний (продавцов или покупателей)
@@ -222,24 +222,14 @@ Function NewTemplate(ByVal cln As String, ByVal tem As String, _
         Columns(1).ColumnWidth = 30
         Columns(2).ColumnWidth = 20
         Cells(1, 1) = "Наименование"
+        Cells(1, 2) = "ИНН/КПП"
         Range(Cells(2, 2), Cells(maxComps, 2)).NumberFormat = "@"
         Rows(2).Hidden = True
         With Range(Cells(3, 2), Cells(maxComps, 2)).Validation
-        If i = 2 Then
-            'Покупатели (может быть ИНН или ИНН/КПП)
-            Cells(1, 2) = "ИНН/КПП"
             .Delete
             .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:= _
                 "=OR(LEN(B3)=12,LEN(B3)=20)"
             .ErrorMessage = "Не корректная длина строки. Должно быть 12 или 20 символов."
-        Else
-            'Может быть только ИНН
-            Cells(1, 3) = "ИНН"
-            .Delete
-            .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:= _
-                "=OR(LEN(B3)=10)"
-            .ErrorMessage = "Не корректная длина строки. Должно быть 10 символов."
-        End If
         End With
         Range("A3").Select
         ActiveWindow.FreezePanes = False
