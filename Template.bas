@@ -1,5 +1,5 @@
 Attribute VB_Name = "Template"
-'Last change: 23.04.2021 18:20
+'Last change: 08.07.2021 20:12
 
 Const LastRec = 10000   'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxComps = 100    'Максимальное количество компаний (продавцов или покупателей)
@@ -44,12 +44,14 @@ Sub Generate()
                     Cells(i, cTResult) = "Ошибка"
                 End If
                 If res = 1 Then
-                    Cells(i, cTFile) = name
+                    Cells(i, cTFile).Hyperlinks.Add Anchor:=Cells(i, cTFile), _
+                        Address:="file:" + name, TextToDisplay:=name
                     Cells(i, cTResult) = "Успешно!"
                     Cells(i, cTStat) = "OK"
                 End If
                 If res = 2 Then
-                    Cells(i, cTFile) = name
+                    Cells(i, cTFile).Hyperlinks.Add Anchor:=Cells(i, cTFile), _
+                        Address:="file:" + name, TextToDisplay:=name
                     Cells(i, cTResult) = "Файл уже существует, пропущено"
                     Cells(i, cTStat) = "OK"
                 End If
@@ -224,10 +226,19 @@ Function NewTemplate(ByVal cln As String, ByVal tem As String, _
         Range(Cells(2, 2), Cells(maxComps, 2)).NumberFormat = "@"
         Rows(2).Hidden = True
         With Range(Cells(3, 2), Cells(maxComps, 2)).Validation
+        If i = 2 Then
+            'Покупатели (может быть ИНН или ИНН/КПП)
             .Delete
             .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:= _
                 "=OR(LEN(B3)=12,LEN(B3)=20)"
             .ErrorMessage = "Не корректная длина строки. Должно быть 12 или 20 символов."
+        Else
+            'Может быть только ИНН
+            .Delete
+            .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:= _
+                "=OR(LEN(B3)=10)"
+            .ErrorMessage = "Не корректная длина строки. Должно быть 10 символов."
+        End If
         End With
         Range("A3").Select
         ActiveWindow.FreezePanes = False
