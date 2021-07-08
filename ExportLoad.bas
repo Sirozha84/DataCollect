@@ -1,5 +1,5 @@
 Attribute VB_Name = "ExportLoad"
-'Last change: 07.07.2021 19:49
+'Last change: 08.07.2021 20:31
 
 Sub Run()
     
@@ -51,8 +51,9 @@ Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
     Cells(i, 5) = "КПП"
     Cells(i, 6) = "Наименование"
     Cells(i, 7) = "Сумма в руб." + Chr(10) + "и коп."
-    Cells(i, 8) = "Сумма НДС" '+ Chr(10) + "без НДС 20%"
+    Cells(i, 8) = "Сумма НДС"
     Cells(i, 9) = "Период НД"
+    Cells(i, 10) = "Дата принятия" + Chr(10) + "к учёту СФ"
     Columns(1).ColumnWidth = 10
     Columns(2).ColumnWidth = 13
     Columns(3).ColumnWidth = 10
@@ -62,8 +63,9 @@ Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
     Columns(7).ColumnWidth = 12
     Columns(8).ColumnWidth = 12
     Columns(9).ColumnWidth = 12
+    Columns(10).ColumnWidth = 15
     Rows(1).RowHeight = 30
-    Set hat = Range(Cells(1, 1), Cells(1, 9))
+    Set hat = Range(Cells(1, 1), Cells(1, 10))
     hat.HorizontalAlignment = xlCenter
     hat.VerticalAlignment = xlCenter
     hat.Interior.Color = colGray
@@ -90,7 +92,8 @@ Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
                 Cells(j, 7) = DTL.Cells(i, clPrice)
                 Cells(j, 8).NumberFormat = "### ### ##0.00"
                 Cells(j, 8) = DTL.Cells(i, clNDS)
-                Cells(j, 9) = LastDateOfQuartal(DTL.Cells(i, clPND).text)
+                Cells(j, 9) = DTL.Cells(i, clPND).text
+                Cells(j, 10) = LastDateOfQuartal(DTL.Cells(i, clPND).text)
                 j = j + 1
             End If
         End If
@@ -113,7 +116,19 @@ End Sub
 'Распределение поступлений
 Sub LoadAllocation()
     
-    For Each inn In selIndexes
+    'Формируем список присутствующих продавцов
+    Message "Просмотр базы..."
+    Dim enSalers As Variant
+    Set enSalers = CreateObject("Scripting.Dictionary")
+    i = firstDtL
+    Do While DTL.Cells(i, clAccept) <> ""
+        If DTL.Cells(i, clAccept) = "OK" Then enSalers(Left(DTL.Cells(i, clSaleINN).text, 10)) = 1
+        i = i + 1
+    Loop
+    
+    'For Each inn In selIndexes
+    Message "Распределение поступлений"
+    For Each inn In enSalers
         
         Si = selIndexes(inn)
         oND = StupidQToQIndex(DIC.Cells(Si, cOPND))
@@ -143,7 +158,7 @@ Sub LoadAllocation()
                 For Each i In ndlist
                     DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
                     If DTL.Cells(i, clRasp).text = "" Then _
-                            DTL.Cells(i, clRasp) = DTL.Cells(i, clNDS)
+                            DTL.Cells(i, clRasp) = Sum 'Было почему-то DTL.Cells(i, clNDS)
                 Next
                 
             End If
@@ -159,9 +174,9 @@ Function GetSaleSumm(ByVal inn As String, ByVal q As Integer) As Double
     i = firstDat
     Sum = 0
     Do While DAT.Cells(i, cAccept) <> ""
-        If DAT.Cells(i, cAccept) = "OK" And DAT.Cells(i, cSellINN) = inn Then
+        If DAT.Cells(i, cAccept) = "OK" And Left(DAT.Cells(i, cSellINN).text, 10) = inn Then
             If StupidQToQIndex(DAT.Cells(i, cPND)) = q Then
-                Sum = Sum + WorksheetFunction.Sum(Range(DAT.Cells(i, clNDS), DAT.Cells(i, clNDS + 2)))
+                Sum = Sum + WorksheetFunction.Sum(Range(DAT.Cells(i, cNDS), DAT.Cells(i, cNDS + 2)))
             End If
         End If
         i = i + 1
