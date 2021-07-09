@@ -1,5 +1,5 @@
 Attribute VB_Name = "Template"
-'Last change: 08.07.2021 21:53
+'Last change: 09.07.2021 11:34
 
 Const LastRec = 10000   'Последняя строка записей (Первая всегда 5, вбита гвоздями)
 Const maxComps = 100    'Максимальное количество компаний (продавцов или покупателей)
@@ -44,14 +44,12 @@ Sub Generate()
                     Cells(i, cTResult) = "Ошибка"
                 End If
                 If res = 1 Then
-                    Cells(i, cTFile).Hyperlinks.Add Anchor:=Cells(i, cTFile), _
-                        Address:="file:" + name, TextToDisplay:=name
+                    Cells(i, cTFile) = name
                     Cells(i, cTResult) = "Успешно!"
                     Cells(i, cTStat) = "OK"
                 End If
                 If res = 2 Then
-                    Cells(i, cTFile).Hyperlinks.Add Anchor:=Cells(i, cTFile), _
-                        Address:="file:" + name, TextToDisplay:=name
+                    Cells(i, cTFile) = name
                     Cells(i, cTResult) = "Файл уже существует, пропущено"
                     Cells(i, cTStat) = "OK"
                 End If
