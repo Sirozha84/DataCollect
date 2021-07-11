@@ -1,11 +1,10 @@
 Attribute VB_Name = "ExportLoad"
-'Last change: 08.07.2021 20:31
+'Last change: 11.07.2021 15:32
 
 Sub Run()
     
     Message "Подготовка..."
     Dictionary.Init
-    LoadAllocation
     
     'Подготовка каталога для экспорта
     Patch = DirExport + "\Поступления"
@@ -16,14 +15,15 @@ Sub Run()
     Next
     
     'Формируем список инн продавцов для выгрузки
-    Dim SalersINN As Collection
-    Set SalersINN = New Collection
     Set files = Source.getFiles(DirExport + "\Отгрузки", False)
+    Set INNs = FilesToINNs(files)
+    LoadAllocation INNs
     
     n = 1
     a = files.Count
-    For Each file In files
-        CreateExportFile Left(Source.FSO.GetFileName(file), 10), CStr(n) + " из " + CStr(a) + ": "
+    For Each inn In INNs
+        CreateExportFile inn, CStr(n) + " из " + CStr(a) + ": "
+        n = n + 1
     Next
     
     Message "Готово!"
@@ -114,21 +114,11 @@ er:
 End Sub
 
 'Распределение поступлений
-Sub LoadAllocation()
+Sub LoadAllocation(ByVal INNs As Collection)
     
-    'Формируем список присутствующих продавцов
-    Message "Просмотр базы..."
-    Dim enSalers As Variant
-    Set enSalers = CreateObject("Scripting.Dictionary")
-    i = firstDtL
-    Do While DTL.Cells(i, clAccept) <> ""
-        If DTL.Cells(i, clAccept) = "OK" Then enSalers(Left(DTL.Cells(i, clSaleINN).text, 10)) = 1
-        i = i + 1
-    Loop
+    Message "Распределение поступлений..."
     
-    'For Each inn In selIndexes
-    Message "Распределение поступлений"
-    For Each inn In enSalers
+    For Each inn In INNs
         
         Si = selIndexes(inn)
         oND = StupidQToQIndex(DIC.Cells(Si, cOPND))
@@ -139,26 +129,19 @@ Sub LoadAllocation()
             Sum = GetSaleSumm(inn, cPer)
             If Sum > minSale Then
             
-                Set dateS = GetDatesList(cPer)
-                
                 'Подбираем список поступлений
-                Dim ndlist As Collection
-                Set ndlist = New Collection
+                Set dateS = GetDatesList(cPer)
                 For Each postdate In dateS
                     i = dateS(postdate)
                     Post = DTL.Cells(i, clNDS)
-                    If Sum - Post >= 0 Then
-                        Sum = Sum - Post
-                        If Sum >= 0 Then ndlist.Add i
+                    If Sum >= Post Then
+                        If DTL.Cells(i, clRasp).text = "" Then
+                            Sum = Sum - Post
+                            DTL.Cells(i, clRasp) = Post
+                            DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
+                        End If
                         If Sum < maxDif Then Exit For
                     End If
-                Next
-                
-                'По собранному списку поступлений проставляем текущий период и распределённую сумму
-                For Each i In ndlist
-                    DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
-                    If DTL.Cells(i, clRasp).text = "" Then _
-                            DTL.Cells(i, clRasp) = Sum 'Было почему-то DTL.Cells(i, clNDS)
                 Next
                 
             End If
@@ -168,6 +151,14 @@ Sub LoadAllocation()
     Next
     
 End Sub
+
+'Перевод списка файлов в список ИНН
+Function FilesToINNs(files As Object) As Object
+    Set FilesToINNs = New Collection
+    For Each file In files
+        FilesToINNs.Add Left(Source.FSO.GetFileName(file), 10)
+    Next
+End Function
 
 'Расчёт суммы отгрузок продавца с INN за квартал Q
 Function GetSaleSumm(ByVal inn As String, ByVal q As Integer) As Double
