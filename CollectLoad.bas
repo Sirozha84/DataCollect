@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Последняя правка: 28.06.2021 21:05
+'Last change: 12.07.2021 15:44
 
 Dim LastRec As Long
 Dim curFile As String
@@ -175,8 +175,9 @@ Function AddFile(ByVal file As String) As Byte
             i = i + 1
         Loop
     End If
-        
+    If ftyp = "" Then AddFile = 8
     If errors Then AddFile = 2
+
 ex:
     'Завершение
     On Error GoTo er
