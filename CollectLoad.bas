@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 12.07.2021 15:50
+'Last change: 12.07.2021 20:58
 
 Dim LastRec As Long
 Dim curFile As String
@@ -9,17 +9,19 @@ Dim curProvINN As String
 Dim UINs As Object
 
 'Колонки данных в обрабатываемых файлах
-Dim scKVO As Integer
-Dim scND As Integer
-Dim scSeller As Integer
-Dim scSellerINN As Integer
-Dim scPrice As Integer
-Dim scPWN20 As Integer
-Dim scPWN18 As Integer
-Dim scPWN10 As Integer
-Dim scNDS20 As Integer
-Dim scNDS18 As Integer
-Dim scNDS10 As Integer
+Dim scRType As Byte     'Стиль записей: 0 - номер/дата, инн/кпп - в одной ячейке, 1 - в раздельных
+Dim scFirst As Integer  'Первая строка с данными
+Dim scKVO As Integer        'Код вида операции
+Dim scND As Integer         'Номер/дата
+Dim scSeller As Integer     'Наименование продавца
+Dim scSellerINN As Integer  'ИНН продавца
+Dim scPrice As Integer      'Стоимость
+Dim scPWN20 As Integer      'Стоимость облагаемая налогом 20%
+Dim scPWN18 As Integer      'Стоимость облагаемая налогом 18%
+Dim scPWN10 As Integer      'Стоимость облагаемая налогом 10%
+Dim scNDS20 As Integer      'НДС 20%
+Dim scNDS18 As Integer      'НДС 18%
+Dim scNDS10 As Integer      'НДС 20%
 
 'Запуск процесса сбора данных
 Sub Run()
@@ -98,7 +100,7 @@ End Sub
 '1 - ошибка загрузки
 '2 - ошибка в данных (errors=true)
 '7 - нет маркера, или он не верный
-'8 - файл или поля не распознан
+'8 - поля не распознаны
 Function AddFile(ByVal file As String) As Byte
     
     'Подготовки
@@ -133,9 +135,9 @@ Function AddFile(ByVal file As String) As Byte
     If ftyp = "j" Then
         curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
         curProvINN = Right(SRC.Cells(5, 2).text, 20)
-        i = 13
         'Чтение данных о закупках
-        Do While SRC.Cells(i, 2).text <> ""
+        i = 13 'scFirst
+        Do While SRC.Cells(i, scKVO).text <> ""
             If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 2).text <> "005" Then
                 If Not copyRecordZH(i) Then
                     errors = True
@@ -155,11 +157,9 @@ Function AddFile(ByVal file As String) As Byte
     End If
     If ftyp = "b" Then
         If Not SBFieldRecognition Then AddFile = 8: GoTo ex
-        curProv = Replace(SRC.Cells(4, 1).text, "Продавец  ", "")
-        curProvINN = Right(SRC.Cells(5, 1).text, 20)
-        i = 13
         'Чтение данных о закупках
-        Do While SRC.Cells(i, 2).text <> ""
+        i = scFirst
+        Do While SRC.Cells(i, scKVO).text <> ""
             If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 1).text <> "005" Then
                 If Not copyRecordSB(i) Then
                     errors = True
@@ -179,7 +179,7 @@ Function AddFile(ByVal file As String) As Byte
     End If
     If ftyp = "" Then AddFile = 8
     If errors Then AddFile = 2
-
+    
 ex:
     'Завершение
     On Error GoTo er
@@ -238,10 +238,14 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
         DTL.Cells(LastRec, clSaleName) = curProv
         kvochange = True
     End If
-    nd = SRC.Cells(Si, 3).text
-    DTL.Cells(LastRec, clNum) = NumFromND(nd)
-    DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
-    DTL.Cells(LastRec, clDate) = Right(nd, 10)
+    If scRType = 0 Then
+        nd = SRC.Cells(Si, scND).text
+        DTL.Cells(LastRec, clNum) = NumFromND(nd)
+        DTL.Cells(LastRec, clDate) = Right(nd, 10)
+    Else
+        DTL.Cells(LastRec, clNum) = SRC.Cells(Si, scND).text
+        DTL.Cells(LastRec, clDate) = SRC.Cells(Si, scND + 1).text
+    End If
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)
@@ -278,6 +282,7 @@ End Function
 Sub SetFormates(ByVal i As Integer)
     DTL.Cells(LastRec, clKVO).NumberFormat = "@"
     DTL.Cells(LastRec, clNum).NumberFormat = "@"
+    DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
     DTL.Cells(LastRec, clProvINN).NumberFormat = "@"
     DTL.Cells(LastRec, clSaleINN).NumberFormat = "@"
     For i = 0 To 4
@@ -340,10 +345,11 @@ Function SBFieldRecognition() As Boolean
     scNDS20 = 0
     scNDS18 = 0
     scNDS10 = 0
-
+    
+    'Тип шаблона 0
     For i = 1 To 50
         If SRC.Cells(8, i) = "Код вида опера-ции" Then scKVO = i
-        If Left(SRC.Cells(8, i), 12) = "Номер и дата" Then scND = i
+        If Left(SRC.Cells(8, i), 12) = "Номер и дата" Then If scND = 0 Then scND = i
         If Left(SRC.Cells(8, i), 12) = "Наименование" Then scSeller = i
         If Left(SRC.Cells(8, i), 7) = "ИНН/КПП" Then scSellerINN = i
         If Left(SRC.Cells(11, i), 10) = "в рублях и" Then scPrice = i
@@ -351,7 +357,6 @@ Function SBFieldRecognition() As Boolean
         If SRC.Cells(11, i) = "18 процентов" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
         If SRC.Cells(11, i) = "10 процентов" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
     Next
-    
     SBFieldRecognition = _
         scKVO <> 0 And _
         scND <> 0 And _
@@ -362,7 +367,42 @@ Function SBFieldRecognition() As Boolean
         scPWN10 <> 0 And _
         scNDS18 <> 0 And _
         scNDS10 <> 0
-
+    If SBFieldRecognition Then
+        scRType = 0
+        scFirst = 13
+        curProv = Replace(SRC.Cells(4, 1).text, "Продавец  ", "")
+        curProvINN = Right(SRC.Cells(5, 1).text, 20)
+        Exit Function
+    End If
+        
+    'Тип шаблона 1
+    For i = 1 To 50
+        If Left(SRC.Cells(4, i), 17) = "Код вида операции" Then scKVO = i
+        If SRC.Cells(3, i) = "СФ" Then scND = i
+        If SRC.Cells(3, i) = "Сведения о покупателе" Then scSeller = i + 2: scSellerINN = i
+        If Left(SRC.Cells(4, i), 13) = "в руб. и коп." Then scPrice = i
+        If Left(SRC.Cells(4, i), 3) = "20%" Then If scPWN20 = 0 Then scPWN20 = i Else scNDS20 = i
+        If Left(SRC.Cells(4, i), 3) = "18%" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
+        If Left(SRC.Cells(4, i), 3) = "10%" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
+    Next
+    SBFieldRecognition = _
+        scKVO <> 0 And _
+        scND <> 0 And _
+        scSeller <> 0 And _
+        scSellerINN <> 0 And _
+        scPrice <> 0 And _
+        scPWN18 <> 0 And _
+        scPWN10 <> 0 And _
+        scNDS18 <> 0 And _
+        scNDS10 <> 0
+    If SBFieldRecognition Then
+        scRType = 1
+        scFirst = 5
+        curProv = SRC.Cells(2, 1).text
+        curProvINN = SRC.Cells(3, 1).text
+        Exit Function
+    End If
+        
 End Function
 
 '******************** End of File ********************
