@@ -1,7 +1,10 @@
 Attribute VB_Name = "Numerator"
+'Last change: 12.07.2021 21:27
+
 Dim Prefixes As Object  'Словарь префиксов
 Dim Liters As Object    'Словарь литеров
 Dim Codes As Object     'Словарь кодов
+Dim LNum As Long        'Последний номер поступления
 
 'Инициализация словаря
 Sub Init()
@@ -29,6 +32,11 @@ Sub Init()
 
 End Sub
 
+'Инициализация последнего номера поступления (упрощённая нумерация в поступлениях)
+Sub InitLoad()
+    LNum = PRP.Cells(10, 2)
+End Sub
+
 'Сохранение словаря на страницу
 Sub Save()
     i = firstNum
@@ -43,7 +51,7 @@ Sub Save()
     NUM.Cells(i, 2) = ""
 End Sub
 
-'Генерация уникального номера
+'Генерация уникального номера отгрузки
 Public Function Generate(recDate As Date, seller As String) As String
     
     lit = Liters(seller)
@@ -56,6 +64,13 @@ Public Function Generate(recDate As Date, seller As String) As String
 
     Generate = pref + Right(CStr(Prefixes(pref) + 10 ^ d), d)
 
+End Function
+
+'Генерация уникального номера поступления
+Public Function GenerateLoad() As Long
+    LNum = LNum + 1
+    PRP.Cells(10, 2) = LNum
+    GenerateLoad = LNum
 End Function
 
 'Поиск в словаре или генерация литера
@@ -86,3 +101,5 @@ Function CheckPrefix(UID As String, ByVal dateS As Date, seller As String) As Bo
     pref = Liters(seller) + GetCode(seller, dateS, d)
     CheckPrefix = pref = Left(UID, Len(pref))
 End Function
+
+'******************** End of File ********************

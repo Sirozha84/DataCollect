@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 12.07.2021 20:58
+'Last change: 12.07.2021 21:57
 
 Dim LastRec As Long
 Dim curFile As String
@@ -137,7 +137,7 @@ Function AddFile(ByVal file As String) As Byte
         curProvINN = Right(SRC.Cells(5, 2).text, 20)
         'Чтение данных о закупках
         i = 13 'scFirst
-        Do While SRC.Cells(i, scKVO).text <> ""
+        Do While SRC.Cells(i, 2).text <> ""
             If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 2).text <> "005" Then
                 If Not copyRecordZH(i) Then
                     errors = True
