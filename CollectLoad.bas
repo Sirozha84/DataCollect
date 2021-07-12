@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 12.07.2021 15:44
+'Last change: 12.07.2021 15:50
 
 Dim LastRec As Long
 Dim curFile As String
@@ -98,7 +98,7 @@ End Sub
 '1 - ошибка загрузки
 '2 - ошибка в данных (errors=true)
 '7 - нет маркера, или он не верный
-'8 - поля не распознаны
+'8 - файл или поля не распознан
 Function AddFile(ByVal file As String) As Byte
     
     'Подготовки
@@ -121,8 +121,10 @@ Function AddFile(ByVal file As String) As Byte
     End If
     
     'Определяемся с типом файла
+    If LCase(Left(SRC.Cells(1, 2), 5)) = "книга" Then ftyp = "b"
     If LCase(Left(SRC.Cells(2, 1), 5)) = "книга" Then ftyp = "b"
     If LCase(Left(SRC.Cells(2, 22), 5)) = "книга" Then ftyp = "b"
+    If LCase(Left(SRC.Cells(1, 2), 6)) = "журнал" Then ftyp = "j"
     If LCase(Left(SRC.Cells(2, 1), 6)) = "журнал" Then ftyp = "j"
     If LCase(Left(SRC.Cells(2, 27), 6)) = "журнал" Then ftyp = "j"
     
