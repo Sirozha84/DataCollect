@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 12.07.2021 21:57
+'Last change: 13.07.2021 20:55
 
 Dim LastRec As Long
 Dim curFile As String
@@ -22,6 +22,7 @@ Dim scPWN10 As Integer      'Стоимость облагаемая налогом 10%
 Dim scNDS20 As Integer      'НДС 20%
 Dim scNDS18 As Integer      'НДС 18%
 Dim scNDS10 As Integer      'НДС 20%
+Dim scNDS As Integer        'НДС всего
 
 'Запуск процесса сбора данных
 Sub Run()
@@ -122,45 +123,12 @@ Function AddFile(ByVal file As String) As Byte
         Exit Function
     End If
     
-    'Определяемся с типом файла
-    If LCase(Left(SRC.Cells(1, 2), 5)) = "книга" Then ftyp = "b"
-    If LCase(Left(SRC.Cells(2, 1), 5)) = "книга" Then ftyp = "b"
-    If LCase(Left(SRC.Cells(2, 22), 5)) = "книга" Then ftyp = "b"
-    If LCase(Left(SRC.Cells(1, 2), 6)) = "журнал" Then ftyp = "j"
-    If LCase(Left(SRC.Cells(2, 1), 6)) = "журнал" Then ftyp = "j"
-    If LCase(Left(SRC.Cells(2, 27), 6)) = "журнал" Then ftyp = "j"
-    
-    'Читаем данные
+   'Чтение данных
     c = 60  'Колонка с обратной связью
-    If ftyp = "j" Then
-        curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
-        curProvINN = Right(SRC.Cells(5, 2).text, 20)
-        'Чтение данных о закупках
-        i = 13 'scFirst
-        Do While SRC.Cells(i, 2).text <> ""
-            If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 2).text <> "005" Then
-                If Not copyRecordZH(i) Then
-                    errors = True
-                    DTL.Cells(LastRec, clAccept) = "fail"
-                Else
-                    DTL.Cells(LastRec, clDateCol) = DateTime.Now
-                    uin = GenerateLoad
-                    DTL.Cells(LastRec, clUIN) = uin
-                    SRC.Cells(i, c) = uin
-                    DTL.Cells(LastRec, clAccept) = "OK"
-                End If
-                DTL.Cells(LastRec, clFile) = file
-                LastRec = LastRec + 1
-            End If
-            i = i + 1
-        Loop
-    End If
-    If ftyp = "b" Then
-        If Not SBFieldRecognition Then AddFile = 8: GoTo ex
-        'Чтение данных о закупках
+    If SBFieldRecognition Then
         i = scFirst
         Do While SRC.Cells(i, scKVO).text <> ""
-            If UINs(SRC.Cells(i, c).text) = "" And SRC.Cells(i, 1).text <> "005" Then
+            If UINs(SRC.Cells(i, c).text) = "" And Len(SRC.Cells(i, scKVO).text) < 3 Then
                 If Not copyRecordSB(i) Then
                     errors = True
                     DTL.Cells(LastRec, clAccept) = "fail"
@@ -176,11 +144,11 @@ Function AddFile(ByVal file As String) As Byte
             End If
             i = i + 1
         Loop
+    Else
+         AddFile = 8
     End If
-    If ftyp = "" Then AddFile = 8
     If errors Then AddFile = 2
     
-ex:
     'Завершение
     On Error GoTo er
     impBook.Close True
@@ -190,34 +158,6 @@ ex:
 
 er:
     AddFile = 1
-    
-End Function
-
-'Копирование записи из журнала. Возвращает True, если запись принялась без ошибок
-'Si - строка в исходниках
-Function copyRecordZH(ByVal Si As Long) As Boolean
-    
-    SetFormates LastRec
-    On Error GoTo er
-    DTL.Cells(LastRec, clMark) = curMark
-    DTL.Cells(LastRec, clKVO) = SRC.Cells(Si, 4)
-    nd = SRC.Cells(Si, 6).text
-    DTL.Cells(LastRec, clNum) = NumFromND(nd)
-    DTL.Cells(LastRec, clDate).NumberFormat = "dd.MM.yyyy"
-    DTL.Cells(LastRec, clDate) = Right(nd, 10)
-    DTL.Cells(LastRec, clProvINN) = curProvINN
-    DTL.Cells(LastRec, clProvName) = curProv
-    DTL.Cells(LastRec, clSaleINN) = Left(SRC.Cells(Si, 15), 10)
-    DTL.Cells(LastRec, clSaleName) = SRC.Cells(Si, 13)
-    DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, 27)
-    DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, 29)
-    
-    copyRecordZH = VerifyLoad(LastRec)
-    AddFormuls
-    Exit Function
-    
-er:
-    copyRecordZH = False
     
 End Function
 
@@ -249,18 +189,15 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     DTL.Cells(LastRec, clProvINN) = curProvINN
     DTL.Cells(LastRec, clProvName) = curProv
     DTL.Cells(LastRec, clPrice) = SRC.Cells(Si, scPrice)
-    If scPWN20 <> 0 Then
-        DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)
-        DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)
-        DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)
-        DTL.Cells(LastRec, clNDS) = _
+    If scPWN20 <> 0 Then DTL.Cells(LastRec, clPrice + 1) = SRC.Cells(Si, scPWN20)
+    If scPWN18 <> 0 Then DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)
+    If scPWN10 <> 0 Then DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)
+    If scNDS20 <> 0 Then DTL.Cells(LastRec, clNDS) = _
             WorksheetFunction.Sum(Range(SRC.Cells(Si, scNDS20), SRC.Cells(Si, scNDS10)))
-    Else
-        DTL.Cells(LastRec, clPrice + 2) = SRC.Cells(Si, scPWN18)
-        DTL.Cells(LastRec, clPrice + 3) = SRC.Cells(Si, scPWN10)
-        DTL.Cells(LastRec, clNDS) = _
+    If scNDS20 = 0 And scNDS18 <> 0 Then DTL.Cells(LastRec, clNDS) = _
             WorksheetFunction.Sum(Range(SRC.Cells(Si, scNDS18), SRC.Cells(Si, scNDS10)))
-    End If
+    If scNDS <> 0 Then DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, scNDS)
+    
     copyRecordSB = VerifyLoad(LastRec)
     
     'КВО менялся с 02 на 22, делаем связанные с этим событием действия
@@ -307,7 +244,9 @@ Sub FindDuplicates()
     Set numbers = CreateObject("Scripting.Dictionary")
     i = firstDtL
     Do While DTL.Cells(i, clAccept) <> ""
-        NUM = DTL.Cells(i, clNum).text
+        NUM = DTL.Cells(i, clNum).text + "!" + _
+              DTL.Cells(i, clProvINN).text + "!" + _
+              DTL.Cells(i, clSaleINN).text
         If numbers(NUM) = Empty Then
             numbers(NUM) = i
         Else
@@ -345,8 +284,9 @@ Function SBFieldRecognition() As Boolean
     scNDS20 = 0
     scNDS18 = 0
     scNDS10 = 0
+    scNDS = 0
     
-    'Тип шаблона 0
+    'Книга продаж, тип 0
     For i = 1 To 50
         If SRC.Cells(8, i) = "Код вида опера-ции" Then scKVO = i
         If Left(SRC.Cells(8, i), 12) = "Номер и дата" Then If scND = 0 Then scND = i
@@ -375,7 +315,7 @@ Function SBFieldRecognition() As Boolean
         Exit Function
     End If
         
-    'Тип шаблона 1
+    'Книга продаж, тип 1
     For i = 1 To 50
         If Left(SRC.Cells(4, i), 17) = "Код вида операции" Then scKVO = i
         If SRC.Cells(3, i) = "СФ" Then scND = i
@@ -400,6 +340,30 @@ Function SBFieldRecognition() As Boolean
         scFirst = 5
         curProv = SRC.Cells(2, 1).text
         curProvINN = SRC.Cells(3, 1).text
+        Exit Function
+    End If
+    
+    'Журнал учёта
+    For i = 1 To 50
+        If Left(SRC.Cells(9, i), 3) = "Код" Then scKVO = i
+        If Left(SRC.Cells(9, i), 12) = "Номер и дата" And scND = 0 Then scND = i
+        If Left(SRC.Cells(9, i), 12) = "Наименование" And acseller = 0 Then scSeller = i
+        If Left(SRC.Cells(9, i), 7) = "ИНН/КПП" Then scSellerINN = i
+        If Left(SRC.Cells(9, i), 9) = "Стоимость" Then scPrice = i
+        If Left(SRC.Cells(9, i), 11) = "В том числе" Then scNDS = i
+    Next
+    SBFieldRecognition = _
+        scKVO <> 0 And _
+        scND <> 0 And _
+        scSeller <> 0 And _
+        scSellerINN <> 0 And _
+        scPrice <> 0 And _
+        scNDS <> 0
+    If SBFieldRecognition Then
+        scRType = 0
+        scFirst = 13
+        curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
+        curProvINN = Right(SRC.Cells(5, 2).text, 20)
         Exit Function
     End If
         
