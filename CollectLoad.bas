@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 13.07.2021 20:55
+'Last change: 14.07.2021 21:18
 
 Dim LastRec As Long
 Dim curFile As String
@@ -84,15 +84,17 @@ Sub Run()
         i = i + 1
     Loop
     
-    FindDuplicates
+    ed = FindDuplicates
 
     'Завершение
     ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True
     
-    MsgBox ("Обработка завершена!" + Chr(13) + "Файлов загруженные успешно: " + _
-            CStr(s) + Chr(13) + "Файлы с ошибками: " + CStr(e))
+    MsgBox ("Обработка завершена!" + Chr(13) + _
+            "Файлов загруженные успешно: " + CStr(s) + Chr(13) + _
+            "Файлы с ошибками: " + CStr(e)) + Chr(13) + _
+            "Повторы номеров СФ: " + CStr(ed)
     
 End Sub
 
@@ -240,7 +242,8 @@ Sub AddFormuls()
 End Sub
 
 'Проверка собранных записей на отсутствие повторяющихся номеров
-Sub FindDuplicates()
+Function FindDuplicates()
+    e = 0
     Set numbers = CreateObject("Scripting.Dictionary")
     i = firstDtL
     Do While DTL.Cells(i, clAccept) <> ""
@@ -257,10 +260,14 @@ Sub FindDuplicates()
             DTL.Cells(i, clCom).Interior.Color = colRed
             DTL.Cells(io, clAccept) = "fail"
             DTL.Cells(i, clAccept) = "fail"
+            Log.Rec DTL.Cells(i, clFile), 2
+            Log.Rec DTL.Cells(io, clFile), 2
+            e = e + 2
         End If
         i = i + 1
     Loop
-End Sub
+    FindDuplicates = e
+End Function
 
 'Отделение номера от "Номер и дата"
 Function NumFromND(ByVal nd As String) As String
@@ -273,6 +280,91 @@ End Function
 'Распознавание колонок в книге продаж
 Function SBFieldRecognition() As Boolean
     
+    'Книга продаж, тип 0
+    scReset
+    st = 7
+    Do
+        For i = 1 To 50
+            If SRC.Cells(st, i) = "Код вида опера-ции" Then scKVO = i
+            If Left(SRC.Cells(st, i), 12) = "Номер и дата" Then If scND = 0 Then scND = i
+            If Left(SRC.Cells(st, i), 12) = "Наименование" Then scSeller = i
+            If Left(SRC.Cells(st, i), 7) = "ИНН/КПП" Then scSellerINN = i
+            If Left(SRC.Cells(st + 3, i), 10) = "в рублях и" Then scPrice = i
+            If SRC.Cells(st + 3, i) = "20 процентов" Then If scPWN20 = 0 Then scPWN20 = i Else scNDS20 = i
+            If SRC.Cells(st + 3, i) = "18 процентов" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
+            If SRC.Cells(st + 3, i) = "10 процентов" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
+        Next
+        SBFieldRecognition = scKVO <> 0 And scND <> 0 And scSeller <> 0 And scSellerINN <> 0 And _
+                scPrice <> 0 And scPWN18 <> 0 And scPWN10 <> 0 And scNDS18 <> 0 And scNDS10 <> 0
+        st = st + 1
+    Loop Until SBFieldRecognition Or st > 8
+    If SBFieldRecognition Then
+        scRType = 0
+        scFirst = 13
+        For i = 2 To 6
+            If Left(SRC.Cells(i, 1).text, 8) = "Продавец" Then _
+                    curProv = Replace(SRC.Cells(i, 1).text, "Продавец  ", "")
+            If Left(SRC.Cells(i, 1).text, 17) = "Идентификационный" Then _
+                    curProvINN = Right(SRC.Cells(i, 1).text, 20)
+        Next
+        Exit Function
+    End If
+        
+    'Книга продаж, тип 1
+    scReset
+    st = 2
+    Do
+        For i = 1 To 50
+            If Left(SRC.Cells(4, i), 17) = "Код вида операции" Then scKVO = i
+            If SRC.Cells(st, i) = "СФ" Then scND = i
+            If Right(SRC.Cells(st, i), 10) = "(стр. 020)" Then scND = i
+            If SRC.Cells(st, i) = "Сведения о покупателе" Then scSeller = i + 2: scSellerINN = i
+            If Right(SRC.Cells(st, i), 10) = "(стр. 100)" Then scSeller = i + 2: scSellerINN = i
+            If Left(SRC.Cells(4, i), 13) = "в руб. и коп." Then scPrice = i
+            If Left(SRC.Cells(4, i), 9) = "Стоимость" And scPrice = 0 Then scPrice = i
+            If Right(SRC.Cells(st, i), 10) = "(стр. 106)" And scPrice = 0 Then scPrice = i
+            If Left(SRC.Cells(4, i), 9) = "Сумма НДС" Then scNDS = i
+            If Left(SRC.Cells(4, i), 3) = "20%" Then If scPWN20 = 0 Then scPWN20 = i Else scNDS20 = i
+            If Left(SRC.Cells(4, i), 3) = "18%" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
+            If Left(SRC.Cells(4, i), 3) = "10%" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
+        Next
+        SBFieldRecognition = scKVO <> 0 And scND <> 0 And scSeller <> 0 And scSellerINN <> 0 And _
+                scPrice <> 0 And (scNDS <> 0 Or (scPWN18 <> 0 And scPWN10 <> 0 And scNDS18 <> 0 And scNDS10 <> 0))
+        st = st + 1
+    Loop Until SBFieldRecognition Or st > 4
+    If SBFieldRecognition Then
+        scRType = 1
+        scFirst = 5
+        curProv = SRC.Cells(2, 1).text
+        curProvINN = SRC.Cells(3, 1).text
+        Exit Function
+    End If
+    
+    'Журнал учёта
+    scReset
+    For i = 1 To 50
+        If Left(SRC.Cells(9, i), 3) = "Код" Then scKVO = i
+        If Left(SRC.Cells(9, i), 12) = "Номер и дата" And scND = 0 Then scND = i
+        If SRC.Cells(9, i) = "СФ" And scND = 0 Then scND = i
+        If Left(SRC.Cells(9, i), 12) = "Наименование" And acseller = 0 Then scSeller = i
+        If Left(SRC.Cells(9, i), 7) = "ИНН/КПП" Then scSellerINN = i
+        If Left(SRC.Cells(9, i), 9) = "Стоимость" Then scPrice = i
+        If Left(SRC.Cells(9, i), 11) = "В том числе" Then scNDS = i
+    Next
+    SBFieldRecognition = scKVO <> 0 And scND <> 0 And scSeller <> 0 And _
+            scSellerINN <> 0 And scPrice <> 0 And scNDS <> 0
+    If SBFieldRecognition Then
+        scRType = 0
+        scFirst = 13
+        curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
+        curProvINN = Right(SRC.Cells(5, 2).text, 20)
+        Exit Function
+    End If
+        
+End Function
+
+'Сброс распознаных колонок
+Sub scReset()
     scKVO = 0
     scND = 0
     scSeller = 0
@@ -285,88 +377,6 @@ Function SBFieldRecognition() As Boolean
     scNDS18 = 0
     scNDS10 = 0
     scNDS = 0
-    
-    'Книга продаж, тип 0
-    For i = 1 To 50
-        If SRC.Cells(8, i) = "Код вида опера-ции" Then scKVO = i
-        If Left(SRC.Cells(8, i), 12) = "Номер и дата" Then If scND = 0 Then scND = i
-        If Left(SRC.Cells(8, i), 12) = "Наименование" Then scSeller = i
-        If Left(SRC.Cells(8, i), 7) = "ИНН/КПП" Then scSellerINN = i
-        If Left(SRC.Cells(11, i), 10) = "в рублях и" Then scPrice = i
-        If SRC.Cells(11, i) = "20 процентов" Then If scPWN20 = 0 Then scPWN20 = i Else scNDS20 = i
-        If SRC.Cells(11, i) = "18 процентов" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
-        If SRC.Cells(11, i) = "10 процентов" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
-    Next
-    SBFieldRecognition = _
-        scKVO <> 0 And _
-        scND <> 0 And _
-        scSeller <> 0 And _
-        scSellerINN <> 0 And _
-        scPrice <> 0 And _
-        scPWN18 <> 0 And _
-        scPWN10 <> 0 And _
-        scNDS18 <> 0 And _
-        scNDS10 <> 0
-    If SBFieldRecognition Then
-        scRType = 0
-        scFirst = 13
-        curProv = Replace(SRC.Cells(4, 1).text, "Продавец  ", "")
-        curProvINN = Right(SRC.Cells(5, 1).text, 20)
-        Exit Function
-    End If
-        
-    'Книга продаж, тип 1
-    For i = 1 To 50
-        If Left(SRC.Cells(4, i), 17) = "Код вида операции" Then scKVO = i
-        If SRC.Cells(3, i) = "СФ" Then scND = i
-        If SRC.Cells(3, i) = "Сведения о покупателе" Then scSeller = i + 2: scSellerINN = i
-        If Left(SRC.Cells(4, i), 13) = "в руб. и коп." Then scPrice = i
-        If Left(SRC.Cells(4, i), 3) = "20%" Then If scPWN20 = 0 Then scPWN20 = i Else scNDS20 = i
-        If Left(SRC.Cells(4, i), 3) = "18%" Then If scPWN18 = 0 Then scPWN18 = i Else scNDS18 = i
-        If Left(SRC.Cells(4, i), 3) = "10%" Then If scPWN10 = 0 Then scPWN10 = i Else scNDS10 = i
-    Next
-    SBFieldRecognition = _
-        scKVO <> 0 And _
-        scND <> 0 And _
-        scSeller <> 0 And _
-        scSellerINN <> 0 And _
-        scPrice <> 0 And _
-        scPWN18 <> 0 And _
-        scPWN10 <> 0 And _
-        scNDS18 <> 0 And _
-        scNDS10 <> 0
-    If SBFieldRecognition Then
-        scRType = 1
-        scFirst = 5
-        curProv = SRC.Cells(2, 1).text
-        curProvINN = SRC.Cells(3, 1).text
-        Exit Function
-    End If
-    
-    'Журнал учёта
-    For i = 1 To 50
-        If Left(SRC.Cells(9, i), 3) = "Код" Then scKVO = i
-        If Left(SRC.Cells(9, i), 12) = "Номер и дата" And scND = 0 Then scND = i
-        If Left(SRC.Cells(9, i), 12) = "Наименование" And acseller = 0 Then scSeller = i
-        If Left(SRC.Cells(9, i), 7) = "ИНН/КПП" Then scSellerINN = i
-        If Left(SRC.Cells(9, i), 9) = "Стоимость" Then scPrice = i
-        If Left(SRC.Cells(9, i), 11) = "В том числе" Then scNDS = i
-    Next
-    SBFieldRecognition = _
-        scKVO <> 0 And _
-        scND <> 0 And _
-        scSeller <> 0 And _
-        scSellerINN <> 0 And _
-        scPrice <> 0 And _
-        scNDS <> 0
-    If SBFieldRecognition Then
-        scRType = 0
-        scFirst = 13
-        curProv = Split(SRC.Cells(4, 2).text, ": ")(1)
-        curProvINN = Right(SRC.Cells(5, 2).text, 20)
-        Exit Function
-    End If
-        
-End Function
+End Sub
 
 '******************** End of File ********************
