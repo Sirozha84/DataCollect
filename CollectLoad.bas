@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 17.07.2021 16:47
+'Last change: 17.07.2021 21:24
 
 Dim LastRec As Long
 Dim curFile As String
@@ -125,13 +125,13 @@ Function AddFile(ByVal file As String) As Byte
         Exit Function
     End If
     
-   'Чтение данных
+    'Чтение данных
     c = 60  'Колонка с обратной связью
     If SBFieldRecognition Then
         i = scFirst
         Do While SRC.Cells(i, scKVO).text <> ""
             If UINs(SRC.Cells(i, c).text) = "" And Len(SRC.Cells(i, scKVO).text) < 3 Then
-                If Not copyRecordSB(i) Then
+                If Not copyRecord(i) Then
                     errors = True
                     DTL.Cells(LastRec, clAccept) = "fail"
                 Else
@@ -165,7 +165,7 @@ End Function
 
 'Копирование записи из книги продаж. Возвращает True, если запись принялась без ошибок
 'Si - строка в исходниках
-Function copyRecordSB(ByVal Si As Long) As Boolean
+Function copyRecord(ByVal Si As Long) As Boolean
     
     SetFormates LastRec
     On Error GoTo er
@@ -200,7 +200,7 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
             WorksheetFunction.Sum(Range(SRC.Cells(Si, scNDS18), SRC.Cells(Si, scNDS10)))
     If scNDS <> 0 Then DTL.Cells(LastRec, clNDS) = SRC.Cells(Si, scNDS)
     
-    copyRecordSB = VerifyLoad(LastRec)
+    copyRecord = VerifyLoad(LastRec)
     
     'КВО менялся с 02 на 22, делаем связанные с этим событием действия
     If kvochange Then
@@ -213,7 +213,7 @@ Function copyRecordSB(ByVal Si As Long) As Boolean
     Exit Function
     
 er:
-    copyRecordSB = False
+    copyRecord = False
     
 End Function
 
@@ -233,12 +233,12 @@ End Sub
 Sub AddFormuls()
     s = CStr(LastRec)
     DTL.Cells(LastRec, clOst).Formula = "=M" + s + "-OneCellSum(P" + s + ")"
-    formul = "=R" + s + ">=0"
-    With DTL.Cells(LastRec, clRasp).Validation
-        .Delete
-        .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:=formul
-        .ErrorMessage = "Распределённая сумма превысила сумму НДС"
-    End With
+    'formul = "=R" + s + ">=0"
+    'With DTL.Cells(LastRec, clRasp).Validation
+    '    .Delete
+    '    .Add Type:=xlValidateCustom, AlertStyle:=xlValidAlertStop, Formula1:=formul
+    '    .ErrorMessage = "Распределённая сумма превысила сумму НДС"
+    'End With
 End Sub
 
 'Проверка собранных записей на отсутствие повторяющихся номеров
