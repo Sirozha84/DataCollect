@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 17.07.2021 21:24
+'Last change: 17.07.2021 21:56
 
 Dim LastRec As Long
 Dim curFile As String
@@ -65,8 +65,12 @@ Sub Run()
         n = n + 1
     Next
 
+    'Проверка на дубликаты
+    Message "Проверка на дубликаты..."
+    ed = FindDuplicates
+
     'Обновляем данные в справочнике
-    Message "Расчёт квартальных лимитов"
+    Message "Расчёт квартальных лимитов..."
     Range(DIC.Cells(firstDic, cPBalance), DIC.Cells(maxRow, cPBalance + quartCount * 2 - 1)).Clear
     i = firstDtL
     Do While DTL.Cells(i, clAccept) <> ""
@@ -79,12 +83,9 @@ Sub Run()
                 If DTL.Cells(i, 1).text = "З" Then Qi = Qi + 1
                 DIC.Cells(Si, Qi) = DIC.Cells(Si, Qi) + Sum
             End If
-            
         End If
         i = i + 1
     Loop
-    
-    ed = FindDuplicates
 
     'Завершение
     ActiveWorkbook.Save
