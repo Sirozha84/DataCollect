@@ -1,5 +1,5 @@
 Attribute VB_Name = "SellBook"
-'Последняя правка: 04.07.2021 16:59
+'Last change: 04.07.2021 16:59
 
 Dim Patch As String
 Dim BuyersList As Variant
@@ -122,7 +122,7 @@ Sub GetLists()
     i = 2
     For i = 2 To 1000
         If SEL.Cells(i, 1).text <> "" Then
-            Si = SEL.Cells(i, 2).text
+            Si = Left(SEL.Cells(i, 2).text, 10)
             SellersList(Si) = DIC.Cells(selIndexes(Si), 1).text
         End If
     Next
