@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 14.07.2021 21:18
+'Last change: 17.07.2021 16:47
 
 Dim LastRec As Long
 Dim curFile As String
@@ -253,16 +253,10 @@ Function FindDuplicates()
         If numbers(NUM) = Empty Then
             numbers(NUM) = i
         Else
-            io = numbers(NUM)
-            DTL.Cells(io, clCom) = "Номер СФ повторяется"
             DTL.Cells(i, clCom) = "Номер СФ повторяется"
-            DTL.Cells(io, clCom).Interior.Color = colRed
             DTL.Cells(i, clCom).Interior.Color = colRed
-            DTL.Cells(io, clAccept) = "fail"
             DTL.Cells(i, clAccept) = "fail"
-            Log.Rec DTL.Cells(i, clFile), 2
-            Log.Rec DTL.Cells(io, clFile), 2
-            e = e + 2
+            e = e + 1
         End If
         i = i + 1
     Loop
