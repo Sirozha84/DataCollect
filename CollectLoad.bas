@@ -1,5 +1,5 @@
 Attribute VB_Name = "CollectLoad"
-'Last change: 17.07.2021 21:56
+'Last change: 18.07.2021 19:51
 
 Dim LastRec As Long
 Dim curFile As String
@@ -31,6 +31,7 @@ Sub Run()
     Dictionary.Init
     Numerator.InitLoad
     Log.Init
+    DTL.EnableCalculation = False
     
     'Очищаем сбор от старых непринятых записей
     Set UINs = CreateObject("Scripting.Dictionary")
@@ -88,6 +89,7 @@ Sub Run()
     Loop
 
     'Завершение
+    DTL.EnableCalculation = True
     ActiveWorkbook.Save
     Message "Готово! Файл сохранён."
     Application.DisplayAlerts = True

@@ -1,5 +1,5 @@
 Attribute VB_Name = "SellBook"
-'Last change: 04.07.2021 16:59
+'Last change: 18.07.2021 20:21
 
 Dim Patch As String
 Dim BuyersList As Variant
@@ -355,6 +355,15 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     'Сохранение и закрытие документа
     On Error GoTo er
     Application.DisplayAlerts = False
+    With PageSetup
+        .Orientation = xlLandscape
+        .LeftMargin = 0.64
+        .TopMargin = 0.64
+        .RightMargin = 0.64
+        .BottomMargin = 0.64
+        .FitToPagesWide = 1
+        .Zoom = False
+    End With
     ActiveWorkbook.SaveAs fileName:=fileName
     ActiveWorkbook.Close
     BookCount = BookCount + 1
