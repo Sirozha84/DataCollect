@@ -1,5 +1,5 @@
 Attribute VB_Name = "SellBook"
-'Last change: 20.07.2021 10:20
+'Last change: 20.07.2021 19:25
 
 Dim Patch As String
 Dim BuyersList As Variant
@@ -93,7 +93,7 @@ Function Prepare(ByVal cod As String) As Boolean
     i = firstDat
     Do While DAT.Cells(i, cAccept) <> ""
         If DAT.Cells(i, cCode).text = cod Then
-            If DAT.Cells(i, cAccept) <> "fail" Then
+            If DAT.Cells(i, cAccept) = "OK" Then
                 Where.Add i
                 Quartals(GetQuartal(DAT.Cells(i, cDates))) = 1
             Else
