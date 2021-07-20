@@ -1,5 +1,5 @@
 Attribute VB_Name = "SellBook"
-'Last change: 18.07.2021 20:21
+'Last change: 20.07.2021 10:20
 
 Dim Patch As String
 Dim BuyersList As Variant
@@ -123,7 +123,8 @@ Sub GetLists()
     For i = 2 To 1000
         If SEL.Cells(i, 1).text <> "" Then
             Si = Left(SEL.Cells(i, 2).text, 10)
-            SellersList(Si) = DIC.Cells(selIndexes(Si), 1).text
+            ind = selIndexes(Si)
+            If Not ind = Empty Then SellersList(Si) = DIC.Cells(selIndexes(Si), 1).text
         End If
     Next
 
@@ -355,7 +356,7 @@ Sub MakeBook(ByVal q As String, ByVal b As String, ByVal s As String)
     'Сохранение и закрытие документа
     On Error GoTo er
     Application.DisplayAlerts = False
-    With PageSetup
+    With Sheets(1).PageSetup
         .Orientation = xlLandscape
         .LeftMargin = 0.64
         .TopMargin = 0.64
