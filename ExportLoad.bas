@@ -1,5 +1,8 @@
 Attribute VB_Name = "ExportLoad"
-'Last change: 11.07.2021 15:32
+'Last change: 22.07.2021 14:41
+
+Dim datesD As Collection    'Коллекция дат, собранных в поступлениях
+Dim datesI As Collection    'Коллекция индексов этих дат
 
 Sub Run()
     
@@ -17,12 +20,19 @@ Sub Run()
     'Формируем список инн продавцов для выгрузки
     Set files = Source.getFiles(DirExport + "\Отгрузки", False)
     Set INNs = FilesToINNs(files)
-    LoadAllocation INNs
     
     n = 1
-    a = files.Count
-    For Each inn In INNs
-        CreateExportFile inn, CStr(n) + " из " + CStr(a) + ": "
+    a = INNs.Count
+    For Each INN In INNs
+        Message "Распределение поступлений... (" + CStr(n) + " из " + CStr(a) + ")"
+        LoadAllocation INN
+        n = n + 1
+    Next
+    
+    n = 1
+    For Each INN In INNs
+        Message "Экспорт файлов... (" + CStr(n) + " из " + CStr(a) + ")"
+        CreateExportFile INN
         n = n + 1
     Next
     
@@ -31,15 +41,12 @@ Sub Run()
 End Sub
 
 'Формирование файла выгрузки
-Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
-    
-    saler = SellFileName(inn)
-    Message "Экспорт файла " + NUM + saler
+Sub CreateExportFile(ByVal INN As String)
     
     'Определяемся с путём и именем файла
     Patch = DirExport + "\Поступления"
     MakeDir Patch
-    fileName = Patch + "\" + cutBadSymbols(saler) + ".xlsx"
+    fileName = Patch + "\" + cutBadSymbols(SellFileName(INN)) + ".xlsx"
     
     'Создаём книгу
     Workbooks.Add
@@ -77,20 +84,20 @@ Sub CreateExportFile(ByVal inn As String, ByVal NUM As String)
     j = firstEx
     Do While DTL.Cells(i, clAccept) <> ""
         If DTL.Cells(i, clAccept) = "OK" Then
-            If Left(DTL.Cells(i, clSaleINN).text, 10) = inn Then
+            If Left(DTL.Cells(i, clSaleINN).text, 10) = INN Then
                 'Копирование данных из сбора
                 Cells(j, 1).NumberFormat = "@"
                 Cells(j, 1) = "01"
                 Cells(j, 2) = DTL.Cells(i, 1)
                 Cells(j, 3).NumberFormat = "dd.MM.yyyy"
                 Cells(j, 3) = DTL.Cells(i, clDate)
-                innkpp = Split(DAT.Cells(i, 3), "/")
+                innkpp = Split(dat.Cells(i, 3), "/")
                 Cells(j, 4).NumberFormat = "@"
                 Cells(j, 4) = DTL.Cells(i, clSaleINN)
                 Cells(j, 6) = DTL.Cells(i, clSaleName)
-                Cells(j, 7).NumberFormat = "### ### ##0.00"
+                Cells(j, 7).NumberFormat = numFormat
                 Cells(j, 7) = DTL.Cells(i, clPrice)
-                Cells(j, 8).NumberFormat = "### ### ##0.00"
+                Cells(j, 8).NumberFormat = numFormat
                 Cells(j, 8) = DTL.Cells(i, clNDS)
                 Cells(j, 9) = DTL.Cells(i, clPND).text
                 Cells(j, 10) = LastDateOfQuartal(DTL.Cells(i, clPND).text)
@@ -114,39 +121,33 @@ er:
 End Sub
 
 'Распределение поступлений
-Sub LoadAllocation(ByVal INNs As Collection)
+Sub LoadAllocation(ByVal INN As String)
     
-    Message "Распределение поступлений..."
-    
-    For Each inn In INNs
+    oND = StupidQToQIndex(DIC.Cells(selIndexes(INN), cOPND))
+    For cPer = oND To quartCount - 1
         
-        Si = selIndexes(inn)
-        oND = StupidQToQIndex(DIC.Cells(Si, cOPND))
+        'Расчёт суммы всех отгрузок за текущий период
+        Sum = GetSaleSumm(INN, cPer)
+        If Sum > minSale Then
         
-        For cPer = oND To quartCount - 1
-            
-            'Расчёт суммы всех отгрузок за текущий период
-            Sum = GetSaleSumm(inn, cPer)
-            If Sum > minSale Then
-            
-                'Подбираем список поступлений
-                Set dateS = GetDatesList(cPer)
-                For Each postdate In dateS
-                    i = dateS(postdate)
-                    Post = DTL.Cells(i, clNDS)
-                    If Sum >= Post Then
-                        If DTL.Cells(i, clRasp).text = "" Then
-                            Sum = Sum - Post
-                            DTL.Cells(i, clRasp) = Post
-                            DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
-                        End If
-                        If Sum < maxDif Then Exit For
+            'Подбираем список поступлений
+            GetDatesList cPer, INN
+            For d = 1 To datesD.Count
+                i = datesI(d)
+                Post = DTL.Cells(i, clNDS)  'Поступление
+                If Sum >= Post Then
+                    If DTL.Cells(i, clRasp) = "" Then
+                        Sum = Sum - Post
+                        DTL.Cells(i, clRasp) = Post
+                        DTL.Cells(i, clPND) = IndexToQYYYY(cPer)
+                    Else
+                        Sum = Sum - OneCellSum(DTL.Cells(i, clRasp))
                     End If
-                Next
-                
-            End If
+                    If Sum < maxDif Then Exit For
+                End If
+            Next
             
-        Next
+        End If
         
     Next
     
@@ -161,13 +162,13 @@ Function FilesToINNs(files As Object) As Object
 End Function
 
 'Расчёт суммы отгрузок продавца с INN за квартал Q
-Function GetSaleSumm(ByVal inn As String, ByVal q As Integer) As Double
+Function GetSaleSumm(ByVal INN As String, ByVal q As Integer) As Double
     i = firstDat
     Sum = 0
-    Do While DAT.Cells(i, cAccept) <> ""
-        If DAT.Cells(i, cAccept) = "OK" And Left(DAT.Cells(i, cSellINN).text, 10) = inn Then
-            If StupidQToQIndex(DAT.Cells(i, cPND)) = q Then
-                Sum = Sum + WorksheetFunction.Sum(Range(DAT.Cells(i, cNDS), DAT.Cells(i, cNDS + 2)))
+    Do While dat.Cells(i, cAccept) <> ""
+        If dat.Cells(i, cAccept) = "OK" And Left(dat.Cells(i, cSellINN).text, 10) = INN Then
+            If StupidQToQIndex(dat.Cells(i, cPND)) = q Then
+                Sum = Sum + WorksheetFunction.Sum(Range(dat.Cells(i, cNDS), dat.Cells(i, cNDS + 2)))
             End If
         End If
         i = i + 1
@@ -176,34 +177,48 @@ Function GetSaleSumm(ByVal inn As String, ByVal q As Integer) As Double
 End Function
 
 'Формирование сортированного списка дат входящих в 12 кварталов начиная от cPer
-Function GetDatesList(ByVal cPer As Integer) As Object
+Sub GetDatesList(ByVal cPer As Integer, ByVal INN As String)
             
-    'Собираем подходящие даты
-    Set dateS = CreateObject("Scripting.Dictionary")
+    Dim datesDt As Collection
+    Dim datesIt As Collection
+    Set datesDt = New Collection
+    Set datesIt = New Collection
+    Set datesD = New Collection
+    Set datesI = New Collection
+        
+    'Отбираем строчки, соответствующие данному продавцу
+    Dim d As Date
     i = firstDtL
     Do While DTL.Cells(i, clAccept) <> ""
-        Dim d As Date
-        d = DTL.Cells(i, clDate)
-        q = DateToQIndex(d)
-        If q >= cPer And q <= cPer + 11 And DTL.Cells(i, clPND) = "" Then dateS(d) = i
+        'Debug.Assert i <> 13822
+        If DTL.Cells(i, clAccept) = "OK" And DTL.Cells(i, clSaleINN) = INN Then
+            d = DTL.Cells(i, clDate)
+            q = DateToQIndex(d)
+            If q >= cPer And q <= cPer + 11 Then
+                datesDt.Add d
+                datesIt.Add i
+            End If
+        End If
         i = i + 1
     Loop
     
     'Сортируем собранные даты
-    Set datesSorted = CreateObject("Scripting.Dictionary")
-    Do While dateS.Count > 0
-        Dim max As Date
-        max = 0
-        For Each dt In dateS
-            If max < dt Then max = dt
+    Do While datesDt.Count > 0
+        max = datesDt(1)
+        im = 1
+        For i = 1 To datesDt.Count
+            If max < datesDt(i) Then
+                max = datesDt(i)
+                im = i
+            End If
         Next
-        datesSorted(max) = dateS(max)
-        dateS.Remove (max)
+        datesD.Add datesDt(im)
+        datesI.Add datesIt(im)
+        datesDt.Remove (im)
+        datesIt.Remove (im)
     Loop
     
-    Set GetDatesList = datesSorted
-    
-End Function
+End Sub
 
 'Вычисление последней даты квартала
 Function LastDateOfQuartal(ByVal q) As String
